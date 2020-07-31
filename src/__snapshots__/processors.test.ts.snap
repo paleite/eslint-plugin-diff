@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`configs diff 1`] = `
+Object {
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*",
+      ],
+      "processor": "diff/diff",
+    },
+  ],
+  "plugins": Array [
+    "diff",
+  ],
+}
+`;
+
+exports[`configs staged 1`] = `
+Object {
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*",
+      ],
+      "processor": "diff/staged",
+    },
+  ],
+  "plugins": Array [
+    "diff",
+  ],
+}
+`;
+
+exports[`processors diff 1`] = `
+Array [
+  Object {
+    "column": 1,
+    "line": 2,
+    "message": "Expected { after 'if' condition.",
+    "messageId": "missingCurlyAfterCondition",
+    "nodeType": "IfStatement",
+    "ruleId": "curly",
+    "severity": 1,
+  },
+  Object {
+    "column": 1,
+    "line": 3,
+    "message": "Expected { after 'if' condition.",
+    "messageId": "missingCurlyAfterCondition",
+    "nodeType": "IfStatement",
+    "ruleId": "curly",
+    "severity": 1,
+  },
+]
+`;
+
+exports[`processors staged 1`] = `
+Array [
+  Object {
+    "column": 1,
+    "line": 2,
+    "message": "Expected { after 'if' condition.",
+    "messageId": "missingCurlyAfterCondition",
+    "nodeType": "IfStatement",
+    "ruleId": "curly",
+    "severity": 1,
+  },
+]
+`;

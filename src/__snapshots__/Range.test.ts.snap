@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`range should throw TypeError when parameters are flipped 1`] = `"inclusiveLowerBound must be strictly less than exclusiveUpperBound: 1 >= 0"`;

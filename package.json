@@ -1,0 +1,59 @@
+{
+  "name": "eslint-plugin-diff",
+  "version": "0.0.0",
+  "description": "Run ESLint on your changes only",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "diff"
+  ],
+  "homepage": "https://github.com/paleite/eslint-plugin-diff#readme",
+  "bugs": {
+    "url": "https://github.com/paleite/eslint-plugin-diff/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paleite/eslint-plugin-diff.git"
+  },
+  "license": "MIT",
+  "author": "Patrick Eriksson <paleite@users.noreply.github.com> (https://github.com/paleite)",
+  "main": "dist/index.js",
+  "files": [
+    "/dist/"
+  ],
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "format": "prettier --write .",
+    "lint": "eslint --cache --ext .js,.ts --fix --format codeframe .",
+    "release": "np",
+    "test": "jest",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/eslint": "^7.2.0",
+    "@types/jest": "^26.0.8",
+    "@types/node": "^14.0.27",
+    "@typescript-eslint/eslint-plugin": "^3.8.0",
+    "@typescript-eslint/parser": "^3.8.0",
+    "eslint": "^7.0.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-promise": "^4.2.1",
+    "husky": "^4.2.5",
+    "jest": "^26.2.2",
+    "lint-staged": "^10.2.11",
+    "np": "^6.3.2",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.1.4",
+    "typescript": "^3.9.7"
+  },
+  "peerDependencies": {
+    "eslint": ">=7.0.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

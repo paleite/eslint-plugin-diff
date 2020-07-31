@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`git should find the ranges of each staged file 1`] = `
+Array [
+  Range {
+    "exclusiveUpperBound": 1,
+    "inclusiveLowerBound": 0,
+  },
+  Range {
+    "exclusiveUpperBound": 6,
+    "inclusiveLowerBound": 2,
+  },
+  Range {
+    "exclusiveUpperBound": 9,
+    "inclusiveLowerBound": 7,
+  },
+]
+`;

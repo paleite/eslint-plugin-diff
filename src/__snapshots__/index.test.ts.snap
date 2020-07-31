@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`plugin should match expected export 1`] = `
+Object {
+  "configs": Object {
+    "diff": Object {
+      "overrides": Array [
+        Object {
+          "files": Array [
+            "*",
+          ],
+          "processor": "diff/diff",
+        },
+      ],
+      "plugins": Array [
+        "diff",
+      ],
+    },
+    "staged": Object {
+      "overrides": Array [
+        Object {
+          "files": Array [
+            "*",
+          ],
+          "processor": "diff/staged",
+        },
+      ],
+      "plugins": Array [
+        "diff",
+      ],
+    },
+  },
+  "default": Object {
+    "configs": Object {
+      "diff": Object {
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*",
+            ],
+            "processor": "diff/diff",
+          },
+        ],
+        "plugins": Array [
+          "diff",
+        ],
+      },
+      "staged": Object {
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*",
+            ],
+            "processor": "diff/staged",
+          },
+        ],
+        "plugins": Array [
+          "diff",
+        ],
+      },
+    },
+    "processors": Object {
+      "diff": Object {
+        "postprocess": [Function],
+      },
+      "staged": Object {
+        "postprocess": [Function],
+      },
+    },
+  },
+  "processors": Object {
+    "diff": Object {
+      "postprocess": [Function],
+    },
+    "staged": Object {
+      "postprocess": [Function],
+    },
+  },
+}
+`;
