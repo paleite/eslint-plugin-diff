@@ -29,7 +29,8 @@
     "lint": "eslint --cache --ext .js,.ts --fix --format codeframe .",
     "release": "np",
     "test": "jest",
-    "typecheck": "tsc --project tsconfig.json"
+    "typecheck": "tsc --project tsconfig.json",
+    "prepublish": "yarn run clean && yarn run build"
   },
   "devDependencies": {
     "@types/eslint": "^7.2.0",
