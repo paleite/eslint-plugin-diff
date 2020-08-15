@@ -20,6 +20,8 @@ const diff = {
         )
       )
       .flat(),
+
+  supportsAutofix: true,
 };
 
 const diffConfig = {
@@ -46,6 +48,8 @@ const staged = {
         )
       )
       .flat(),
+
+  supportsAutofix: true,
 };
 
 const stagedConfig = {
