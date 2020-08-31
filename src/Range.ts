@@ -17,10 +17,6 @@ class Range {
   }
 
   isWithinRange(n: Readonly<number>): boolean {
-    // console.log("this.inclusiveLowerBound: " + this.inclusiveLowerBound);
-    // console.log("n: " + n);
-    // console.log("this.exclusiveUpperBound: " + this.exclusiveUpperBound);
-
     return this.inclusiveLowerBound <= n && n < this.exclusiveUpperBound;
   }
 }
