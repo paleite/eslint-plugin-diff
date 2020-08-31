@@ -36,14 +36,22 @@ const getRangeForChangedLines = (line: string) => {
     range.groups?.linesCountDelimiter && range.groups?.linesCount
       ? parseInt(range.groups.linesCount)
       : 1;
+
+  const hasAddedLines = linesCount !== 0;
   const start: number = parseInt(range.groups?.start);
   const end = start + linesCount;
 
-  return new Range(start, end);
+  return hasAddedLines ? new Range(start, end) : null;
 };
 
+const removeNullRanges = (r: Range | null): r is Range => r !== null;
+
 const getRangesForDiff = (diff: string): Range[] => {
-  return diff.split("\n").filter(isHunkHeader).map(getRangeForChangedLines);
+  return diff
+    .split("\n")
+    .filter(isHunkHeader)
+    .map(getRangeForChangedLines)
+    .filter(removeNullRanges);
 };
 
 export { getDiffForFile, getRangesForDiff };

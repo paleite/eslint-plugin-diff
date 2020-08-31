@@ -16,3 +16,12 @@ Array [
   },
 ]
 `;
+
+exports[`git should work for hunks which include only-removal-ranges 1`] = `
+Array [
+  Range {
+    "exclusiveUpperBound": 4,
+    "inclusiveLowerBound": 2,
+  },
+]
+`;
