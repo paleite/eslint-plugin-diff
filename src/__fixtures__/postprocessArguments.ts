@@ -32,7 +32,7 @@ const postprocessArguments = [
       },
     ],
   ],
-  "/mock-filename.js",
+  `/mock filename with quotes ", semicolons ; and spaces.js`,
 ] as [Linter.LintMessage[][], string];
 
 export { postprocessArguments };

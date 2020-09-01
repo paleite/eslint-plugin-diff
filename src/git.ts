@@ -2,12 +2,15 @@ import * as child_process from "child_process";
 import * as path from "path";
 import { Range } from "./Range";
 
+const sanitizeFilePath = (filePath: string) =>
+  JSON.stringify(path.resolve(filePath));
+
 const getDiffForFile = (filePath: string, staged = false): string =>
   child_process
     .execSync(
       `git diff --diff-filter=ACM --unified=0 HEAD ${
         staged ? " --staged" : ""
-      } -- ${path.resolve(filePath)}`
+      } -- ${sanitizeFilePath(filePath)}`
     )
     .toString();
 
