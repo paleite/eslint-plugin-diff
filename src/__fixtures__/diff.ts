@@ -45,3 +45,10 @@ index cb3c131..874b8f9 100644
 @@ -17,2 +16,0 @@ import { a } from "../components/a";
 -import { b } from "../context/b";
 -import { c } from "../context/c";`;
+
+export const filenamesAB = `a/dirty.js
+b/dirty.js
+`;
+
+export const filenamesA = `a/dirty.js
+`
