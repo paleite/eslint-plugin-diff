@@ -5,14 +5,30 @@ import { Range } from "./Range";
 const sanitizeFilePath = (filePath: string) =>
   JSON.stringify(path.resolve(filePath));
 
-const getDiffForFile = (filePath: string, staged = false): string =>
-  child_process
-    .execSync(
-      `git diff --diff-filter=ACM --unified=0 HEAD ${
-        staged ? " --staged" : ""
-      } -- ${sanitizeFilePath(filePath)}`
-    )
-    .toString();
+const diffCacheKey = (filePath: string, staged: boolean): string =>
+  JSON.stringify([path.resolve(filePath), staged]);
+
+const diffCache = new Map<string, string>();
+
+const getDiffForFile = (filePath: string, staged = false): string => {
+  // Get diff entry from cache
+  const cachedDiff = diffCache.get(diffCacheKey(filePath, staged));
+  if (cachedDiff) {
+    // If entry is not falsy return it
+    return cachedDiff;
+  } else {
+    // Otherwise spawn child_process set it in cache and return it
+    const diff = child_process
+      .execSync(
+        `git diff --diff-filter=ACM --unified=0 HEAD ${
+          staged ? " --staged" : ""
+        } -- ${sanitizeFilePath(filePath)}`
+      )
+      .toString();
+    diffCache.set(diffCacheKey(filePath, staged), diff);
+    return diff;
+  }
+};
 
 const isHunkHeader = (input: string) => {
   const hunkHeaderRE = new RegExp(/^@@ .* @@/g);

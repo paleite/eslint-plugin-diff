@@ -25,4 +25,17 @@ describe("git", () => {
     expect(diffFromFile).toContain("diff --git");
     expect(diffFromFile).toContain("@@");
   });
+
+  it("should hit the cached diff of a file", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execSync.mockReturnValue(Buffer.from(hunks));
+
+    const diffFromFileA = getDiffForFile("./mockfileCache.js");
+    const diffFromFileB = getDiffForFile("./mockfileCache.js");
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(1);
+    expect(diffFromFileA).toEqual(diffFromFileB);
+
+    getDiffForFile("./mockfileMiss.js");
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(2);
+  });
 });
