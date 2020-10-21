@@ -62,10 +62,12 @@ Object {
     "processors": Object {
       "diff": Object {
         "postprocess": [Function],
+        "preprocess": [Function],
         "supportsAutofix": true,
       },
       "staged": Object {
         "postprocess": [Function],
+        "preprocess": [Function],
         "supportsAutofix": true,
       },
     },
@@ -73,10 +75,12 @@ Object {
   "processors": Object {
     "diff": Object {
       "postprocess": [Function],
+      "preprocess": [Function],
       "supportsAutofix": true,
     },
     "staged": Object {
       "postprocess": [Function],
+      "preprocess": [Function],
       "supportsAutofix": true,
     },
   },

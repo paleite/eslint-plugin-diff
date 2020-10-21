@@ -1,7 +1,8 @@
 import * as child_process from "child_process";
 import { mocked } from "ts-jest/utils";
-import { getDiffForFile, getRangesForDiff } from "./git";
-import { hunks, includingOnlyRemovals } from "./__fixtures__/diff";
+import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
+import { hunks, includingOnlyRemovals, filenamesAB } from "./__fixtures__/diff";
+import path from "path";
 
 jest.mock("child_process");
 
@@ -37,5 +38,16 @@ describe("git", () => {
 
     getDiffForFile("./mockfileMiss.js");
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(2);
+  });
+
+  it("should get the list of staged files", () => {
+    mockedChildProcess.execSync.mockReturnValue(Buffer.from(filenamesAB));
+
+    const fileList = getDiffFileList();
+
+    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    expect(fileList).toEqual(
+      ["a/dirty.js", "b/dirty.js"].map((p) => path.resolve(p))
+    );
   });
 });

@@ -21,13 +21,24 @@ const getDiffForFile = (filePath: string, staged = false): string => {
     const diff = child_process
       .execSync(
         `git diff --diff-filter=ACM --unified=0 HEAD ${
-          staged ? " --staged" : ""
+          staged ? "--staged" : ""
         } -- ${sanitizeFilePath(filePath)}`
       )
       .toString();
     diffCache.set(diffCacheKey(filePath, staged), diff);
     return diff;
   }
+};
+
+const getDiffFileList = (staged = false): string[] => {
+  return child_process
+    .execSync(
+      `git diff --diff-filter=ACM HEAD ${staged ? "--staged" : ""} --name-only`
+    )
+    .toString()
+    .split("\n")
+    .filter((filePath) => filePath.length)
+    .map((filePath) => path.resolve(filePath));
 };
 
 const isHunkHeader = (input: string) => {
@@ -73,5 +84,5 @@ const getRangesForDiff = (diff: string): Range[] => {
     .filter(removeNullRanges);
 };
 
-export { getDiffForFile, getRangesForDiff };
+export { getDiffForFile, getRangesForDiff, getDiffFileList };
 export type { Range };
