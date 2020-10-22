@@ -8,37 +8,45 @@ const sanitizeFilePath = (filePath: string) =>
 const diffCacheKey = (filePath: string, staged: boolean): string =>
   JSON.stringify([path.resolve(filePath), staged]);
 
-const diffCache = new Map<string, string>();
+const setCachedDiff = (filePath: string, staged: boolean, diff: string): void =>
+  void diffCache.set(diffCacheKey(filePath, staged), diff);
 
+const getCachedDiff = (filePath: string, staged: boolean) =>
+  diffCache.get(diffCacheKey(filePath, staged));
+
+const diffCache = new Map<string, string>();
 const getDiffForFile = (filePath: string, staged = false): string => {
-  // Get diff entry from cache
-  const cachedDiff = diffCache.get(diffCacheKey(filePath, staged));
-  if (cachedDiff) {
-    // If entry is not falsy return it
-    return cachedDiff;
-  } else {
-    // Otherwise spawn child_process set it in cache and return it
-    const diff = child_process
+  let diff = getCachedDiff(filePath, staged);
+  if (diff === undefined) {
+    const result = child_process
       .execSync(
         `git diff --diff-filter=ACM --unified=0 HEAD ${
-          staged ? "--staged" : ""
+          staged ? " --staged" : ""
         } -- ${sanitizeFilePath(filePath)}`
       )
       .toString();
-    diffCache.set(diffCacheKey(filePath, staged), diff);
-    return diff;
+    setCachedDiff(filePath, staged, result);
+    diff = result;
   }
+
+  return diff;
 };
 
+let diffFileListCache: string[];
 const getDiffFileList = (staged = false): string[] => {
-  return child_process
-    .execSync(
-      `git diff --diff-filter=ACM HEAD ${staged ? "--staged" : ""} --name-only`
-    )
-    .toString()
-    .split("\n")
-    .filter((filePath) => filePath.length)
-    .map((filePath) => path.resolve(filePath));
+  if (diffFileListCache === undefined) {
+    diffFileListCache = child_process
+      .execSync(
+        `git diff --diff-filter=ACM HEAD --name-only ${
+          staged ? "--staged" : ""
+        }`
+      )
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => path.resolve(filePath));
+  }
+  return diffFileListCache;
 };
 
 const isHunkHeader = (input: string) => {
@@ -63,12 +71,12 @@ const getRangeForChangedLines = (line: string) => {
   }
 
   const linesCount: number =
-    range.groups?.linesCountDelimiter && range.groups?.linesCount
+    range.groups.linesCountDelimiter && range.groups.linesCount
       ? parseInt(range.groups.linesCount)
       : 1;
 
   const hasAddedLines = linesCount !== 0;
-  const start: number = parseInt(range.groups?.start);
+  const start: number = parseInt(range.groups.start);
   const end = start + linesCount;
 
   return hasAddedLines ? new Range(start, end) : null;

@@ -52,3 +52,5 @@ b/dirty.js
 
 export const filenamesA = `a/dirty.js
 `
+
+export const diffFileList = "file1\nfile2\nfile3\n"

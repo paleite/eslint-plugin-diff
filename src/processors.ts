@@ -1,30 +1,18 @@
-import {
-  getDiffForFile,
-  getRangesForDiff,
-  getDiffFileList,
-  Range,
-} from "./git";
-import { Linter } from "eslint";
+import type { Range } from "./git";
+import { getDiffForFile, getRangesForDiff, getDiffFileList } from "./git";
+import type { Linter } from "eslint";
 
 const STAGED = true;
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
-let fileList: string[];
 
 const diff = {
   preprocess: (
     text: string,
     filename: string
-  ): { text: string; filename: string }[] => {
-    if (
-      (fileList ? fileList : (fileList = getDiffFileList())).includes(filename)
-    ) {
-      return [{ text, filename }];
-    } else {
-      return [];
-    }
-  },
+  ): { text: string; filename: string }[] =>
+    getDiffFileList().includes(filename) ? [{ text, filename }] : [],
 
   postprocess: (
     messages: Linter.LintMessage[][],
@@ -32,9 +20,9 @@ const diff = {
   ): Linter.LintMessage[] =>
     messages
       .map((message) =>
-        message.filter((message) =>
+        message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename)).some(
-            isLineWithinRange(message.line)
+            isLineWithinRange(line)
           )
         )
       )
@@ -57,26 +45,18 @@ const staged = {
   preprocess: (
     text: string,
     filename: string
-  ): { text: string; filename: string }[] => {
-    if (
-      (fileList ? fileList : (fileList = getDiffFileList(true))).includes(
-        filename
-      )
-    ) {
-      return [{ text, filename }];
-    } else {
-      return [];
-    }
-  },
+  ): { text: string; filename: string }[] =>
+    getDiffFileList(STAGED).includes(filename) ? [{ text, filename }] : [],
+
   postprocess: (
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
     messages
       .map((message) =>
-        message.filter((message) =>
+        message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename, STAGED)).some(
-            isLineWithinRange(message.line)
+            isLineWithinRange(line)
           )
         )
       )
