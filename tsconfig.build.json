@@ -7,5 +7,6 @@
     "resolveJsonModule": true
   },
 
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["**/*.test.*", "**/__fixtures__"]
 }

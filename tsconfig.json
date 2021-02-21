@@ -6,5 +6,6 @@
     "rootDir": "."
   },
 
-  "include": ["."]
+  "include": ["."],
+  "exclude": ["dist"]
 }

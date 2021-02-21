@@ -1,20 +1,12 @@
 {
+  "extends": "@tsconfig/node10/tsconfig.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "module": "commonjs",
+    "composite": true,
     "moduleResolution": "node",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "pretty": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "es2017",
-    "lib": ["es2017"]
+    "types": ["jest", "node"]
   }
 }
