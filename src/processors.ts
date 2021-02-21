@@ -18,15 +18,15 @@ const diff = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
+    ([] as Linter.LintMessage[]).concat(
+      ...messages.map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename)).some(
             isLineWithinRange(line)
           )
         )
       )
-      .flat(),
+    ),
 
   supportsAutofix: true,
 };
@@ -52,16 +52,15 @@ const staged = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
+    ([] as Linter.LintMessage[]).concat(
+      ...messages.map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename, STAGED)).some(
             isLineWithinRange(line)
           )
         )
       )
-      .flat(),
-
+    ),
   supportsAutofix: true,
 };
 
