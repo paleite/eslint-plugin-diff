@@ -17,5 +17,6 @@ module.exports = {
      * @param {string[]} files
      */
     (files) => `eslint --fix ${eslintFiles(files)}`,
+    "prettier --write",
   ],
 };
