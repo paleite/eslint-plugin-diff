@@ -31,9 +31,9 @@
     "test": "jest",
     "typecheck": "tsc --project tsconfig.json",
     "prepublish": "yarn run clean && yarn run build",
+    "postpublish": "pinst --enable",
     "postinstall": "husky install",
-    "prepublishOnly": "pinst --disable",
-    "postpublish": "pinst --enable"
+    "prepublishOnly": "pinst --disable"
   },
   "devDependencies": {
     "@tsconfig/node10": "^1.0.7",
