@@ -15,12 +15,16 @@ const getCachedDiff = (filePath: string, staged: boolean) =>
   diffCache.get(diffCacheKey(filePath, staged));
 
 const diffCache = new Map<string, string>();
-const getDiffForFile = (filePath: string, staged = false): string => {
+const getDiffForFile = (
+  filePath: string,
+  staged = false,
+  changesBetween = "HEAD"
+): string => {
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
     const result = child_process
       .execSync(
-        `git diff --diff-filter=ACM --unified=0 HEAD ${
+        `git diff --diff-filter=ACM --unified=0 ${changesBetween} ${
           staged ? " --staged" : ""
         } -- ${sanitizeFilePath(filePath)}`
       )
@@ -33,11 +37,11 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 };
 
 let diffFileListCache: string[];
-const getDiffFileList = (staged = false): string[] => {
+const getDiffFileList = (staged = false, changesBetween = "HEAD"): string[] => {
   if (diffFileListCache === undefined) {
     diffFileListCache = child_process
       .execSync(
-        `git diff --diff-filter=ACM HEAD --name-only ${
+        `git diff --diff-filter=ACM ${changesBetween} --name-only ${
           staged ? "--staged" : ""
         }`
       )
