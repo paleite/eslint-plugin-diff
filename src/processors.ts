@@ -31,15 +31,15 @@ const diff = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    ([] as Linter.LintMessage[]).concat(
-      ...messages.map((message) =>
+    messages
+      .map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename)).some(
             isLineWithinRange(line)
           )
         )
       )
-    ),
+      .reduce((a, b) => a.concat(b), []),
 
   supportsAutofix: true,
 };
@@ -65,15 +65,15 @@ const staged = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    ([] as Linter.LintMessage[]).concat(
-      ...messages.map((message) =>
+    messages
+      .map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename, STAGED)).some(
             isLineWithinRange(line)
           )
         )
       )
-    ),
+      .reduce((a, b) => a.concat(b), []),
 
   supportsAutofix: true,
 };
@@ -101,15 +101,15 @@ const ci = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    ([] as Linter.LintMessage[]).concat(
-      ...messages.map((message) =>
+    messages
+      .map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(
             getDiffForFile(filename, false, changesBetween())
           ).some(isLineWithinRange(line))
         )
       )
-    ),
+      .reduce((a, b) => a.concat(b), []),
 
   supportsAutofix: true,
 };
