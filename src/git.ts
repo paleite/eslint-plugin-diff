@@ -18,17 +18,24 @@ const diffCache = new Map<string, string>();
 const getDiffForFile = (
   filePath: string,
   staged = false,
-  changesBetween = "HEAD"
+  changesBetween = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"
 ): string => {
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
-    const result = child_process
-      .execSync(
-        `git diff --diff-filter=ACM --unified=0 ${changesBetween} ${
-          staged ? " --staged" : ""
-        } -- ${sanitizeFilePath(filePath)}`
-      )
-      .toString();
+    const command = [
+      "git",
+      "diff",
+      "--diff-filter=ACM",
+      staged && "--staged",
+      "--unified=0",
+      changesBetween,
+      "--",
+      sanitizeFilePath(filePath),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const result = child_process.execSync(command).toString();
     setCachedDiff(filePath, staged, result);
     diff = result;
   }
@@ -37,14 +44,24 @@ const getDiffForFile = (
 };
 
 let diffFileListCache: string[];
-const getDiffFileList = (staged = false, changesBetween = "HEAD"): string[] => {
+const getDiffFileList = (
+  staged = false,
+  changesBetween = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"
+): string[] => {
   if (diffFileListCache === undefined) {
+    const command = [
+      "git",
+      "diff",
+      "--diff-filter=ACM",
+      "--name-only",
+      staged && "--staged",
+      changesBetween,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     diffFileListCache = child_process
-      .execSync(
-        `git diff --diff-filter=ACM ${changesBetween} --name-only ${
-          staged ? "--staged" : ""
-        }`
-      )
+      .execSync(command)
       .toString()
       .trim()
       .split("\n")
