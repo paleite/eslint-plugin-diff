@@ -18,13 +18,20 @@ const diffCache = new Map<string, string>();
 const getDiffForFile = (filePath: string, staged = false): string => {
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
-    const result = child_process
-      .execSync(
-        `git diff --diff-filter=ACM --unified=0 HEAD ${
-          staged ? " --staged" : ""
-        } -- ${sanitizeFilePath(filePath)}`
-      )
-      .toString();
+    const command = [
+      "git",
+      "diff",
+      "--diff-filter=ACM",
+      staged && "--staged",
+      "--unified=0",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+      "--",
+      sanitizeFilePath(filePath),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const result = child_process.execSync(command).toString();
     setCachedDiff(filePath, staged, result);
     diff = result;
   }
@@ -35,12 +42,19 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 let diffFileListCache: string[];
 const getDiffFileList = (staged = false): string[] => {
   if (diffFileListCache === undefined) {
+    const command = [
+      "git",
+      "diff",
+      "--diff-filter=ACM",
+      "--name-only",
+      staged && "--staged",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     diffFileListCache = child_process
-      .execSync(
-        `git diff --diff-filter=ACM HEAD --name-only ${
-          staged ? "--staged" : ""
-        }`
-      )
+      .execSync(command)
       .toString()
       .trim()
       .split("\n")

@@ -1,6 +1,6 @@
-import type { Range } from "./git";
-import { getDiffForFile, getRangesForDiff, getDiffFileList } from "./git";
 import type { Linter } from "eslint";
+import type { Range } from "./git";
+import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
 
 const STAGED = true;
 
@@ -18,15 +18,15 @@ const diff = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    ([] as Linter.LintMessage[]).concat(
-      ...messages.map((message) =>
+    messages
+      .map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename)).some(
             isLineWithinRange(line)
           )
         )
       )
-    ),
+      .reduce((a, b) => a.concat(b), []),
 
   supportsAutofix: true,
 };
@@ -52,15 +52,16 @@ const staged = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] =>
-    ([] as Linter.LintMessage[]).concat(
-      ...messages.map((message) =>
+    messages
+      .map((message) =>
         message.filter(({ line }) =>
           getRangesForDiff(getDiffForFile(filename, STAGED)).some(
             isLineWithinRange(line)
           )
         )
       )
-    ),
+      .reduce((a, b) => a.concat(b), []),
+
   supportsAutofix: true,
 };
 
