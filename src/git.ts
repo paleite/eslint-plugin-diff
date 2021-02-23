@@ -15,11 +15,7 @@ const getCachedDiff = (filePath: string, staged: boolean) =>
   diffCache.get(diffCacheKey(filePath, staged));
 
 const diffCache = new Map<string, string>();
-const getDiffForFile = (
-  filePath: string,
-  staged = false,
-  changesBetween = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"
-): string => {
+const getDiffForFile = (filePath: string, staged = false): string => {
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
     const command = [
@@ -28,7 +24,7 @@ const getDiffForFile = (
       "--diff-filter=ACM",
       staged && "--staged",
       "--unified=0",
-      changesBetween,
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
       "--",
       sanitizeFilePath(filePath),
     ]
@@ -44,10 +40,7 @@ const getDiffForFile = (
 };
 
 let diffFileListCache: string[];
-const getDiffFileList = (
-  staged = false,
-  changesBetween = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"
-): string[] => {
+const getDiffFileList = (staged = false): string[] => {
   if (diffFileListCache === undefined) {
     const command = [
       "git",
@@ -55,7 +48,7 @@ const getDiffFileList = (
       "--diff-filter=ACM",
       "--name-only",
       staged && "--staged",
-      changesBetween,
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     ]
       .filter(Boolean)
       .join(" ");
