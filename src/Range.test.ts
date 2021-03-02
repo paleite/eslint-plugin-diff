@@ -1,4 +1,5 @@
 import { Range } from "./Range";
+
 describe("range", () => {
   it("should instantiate with correct parameters", () => {
     const range: Range = new Range(0, 1);

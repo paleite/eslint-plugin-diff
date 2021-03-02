@@ -1,10 +1,10 @@
 import type { Linter } from "eslint";
+import type { Range } from "./git";
 import {
   getDiffFileList,
   getDiffForFile,
   getIgnorePatterns,
   getRangesForDiff,
-  Range,
 } from "./git";
 
 const STAGED = true;
@@ -17,38 +17,21 @@ const diff = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] => {
-    if (!getDiffFileList().includes(filename)) {
-      // console.log( "🧠  skipping " + JSON.stringify(filename) + " because it's not in the diff list" );
-      return [];
-    }
-    const result = messages
-      .map((message) => {
-        // console.log("diff/diff", message, JSON.stringify(filename));
-        return message.filter(({ fatal, line }) => {
-          if (fatal) {
-            // console.log("❌  fatal error in " + JSON.stringify(filename));
-            return fatal;
-          }
+    const shouldKeepFile = getDiffFileList().includes(filename);
 
-          if (
-            !getRangesForDiff(getDiffForFile(filename)).some(
-              isLineWithinRange(line)
-            )
-          ) {
-            // console.log( "🔵  skipping " + JSON.stringify(filename) + " because it's not in the diff list" );
-          }
+    return shouldKeepFile
+      ? messages
+          .map((message) =>
+            message.filter(({ fatal, line }) => {
+              const shouldKeepLine = getRangesForDiff(
+                getDiffForFile(filename)
+              ).some(isLineWithinRange(line));
 
-          return (
-            fatal ||
-            getRangesForDiff(getDiffForFile(filename)).some(
-              isLineWithinRange(line)
-            )
-          );
-        });
-      })
-      .reduce((a, b) => a.concat(b), []);
-    // console.log("diff kjrngkjsngksnj", { result, filename, messages });
-    return result;
+              return fatal ?? shouldKeepLine;
+            })
+          )
+          .reduce((a, b) => a.concat(b), [])
+      : [];
   },
 
   supportsAutofix: true,
@@ -66,29 +49,26 @@ const diffConfig = {
 };
 
 const staged = {
-  preprocess: (
-    text: string,
-    filename: string
-  ): ({ text: string; filename: string } & Record<any, any>)[] => {
-    // console.log({ text: text, filename: filename, lol: "zooooooooooomg" });
-    return getDiffFileList(STAGED).includes(filename)
-      ? [{ text, filename }]
-      : [];
-  },
-
   postprocess: (
     messages: Linter.LintMessage[][],
     filename: string
-  ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
-        message.filter(({ line }) =>
-          getRangesForDiff(getDiffForFile(filename, STAGED)).some(
-            isLineWithinRange(line)
+  ): Linter.LintMessage[] => {
+    const shouldKeepFile = getDiffFileList().includes(filename);
+
+    return shouldKeepFile
+      ? messages
+          .map((message) =>
+            message.filter(({ fatal, line }) => {
+              const shouldKeepLine = getRangesForDiff(
+                getDiffForFile(filename, STAGED)
+              ).some(isLineWithinRange(line));
+
+              return fatal ?? shouldKeepLine;
+            })
           )
-        )
-      )
-      .reduce((a, b) => a.concat(b), []),
+          .reduce((a, b) => a.concat(b), [])
+      : [];
+  },
 
   supportsAutofix: true,
 };

@@ -1,6 +1,6 @@
 # eslint-plugin-diff
 
-Run ESLint on your changes only
+Run ESLint on your changed lines only. Now with CI support!
 
 ## What problem does it solve?
 

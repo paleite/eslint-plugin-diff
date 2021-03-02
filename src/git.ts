@@ -16,7 +16,6 @@ const getCachedDiff = (filePath: string, staged: boolean) =>
 
 const diffCache = new Map<string, string>();
 const getDiffForFile = (filePath: string, staged = false): string => {
-  // console.log("getDiffForFile")
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
     const command = [
@@ -25,7 +24,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
       "--diff-filter=ACM",
       staged && "--staged",
       "--unified=0",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
       "--",
       sanitizeFilePath(filePath),
     ]
@@ -40,9 +39,8 @@ const getDiffForFile = (filePath: string, staged = false): string => {
   return diff;
 };
 
-let diffFileListCache: string[];
+let diffFileListCache: string[] | undefined;
 const getDiffFileList = (staged = false): string[] => {
-  // console.log("getDiffFileList")
   if (diffFileListCache === undefined) {
     const command = [
       "git",
@@ -50,7 +48,7 @@ const getDiffFileList = (staged = false): string[] => {
       "--diff-filter=ACM",
       "--name-only",
       staged && "--staged",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
     ]
       .filter(Boolean)
       .join(" ");
@@ -65,66 +63,29 @@ const getDiffFileList = (staged = false): string[] => {
   return diffFileListCache;
 };
 
-let gitFileListCache: string[];
+let gitFileListCache: string[] | undefined;
 const getGitFileList = (): string[] => {
-  // console.log("getGitFileList")
   if (gitFileListCache === undefined) {
     const command = ["git", "ls-files"].filter(Boolean).join(" ");
 
     gitFileListCache = child_process
-    .execSync(command)
-    .toString()
-    .trim()
-    .split("\n")
-    .map((filePath) => path.resolve(filePath));
+      .execSync(command)
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => path.resolve(filePath));
   }
-  // console.log({gitFileListCache},gitFileListCache.join("\n"))
   return gitFileListCache;
 };
 
 const getIgnorePatterns = (staged = false): string[] => {
-  const diffFileList = getDiffFileList(staged);
-  const gitFileList = getGitFileList();
-  // console.log({diffFileList, gitFileList})
+  const changedFiles = getDiffFileList(staged);
 
-  const newList = gitFileList.filter((x) => !diffFileList.includes(x));
-  const willBeChecked = gitFileList.filter((x) => diffFileList.includes(x));
+  const unchangedFiles = getGitFileList()
+    .filter((x) => !changedFiles.includes(x))
+    .map((x) => path.join("/", path.relative(process.cwd(), x)));
 
-  // throw new Error("Function not implemented.");
-  const result = newList.map((x) =>
-    path.join("/", path.relative(process.cwd(), x))
-  );
-
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
-  console.log("will be checked" + willBeChecked.join("\n"));
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("------------------");
-  console.log("will be ignored" + newList.join("\n"));
-  return result;
+  return unchangedFiles;
 };
 
 const isHunkHeader = (input: string) => {
@@ -162,18 +123,12 @@ const getRangeForChangedLines = (line: string) => {
 
 const removeNullRanges = (r: Range | null): r is Range => r !== null;
 
-const getRangesForDiff = (diff: string): Range[] => {
-  return diff
+const getRangesForDiff = (diff: string): Range[] =>
+  diff
     .split("\n")
     .filter(isHunkHeader)
     .map(getRangeForChangedLines)
     .filter(removeNullRanges);
-};
 
-export {
-  getDiffForFile,
-  getIgnorePatterns,
-  getRangesForDiff,
-  getDiffFileList,
-};
+export { getDiffForFile, getIgnorePatterns, getRangesForDiff, getDiffFileList };
 export type { Range };
