@@ -1,13 +1,16 @@
 import type { Linter } from "eslint";
-import { getDiffFileList, getDiffForFile, getIgnorePatterns, getRangesForDiff, Range } from "./git";
-
+import {
+  getDiffFileList,
+  getDiffForFile,
+  getIgnorePatterns,
+  getRangesForDiff,
+  Range,
+} from "./git";
 
 const STAGED = true;
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
-
-
 
 const diff = {
   postprocess: (
@@ -15,19 +18,15 @@ const diff = {
     filename: string
   ): Linter.LintMessage[] => {
     if (!getDiffFileList().includes(filename)) {
-      console.log(
-        "🧠  skipping " +
-          JSON.stringify(filename) +
-          " because it's not in the diff list"
-      );
+      // console.log( "🧠  skipping " + JSON.stringify(filename) + " because it's not in the diff list" );
       return [];
     }
     const result = messages
       .map((message) => {
-        console.log("diff/diff", message, JSON.stringify(filename));
+        // console.log("diff/diff", message, JSON.stringify(filename));
         return message.filter(({ fatal, line }) => {
           if (fatal) {
-            console.log("❌  fatal error in " + JSON.stringify(filename));
+            // console.log("❌  fatal error in " + JSON.stringify(filename));
             return fatal;
           }
 
@@ -36,11 +35,7 @@ const diff = {
               isLineWithinRange(line)
             )
           ) {
-            console.log(
-              "🔵  skipping " +
-                JSON.stringify(filename) +
-                " because it's not in the diff list"
-            );
+            // console.log( "🔵  skipping " + JSON.stringify(filename) + " because it's not in the diff list" );
           }
 
           return (
@@ -52,7 +47,7 @@ const diff = {
         });
       })
       .reduce((a, b) => a.concat(b), []);
-    console.log("diff kjrngkjsngksnj", { result, filename, messages });
+    // console.log("diff kjrngkjsngksnj", { result, filename, messages });
     return result;
   },
 
@@ -67,7 +62,7 @@ const diffConfig = {
       processor: "diff/diff",
     },
   ],
-  ignorePatterns: getIgnorePatterns()
+  ignorePatterns: getIgnorePatterns(),
 };
 
 const staged = {
@@ -75,7 +70,7 @@ const staged = {
     text: string,
     filename: string
   ): ({ text: string; filename: string } & Record<any, any>)[] => {
-    console.log({ text: text, filename: filename, lol: "zooooooooooomg" });
+    // console.log({ text: text, filename: filename, lol: "zooooooooooomg" });
     return getDiffFileList(STAGED).includes(filename)
       ? [{ text, filename }]
       : [];
@@ -106,6 +101,7 @@ const stagedConfig = {
       processor: "diff/staged",
     },
   ],
+  ignorePatterns: getIgnorePatterns(STAGED),
 };
 
 export { diff, diffConfig, staged, stagedConfig };

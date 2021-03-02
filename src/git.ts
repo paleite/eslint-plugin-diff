@@ -16,6 +16,7 @@ const getCachedDiff = (filePath: string, staged: boolean) =>
 
 const diffCache = new Map<string, string>();
 const getDiffForFile = (filePath: string, staged = false): string => {
+  // console.log("getDiffForFile")
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
     const command = [
@@ -41,6 +42,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 
 let diffFileListCache: string[];
 const getDiffFileList = (staged = false): string[] => {
+  // console.log("getDiffFileList")
   if (diffFileListCache === undefined) {
     const command = [
       "git",
@@ -65,16 +67,18 @@ const getDiffFileList = (staged = false): string[] => {
 
 let gitFileListCache: string[];
 const getGitFileList = (): string[] => {
+  // console.log("getGitFileList")
   if (gitFileListCache === undefined) {
     const command = ["git", "ls-files"].filter(Boolean).join(" ");
 
     gitFileListCache = child_process
-      .execSync(command)
-      .toString()
-      .trim()
-      .split("\n")
-      .map((filePath) => path.resolve(filePath));
+    .execSync(command)
+    .toString()
+    .trim()
+    .split("\n")
+    .map((filePath) => path.resolve(filePath));
   }
+  // console.log({gitFileListCache},gitFileListCache.join("\n"))
   return gitFileListCache;
 };
 
@@ -91,7 +95,35 @@ const getIgnorePatterns = (staged = false): string[] => {
     path.join("/", path.relative(process.cwd(), x))
   );
 
-  console.log({ willBeChecked });
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀");
+  console.log("will be checked" + willBeChecked.join("\n"));
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("------------------");
+  console.log("will be ignored" + newList.join("\n"));
   return result;
 };
 
@@ -140,7 +172,6 @@ const getRangesForDiff = (diff: string): Range[] => {
 
 export {
   getDiffForFile,
-  getGitFileList,
   getIgnorePatterns,
   getRangesForDiff,
   getDiffFileList,
