@@ -63,6 +63,38 @@ const getDiffFileList = (staged = false): string[] => {
   return diffFileListCache;
 };
 
+let gitFileListCache: string[];
+const getGitFileList = (): string[] => {
+  if (gitFileListCache === undefined) {
+    const command = ["git", "ls-files"].filter(Boolean).join(" ");
+
+    gitFileListCache = child_process
+      .execSync(command)
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => path.resolve(filePath));
+  }
+  return gitFileListCache;
+};
+
+const getIgnorePatterns = (staged = false): string[] => {
+  const diffFileList = getDiffFileList(staged);
+  const gitFileList = getGitFileList();
+  // console.log({diffFileList, gitFileList})
+
+  const newList = gitFileList.filter((x) => !diffFileList.includes(x));
+  const willBeChecked = gitFileList.filter((x) => diffFileList.includes(x));
+
+  // throw new Error("Function not implemented.");
+  const result = newList.map((x) =>
+    path.join("/", path.relative(process.cwd(), x))
+  );
+
+  console.log({ willBeChecked });
+  return result;
+};
+
 const isHunkHeader = (input: string) => {
   const hunkHeaderRE = new RegExp(/^@@ .* @@/g);
   return input.match(hunkHeaderRE);
@@ -106,5 +138,11 @@ const getRangesForDiff = (diff: string): Range[] => {
     .filter(removeNullRanges);
 };
 
-export { getDiffForFile, getRangesForDiff, getDiffFileList };
+export {
+  getDiffForFile,
+  getGitFileList,
+  getIgnorePatterns,
+  getRangesForDiff,
+  getDiffFileList,
+};
 export type { Range };

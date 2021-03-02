@@ -1,32 +1,60 @@
 import type { Linter } from "eslint";
-import type { Range } from "./git";
-import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
+import { getDiffFileList, getDiffForFile, getIgnorePatterns, getRangesForDiff, Range } from "./git";
+
 
 const STAGED = true;
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
 
-const diff = {
-  preprocess: (
-    text: string,
-    filename: string
-  ): { text: string; filename: string }[] =>
-    getDiffFileList().includes(filename) ? [{ text, filename }] : [],
 
+
+const diff = {
   postprocess: (
     messages: Linter.LintMessage[][],
     filename: string
-  ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
-        message.filter(({ line }) =>
-          getRangesForDiff(getDiffForFile(filename)).some(
-            isLineWithinRange(line)
-          )
-        )
-      )
-      .reduce((a, b) => a.concat(b), []),
+  ): Linter.LintMessage[] => {
+    if (!getDiffFileList().includes(filename)) {
+      console.log(
+        "🧠  skipping " +
+          JSON.stringify(filename) +
+          " because it's not in the diff list"
+      );
+      return [];
+    }
+    const result = messages
+      .map((message) => {
+        console.log("diff/diff", message, JSON.stringify(filename));
+        return message.filter(({ fatal, line }) => {
+          if (fatal) {
+            console.log("❌  fatal error in " + JSON.stringify(filename));
+            return fatal;
+          }
+
+          if (
+            !getRangesForDiff(getDiffForFile(filename)).some(
+              isLineWithinRange(line)
+            )
+          ) {
+            console.log(
+              "🔵  skipping " +
+                JSON.stringify(filename) +
+                " because it's not in the diff list"
+            );
+          }
+
+          return (
+            fatal ||
+            getRangesForDiff(getDiffForFile(filename)).some(
+              isLineWithinRange(line)
+            )
+          );
+        });
+      })
+      .reduce((a, b) => a.concat(b), []);
+    console.log("diff kjrngkjsngksnj", { result, filename, messages });
+    return result;
+  },
 
   supportsAutofix: true,
 };
@@ -39,14 +67,19 @@ const diffConfig = {
       processor: "diff/diff",
     },
   ],
+  ignorePatterns: getIgnorePatterns()
 };
 
 const staged = {
   preprocess: (
     text: string,
     filename: string
-  ): { text: string; filename: string }[] =>
-    getDiffFileList(STAGED).includes(filename) ? [{ text, filename }] : [],
+  ): ({ text: string; filename: string } & Record<any, any>)[] => {
+    console.log({ text: text, filename: filename, lol: "zooooooooooomg" });
+    return getDiffFileList(STAGED).includes(filename)
+      ? [{ text, filename }]
+      : [];
+  },
 
   postprocess: (
     messages: Linter.LintMessage[][],
