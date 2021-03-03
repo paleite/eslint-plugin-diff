@@ -2,6 +2,7 @@
 
 exports[`configs diff 1`] = `
 Object {
+  "ignorePatterns": Array [],
   "overrides": Array [
     Object {
       "files": Array [
@@ -18,6 +19,7 @@ Object {
 
 exports[`configs staged 1`] = `
 Object {
+  "ignorePatterns": Array [],
   "overrides": Array [
     Object {
       "files": Array [

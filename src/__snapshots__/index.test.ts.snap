@@ -2,87 +2,46 @@
 
 exports[`plugin should match expected export 1`] = `
 Object {
-  "configs": Object {
-    "diff": Object {
-      "overrides": Array [
-        Object {
-          "files": Array [
-            "*",
-          ],
-          "processor": "diff/diff",
-        },
-      ],
-      "plugins": Array [
-        "diff",
-      ],
-    },
-    "staged": Object {
-      "overrides": Array [
-        Object {
-          "files": Array [
-            "*",
-          ],
-          "processor": "diff/staged",
-        },
-      ],
-      "plugins": Array [
-        "diff",
-      ],
-    },
+  "diff": Object {
+    "ignorePatterns": Array [],
+    "overrides": Array [
+      Object {
+        "files": Array [
+          "*",
+        ],
+        "processor": "diff/diff",
+      },
+    ],
+    "plugins": Array [
+      "diff",
+    ],
   },
-  "default": Object {
-    "configs": Object {
-      "diff": Object {
-        "overrides": Array [
-          Object {
-            "files": Array [
-              "*",
-            ],
-            "processor": "diff/diff",
-          },
+  "staged": Object {
+    "ignorePatterns": Array [],
+    "overrides": Array [
+      Object {
+        "files": Array [
+          "*",
         ],
-        "plugins": Array [
-          "diff",
-        ],
+        "processor": "diff/staged",
       },
-      "staged": Object {
-        "overrides": Array [
-          Object {
-            "files": Array [
-              "*",
-            ],
-            "processor": "diff/staged",
-          },
-        ],
-        "plugins": Array [
-          "diff",
-        ],
-      },
-    },
-    "processors": Object {
-      "diff": Object {
-        "postprocess": [Function],
-        "preprocess": [Function],
-        "supportsAutofix": true,
-      },
-      "staged": Object {
-        "postprocess": [Function],
-        "preprocess": [Function],
-        "supportsAutofix": true,
-      },
-    },
+    ],
+    "plugins": Array [
+      "diff",
+    ],
   },
-  "processors": Object {
-    "diff": Object {
-      "postprocess": [Function],
-      "preprocess": [Function],
-      "supportsAutofix": true,
-    },
-    "staged": Object {
-      "postprocess": [Function],
-      "preprocess": [Function],
-      "supportsAutofix": true,
-    },
+}
+`;
+
+exports[`plugin should match expected export 2`] = `
+Object {
+  "diff": Object {
+    "postprocess": [Function],
+    "supportsAutofix": true,
+  },
+  "staged": Object {
+    "postprocess": [Function],
+    "supportsAutofix": true,
   },
 }
 `;

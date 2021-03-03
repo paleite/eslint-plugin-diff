@@ -1,6 +1,7 @@
 import { diff, diffConfig, staged, stagedConfig } from "./processors";
 
-module.exports = {
-  configs: { diff: diffConfig, staged: stagedConfig },
-  processors: { diff, staged },
-};
+const configs = { diff: diffConfig, staged: stagedConfig };
+const processors = { diff, staged };
+
+export { configs, processors };
+module.exports = { configs, processors };

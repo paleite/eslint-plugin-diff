@@ -6,8 +6,11 @@ import {
 } from "./__fixtures__/diff";
 
 jest.mock("child_process");
-
 const mockedChildProcess = mocked(child_process, true);
+mockedChildProcess.execSync.mockReturnValue(
+  Buffer.from(`/mock filename with quotes ", semicolons ; and spaces.js`)
+);
+
 import { diff, diffConfig, staged, stagedConfig } from "./processors";
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
