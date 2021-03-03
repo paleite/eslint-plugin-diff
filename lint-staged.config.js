@@ -12,7 +12,7 @@ module.exports = {
   "*.{html,json,md,yaml,yml}": ["prettier --write"],
   "*.{js,ts}": [
     () => "yarn run typecheck",
-    "jest --bail --findRelatedTests",
+    "jest --coverage --bail --findRelatedTests",
     /**
      * @param {string[]} files
      */

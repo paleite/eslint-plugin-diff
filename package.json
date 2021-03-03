@@ -28,7 +28,7 @@
     "format": "prettier --write .",
     "lint": "eslint --cache --ext .js,.ts --fix --format codeframe .",
     "release": "np",
-    "test": "jest",
+    "test": "jest --coverage",
     "typecheck": "tsc --project tsconfig.json",
     "prepublish": "yarn run clean && yarn run build",
     "postpublish": "pinst --enable",
