@@ -24,7 +24,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
       "--diff-filter=ACM",
       staged && "--staged",
       "--unified=0",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
       "--",
       sanitizeFilePath(filePath),
     ]
@@ -39,7 +39,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
   return diff;
 };
 
-let diffFileListCache: string[];
+let diffFileListCache: string[] | undefined;
 const getDiffFileList = (staged = false): string[] => {
   if (diffFileListCache === undefined) {
     const command = [
@@ -48,7 +48,7 @@ const getDiffFileList = (staged = false): string[] => {
       "--diff-filter=ACM",
       "--name-only",
       staged && "--staged",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT) ?? "HEAD",
+      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
     ]
       .filter(Boolean)
       .join(" ");
@@ -61,6 +61,31 @@ const getDiffFileList = (staged = false): string[] => {
       .map((filePath) => path.resolve(filePath));
   }
   return diffFileListCache;
+};
+
+let gitFileListCache: string[] | undefined;
+const getGitFileList = (): string[] => {
+  if (gitFileListCache === undefined) {
+    const command = ["git", "ls-files"].filter(Boolean).join(" ");
+
+    gitFileListCache = child_process
+      .execSync(command)
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => path.resolve(filePath));
+  }
+  return gitFileListCache;
+};
+
+const getIgnorePatterns = (staged = false): string[] => {
+  const changedFiles = getDiffFileList(staged);
+
+  const unchangedFiles = getGitFileList()
+    .filter((x) => !changedFiles.includes(x))
+    .map((x) => path.join("/", path.relative(process.cwd(), x)));
+
+  return unchangedFiles;
 };
 
 const isHunkHeader = (input: string) => {
@@ -98,13 +123,12 @@ const getRangeForChangedLines = (line: string) => {
 
 const removeNullRanges = (r: Range | null): r is Range => r !== null;
 
-const getRangesForDiff = (diff: string): Range[] => {
-  return diff
+const getRangesForDiff = (diff: string): Range[] =>
+  diff
     .split("\n")
     .filter(isHunkHeader)
     .map(getRangeForChangedLines)
     .filter(removeNullRanges);
-};
 
-export { getDiffForFile, getRangesForDiff, getDiffFileList };
+export { getDiffForFile, getIgnorePatterns, getRangesForDiff, getDiffFileList };
 export type { Range };

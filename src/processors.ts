@@ -1,6 +1,11 @@
 import type { Linter } from "eslint";
 import type { Range } from "./git";
-import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
+import {
+  getDiffFileList,
+  getDiffForFile,
+  getIgnorePatterns,
+  getRangesForDiff,
+} from "./git";
 
 const STAGED = true;
 
@@ -8,25 +13,26 @@ const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
 
 const diff = {
-  preprocess: (
-    text: string,
-    filename: string
-  ): { text: string; filename: string }[] =>
-    getDiffFileList().includes(filename) ? [{ text, filename }] : [],
-
   postprocess: (
     messages: Linter.LintMessage[][],
     filename: string
-  ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
-        message.filter(({ line }) =>
-          getRangesForDiff(getDiffForFile(filename)).some(
-            isLineWithinRange(line)
+  ): Linter.LintMessage[] => {
+    const shouldKeepFile = getDiffFileList().includes(filename);
+
+    return shouldKeepFile
+      ? messages
+          .map((message) =>
+            message.filter(({ fatal, line }) => {
+              const shouldKeepLine = getRangesForDiff(
+                getDiffForFile(filename)
+              ).some(isLineWithinRange(line));
+
+              return fatal ?? shouldKeepLine;
+            })
           )
-        )
-      )
-      .reduce((a, b) => a.concat(b), []),
+          .reduce((a, b) => a.concat(b), [])
+      : [];
+  },
 
   supportsAutofix: true,
 };
@@ -39,28 +45,30 @@ const diffConfig = {
       processor: "diff/diff",
     },
   ],
+  ignorePatterns: getIgnorePatterns(),
 };
 
 const staged = {
-  preprocess: (
-    text: string,
-    filename: string
-  ): { text: string; filename: string }[] =>
-    getDiffFileList(STAGED).includes(filename) ? [{ text, filename }] : [],
-
   postprocess: (
     messages: Linter.LintMessage[][],
     filename: string
-  ): Linter.LintMessage[] =>
-    messages
-      .map((message) =>
-        message.filter(({ line }) =>
-          getRangesForDiff(getDiffForFile(filename, STAGED)).some(
-            isLineWithinRange(line)
+  ): Linter.LintMessage[] => {
+    const shouldKeepFile = getDiffFileList().includes(filename);
+
+    return shouldKeepFile
+      ? messages
+          .map((message) =>
+            message.filter(({ fatal, line }) => {
+              const shouldKeepLine = getRangesForDiff(
+                getDiffForFile(filename, STAGED)
+              ).some(isLineWithinRange(line));
+
+              return fatal ?? shouldKeepLine;
+            })
           )
-        )
-      )
-      .reduce((a, b) => a.concat(b), []),
+          .reduce((a, b) => a.concat(b), [])
+      : [];
+  },
 
   supportsAutofix: true,
 };
@@ -73,6 +81,7 @@ const stagedConfig = {
       processor: "diff/staged",
     },
   ],
+  ignorePatterns: getIgnorePatterns(STAGED),
 };
 
 export { diff, diffConfig, staged, stagedConfig };
