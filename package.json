@@ -20,7 +20,10 @@
   "author": "Patrick Eriksson <paleite@users.noreply.github.com> (https://github.com/paleite)",
   "main": "dist/index.js",
   "files": [
-    "/dist/"
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    "/dist/",
+    "CODE_OF_CONDUCT.md",
+    "SECURITY.md"
   ],
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
