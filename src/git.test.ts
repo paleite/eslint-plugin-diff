@@ -21,6 +21,14 @@ describe("git", () => {
     expect(getRangesForDiff(includingOnlyRemovals)).toMatchSnapshot();
   });
 
+  it("should work for hunks which include only-removal-ranges", () => {
+    expect(() =>
+      getRangesForDiff("@@ invalid hunk header @@")
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"Couldn't match regex with line '@@ invalid hunk header @@'"`
+    );
+  });
+
   it("should get the staged diff of a file", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(hunks));
 

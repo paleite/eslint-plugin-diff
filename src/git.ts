@@ -80,8 +80,9 @@ const getGitFileList = (): string[] => {
 
 const getIgnorePatterns = (staged = false): string[] => {
   const changedFiles = getDiffFileList(staged);
+  const repositoryFiles = getGitFileList();
 
-  const unchangedFiles = getGitFileList()
+  const unchangedFiles = repositoryFiles
     .filter((x) => !changedFiles.includes(x))
     .map((x) => path.join("/", path.relative(process.cwd(), x)));
 
@@ -130,5 +131,11 @@ const getRangesForDiff = (diff: string): Range[] =>
     .map(getRangeForChangedLines)
     .filter(removeNullRanges);
 
-export { getDiffForFile, getIgnorePatterns, getRangesForDiff, getDiffFileList };
+export {
+  getDiffForFile,
+  getIgnorePatterns,
+  getRangesForDiff,
+  getDiffFileList,
+  getGitFileList,
+};
 export type { Range };

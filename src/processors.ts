@@ -17,21 +17,29 @@ const diff = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] => {
-    const shouldKeepFile = getDiffFileList().includes(filename);
+    const isFilenameExcluded = !getDiffFileList().includes(filename);
 
-    return shouldKeepFile
-      ? messages
-          .map((message) =>
-            message.filter(({ fatal, line }) => {
-              const shouldKeepLine = getRangesForDiff(
-                getDiffForFile(filename)
-              ).some(isLineWithinRange(line));
+    if (isFilenameExcluded) {
+      return [];
+    }
 
-              return fatal ?? shouldKeepLine;
-            })
-          )
-          .reduce((a, b) => a.concat(b), [])
-      : [];
+    return messages
+      .map((message) => {
+        const filteredMessage = message.filter(({ fatal, line }) => {
+          if (fatal === true) {
+            return true;
+          }
+
+          const isLineWithinSomeRange = getRangesForDiff(
+            getDiffForFile(filename)
+          ).some(isLineWithinRange(line));
+
+          return isLineWithinSomeRange;
+        });
+
+        return filteredMessage;
+      })
+      .reduce((a, b) => a.concat(b), []);
   },
 
   supportsAutofix: true,
@@ -53,21 +61,29 @@ const staged = {
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] => {
-    const shouldKeepFile = getDiffFileList().includes(filename);
+    const isFilenameExcluded = !getDiffFileList().includes(filename);
 
-    return shouldKeepFile
-      ? messages
-          .map((message) =>
-            message.filter(({ fatal, line }) => {
-              const shouldKeepLine = getRangesForDiff(
-                getDiffForFile(filename, STAGED)
-              ).some(isLineWithinRange(line));
+    if (isFilenameExcluded) {
+      return [];
+    }
 
-              return fatal ?? shouldKeepLine;
-            })
-          )
-          .reduce((a, b) => a.concat(b), [])
-      : [];
+    return messages
+      .map((message) => {
+        const filteredMessage = message.filter(({ fatal, line }) => {
+          if (fatal === true) {
+            return true;
+          }
+
+          const isLineWithinSomeRange = getRangesForDiff(
+            getDiffForFile(filename, STAGED)
+          ).some(isLineWithinRange(line));
+
+          return isLineWithinSomeRange;
+        });
+
+        return filteredMessage;
+      })
+      .reduce((a, b) => a.concat(b), []);
   },
 
   supportsAutofix: true,
