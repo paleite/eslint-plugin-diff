@@ -75,6 +75,7 @@ const getGitFileList = (): string[] => {
       .split("\n")
       .map((filePath) => path.resolve(filePath));
   }
+
   return gitFileListCache;
 };
 

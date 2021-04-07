@@ -35,10 +35,12 @@ exports[`plugin should match expected export 2`] = `
 Object {
   "diff": Object {
     "postprocess": [Function],
+    "preprocess": [Function],
     "supportsAutofix": true,
   },
   "staged": Object {
     "postprocess": [Function],
+    "preprocess": [Function],
     "supportsAutofix": true,
   },
 }

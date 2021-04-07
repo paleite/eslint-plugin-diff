@@ -1,18 +1,34 @@
 import * as child_process from "child_process";
+import path from "path";
 import { mocked } from "ts-jest/utils";
-import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
 import {
+  getDiffFileList,
+  getDiffForFile,
+  getGitFileList,
+  getRangesForDiff,
+} from "./git";
+import {
+  diffFileList,
   hunks,
   includingOnlyRemovals,
-  diffFileList,
 } from "./__fixtures__/diff";
-import path from "path";
 
 jest.mock("child_process");
 
 const mockedChildProcess = mocked(child_process, true);
 
-describe("git", () => {
+const OLD_ENV = process.env;
+
+beforeEach(() => {
+  jest.resetModules(); // Most important - it clears the cache
+  process.env = { ...OLD_ENV }; // Make a copy
+});
+
+afterAll(() => {
+  process.env = OLD_ENV; // Restore old environment
+});
+
+describe("getRangesForDiff", () => {
   it("should find the ranges of each staged file", () => {
     expect(getRangesForDiff(hunks)).toMatchSnapshot();
   });
@@ -28,13 +44,24 @@ describe("git", () => {
       `"Couldn't match regex with line '@@ invalid hunk header @@'"`
     );
   });
+});
 
+describe("getDiffForFile", () => {
   it("should get the staged diff of a file", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(hunks));
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js");
+    const diffFromFile = getDiffForFile("./mockfile.js", true);
 
-    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    const expectedArguments =
+      'git diff --diff-filter=ACM --staged --unified=0 "1234567"';
+    expect(
+      mockedChildProcess.execSync.mock.calls[
+        mockedChildProcess.execSync.mock.calls.length - 1
+      ][0]
+        .split(" -- ")
+        .shift()
+    ).toEqual(expectedArguments);
     expect(diffFromFile).toContain("diff --git");
     expect(diffFromFile).toContain("@@");
   });
@@ -52,15 +79,25 @@ describe("git", () => {
     getDiffForFile("./mockfileMiss.js");
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(2);
   });
+});
 
+describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(diffFileList));
-
-    const fileList = getDiffFileList();
+    const staged = false;
+    const fileList = getDiffFileList(staged);
 
     expect(mockedChildProcess.execSync).toHaveBeenCalled();
     expect(fileList).toEqual(
+      ["file1", "file2", "file3"].map((p) => path.resolve(p))
+    );
+  });
+});
+
+describe("getGitFileList", () => {
+  it("should get the list of committed files", () => {
+    expect(getGitFileList()).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
   });

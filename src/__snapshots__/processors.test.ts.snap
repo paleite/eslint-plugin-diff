@@ -32,7 +32,7 @@ Object {
 }
 `;
 
-exports[`processors diff 1`] = `
+exports[`processors diff postprocess 1`] = `
 Array [
   Object {
     "column": 1,
@@ -55,7 +55,7 @@ Array [
 ]
 `;
 
-exports[`processors staged 1`] = `
+exports[`processors staged postprocess 1`] = `
 Array [
   Object {
     "column": 1,
