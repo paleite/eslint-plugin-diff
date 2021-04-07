@@ -84,6 +84,13 @@ const isHunkHeader = (input: string) => {
 };
 
 const getRangeForChangedLines = (line: string) => {
+  /**
+   * Example values of the RegExp's group:
+   *
+   * start: '7',
+   * linesCountDelimiter: ',2',
+   * linesCount: '2',
+   */
   const rangeRE = new RegExp(
     /^@@ .* \+(?<start>\d+)(?<linesCountDelimiter>,(?<linesCount>\d+))? @@/
   );
@@ -91,21 +98,22 @@ const getRangeForChangedLines = (line: string) => {
   if (range === null) {
     throw Error(`Couldn't match regex with line '${line}'`);
   }
-  if (range.groups?.start === undefined) {
-    /*
-     * NOTE: Never happens, because RegExp requires start to be a
-     * required number
-     */
-    throw Error("Couldn't match regex to find start");
-  }
+
+  const groups = {
+    // Fallback value to ensure hasAddedLines resolves to false
+    start: "0",
+    linesCountDelimiter: ",0",
+    linesCount: "0",
+    ...range.groups,
+  };
 
   const linesCount: number =
-    range.groups.linesCountDelimiter && range.groups.linesCount
-      ? parseInt(range.groups.linesCount)
+    groups.linesCountDelimiter && groups.linesCount
+      ? parseInt(groups.linesCount)
       : 1;
 
   const hasAddedLines = linesCount !== 0;
-  const start: number = parseInt(range.groups.start);
+  const start: number = parseInt(groups.start);
   const end = start + linesCount;
 
   return hasAddedLines ? new Range(start, end) : null;
