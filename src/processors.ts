@@ -3,7 +3,6 @@ import type { Range } from "./git";
 import {
   getDiffFileList,
   getDiffForFile,
-  getIgnorePatterns,
   getRangesForDiff,
 } from "./git";
 
@@ -53,7 +52,6 @@ const diffConfig = {
       processor: "diff/diff",
     },
   ],
-  ignorePatterns: getIgnorePatterns(),
 };
 
 const staged = {
@@ -97,7 +95,6 @@ const stagedConfig = {
       processor: "diff/staged",
     },
   ],
-  ignorePatterns: getIgnorePatterns(STAGED),
 };
 
 export { diff, diffConfig, staged, stagedConfig };

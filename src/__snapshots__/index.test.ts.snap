@@ -3,7 +3,6 @@
 exports[`plugin should match expected export 1`] = `
 Object {
   "diff": Object {
-    "ignorePatterns": Array [],
     "overrides": Array [
       Object {
         "files": Array [
@@ -17,7 +16,6 @@ Object {
     ],
   },
   "staged": Object {
-    "ignorePatterns": Array [],
     "overrides": Array [
       Object {
         "files": Array [
