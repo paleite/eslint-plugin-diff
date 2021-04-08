@@ -22,6 +22,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
       "git",
       "diff",
       "--diff-filter=ACM",
+      "--relative",
       staged && "--staged",
       "--unified=0",
       JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
@@ -47,6 +48,7 @@ const getDiffFileList = (staged = false): string[] => {
       "diff",
       "--diff-filter=ACM",
       "--name-only",
+      "--relative",
       staged && "--staged",
       JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
     ]
