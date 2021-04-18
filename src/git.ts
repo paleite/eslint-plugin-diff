@@ -82,8 +82,8 @@ const getGitFileList = (): string[] => {
 };
 
 const isHunkHeader = (input: string) => {
-  const hunkHeaderRE = new RegExp(/^@@ .* @@/g);
-  return input.match(hunkHeaderRE);
+  const hunkHeaderRE = new RegExp(/^@@ [^@]* @@/);
+  return hunkHeaderRE.exec(input);
 };
 
 const getRangeForChangedLines = (line: string) => {
