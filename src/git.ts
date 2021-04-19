@@ -81,6 +81,27 @@ const getGitFileList = (): string[] => {
   return gitFileListCache;
 };
 
+const hasCleanIndex = (filePath: string): boolean => {
+  const command = [
+    "git",
+    "diff",
+    "--quiet",
+    "--relative",
+    "--unified=0",
+    "--",
+    sanitizeFilePath(filePath),
+  ].join(" ");
+
+  let result = true;
+  try {
+    child_process.execSync(command).toString();
+  } catch (err: unknown) {
+    result = false;
+  }
+
+  return result;
+};
+
 const isHunkHeader = (input: string) => {
   const hunkHeaderRE = new RegExp(/^@@ [^@]* @@/);
   return hunkHeaderRE.exec(input);
@@ -131,5 +152,11 @@ const getRangesForDiff = (diff: string): Range[] =>
     .map(getRangeForChangedLines)
     .filter(removeNullRanges);
 
-export { getDiffForFile, getRangesForDiff, getDiffFileList, getGitFileList };
+export {
+  getDiffForFile,
+  getRangesForDiff,
+  getDiffFileList,
+  getGitFileList,
+  hasCleanIndex,
+};
 export type { Range };

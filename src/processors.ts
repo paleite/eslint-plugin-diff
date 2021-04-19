@@ -1,6 +1,11 @@
 import type { Linter } from "eslint";
 import type { Range } from "./git";
-import { getDiffFileList, getDiffForFile, getRangesForDiff } from "./git";
+import {
+  getDiffFileList,
+  getDiffForFile,
+  getRangesForDiff,
+  hasCleanIndex,
+} from "./git";
 
 const STAGED = true;
 
@@ -27,6 +32,21 @@ const getPostProcessor = (staged = false) => (
   messages: Linter.LintMessage[][],
   filename: string
 ): Linter.LintMessage[] => {
+  if (staged && !hasCleanIndex(filename)) {
+    const fatal = true;
+    const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
+    const severity: Linter.Severity = 2;
+    const fatalError: Linter.LintMessage = {
+      fatal,
+      message,
+      severity,
+      column: 0,
+      line: 0,
+      ruleId: null,
+    };
+    return [fatalError];
+  }
+
   return messages
     .map((message) => {
       const filteredMessage = message.filter(({ fatal, line }) => {
