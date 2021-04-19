@@ -143,14 +143,19 @@ const getRangeForChangedLines = (line: string) => {
   return hasAddedLines ? new Range(start, end) : null;
 };
 
-const removeNullRanges = (r: Range | null): r is Range => r !== null;
-
 const getRangesForDiff = (diff: string): Range[] =>
-  diff
-    .split("\n")
-    .filter(isHunkHeader)
-    .map(getRangeForChangedLines)
-    .filter(removeNullRanges);
+  diff.split("\n").reduce<Range[]>((acc, cur) => {
+    if (!isHunkHeader(cur)) {
+      return acc;
+    }
+
+    const range = getRangeForChangedLines(cur);
+    if (range === null) {
+      return acc;
+    }
+
+    return [...acc, range];
+  }, []);
 
 export {
   getDiffForFile,
