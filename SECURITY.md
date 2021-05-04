@@ -11,4 +11,4 @@ Versions of this project currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Please raise an issue if you find a vulnerability. The aim to respond to any security issues is within 1 week. 
+Please raise an issue if you find a vulnerability. The aim is to respond to any security issues within 1 week.
