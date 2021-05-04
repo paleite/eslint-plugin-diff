@@ -49,17 +49,26 @@ const getPostProcessor = (staged = false) => (
 
   return messages
     .map((message) => {
-      const filteredMessage = message.filter(({ fatal, line }) => {
+      const filteredMessage = message.reduce<Linter.LintMessage[]>((acc, m) => {
+        const { fatal, line } = m;
         if (fatal === true) {
-          return true;
+          return [...acc, m];
         }
-
         const isLineWithinSomeRange = getRangesForDiff(
           getDiffForFile(filename, staged)
         ).some(isLineWithinRange(line));
 
-        return isLineWithinSomeRange;
-      });
+        const decreasedSeverity: Linter.Severity = m.severity === 2 ? 1 : 0;
+        if (!isLineWithinSomeRange && m.severity === 0) {
+          return acc;
+        }
+
+        const nextSeverity: Linter.Severity = isLineWithinSomeRange
+          ? m.severity
+          : decreasedSeverity;
+
+        return [...acc, { ...m, severity: nextSeverity }];
+      }, []);
 
       return filteredMessage;
     })
