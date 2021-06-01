@@ -16,55 +16,56 @@ const STAGED = true;
  * them from being processed in the first place, as a performance optimization.
  * This is increasingly useful the more files there are in the repository.
  */
-const getPreProcessor = (staged = false) => (
-  text: string,
-  filename: string
-) => {
-  const shouldBeProcessed = getDiffFileList(staged).includes(filename);
+const getPreProcessor =
+  (staged = false) =>
+  (text: string, filename: string) => {
+    const shouldBeProcessed = getDiffFileList(staged).includes(filename);
 
-  return shouldBeProcessed ? [text] : [];
-};
+    return shouldBeProcessed ? [text] : [];
+  };
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
 
-const getPostProcessor = (staged = false) => (
-  messages: Linter.LintMessage[][],
-  filename: string
-): Linter.LintMessage[] => {
-  if (staged && !hasCleanIndex(filename)) {
-    const fatal = true;
-    const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
-    const severity: Linter.Severity = 2;
-    const fatalError: Linter.LintMessage = {
-      fatal,
-      message,
-      severity,
-      column: 0,
-      line: 0,
-      ruleId: null,
-    };
-    return [fatalError];
-  }
+const getPostProcessor =
+  (staged = false) =>
+  (
+    messages: Linter.LintMessage[][],
+    filename: string
+  ): Linter.LintMessage[] => {
+    if (staged && !hasCleanIndex(filename)) {
+      const fatal = true;
+      const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
+      const severity: Linter.Severity = 2;
+      const fatalError: Linter.LintMessage = {
+        fatal,
+        message,
+        severity,
+        column: 0,
+        line: 0,
+        ruleId: null,
+      };
+      return [fatalError];
+    }
 
-  return messages
-    .map((message) => {
-      const filteredMessage = message.filter(({ fatal, line }) => {
-        if (fatal === true) {
-          return true;
-        }
+    return messages
+      .map((message) => {
+        const filteredMessage = message.filter(({ fatal, line }) => {
+          if (fatal === true) {
+            return true;
+          }
 
-        const isLineWithinSomeRange = getRangesForDiff(
-          getDiffForFile(filename, staged)
-        ).some(isLineWithinRange(line));
+          const isLineWithinSomeRange = getRangesForDiff(
+            getDiffForFile(filename, staged)
+          ).some(isLineWithinRange(line));
 
-        return isLineWithinSomeRange;
-      });
+          return isLineWithinSomeRange;
+        });
 
-      return filteredMessage;
-    })
-    .reduce((a, b) => a.concat(b), []);
-};
+        return filteredMessage;
+      })
+      .reduce((a, b) => a.concat(b), []);
+  };
 
 const getProcessors = (staged = false) => ({
   preprocess: getPreProcessor(staged),
