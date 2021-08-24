@@ -144,17 +144,17 @@ const getRangeForChangedLines = (line: string) => {
 };
 
 const getRangesForDiff = (diff: string): Range[] =>
-  diff.split("\n").reduce<Range[]>((acc, cur) => {
-    if (!isHunkHeader(cur)) {
-      return acc;
+  diff.split("\n").reduce<Range[]>((ranges, line) => {
+    if (!isHunkHeader(line)) {
+      return ranges;
     }
 
-    const range = getRangeForChangedLines(cur);
+    const range = getRangeForChangedLines(line);
     if (range === null) {
-      return acc;
+      return ranges;
     }
 
-    return [...acc, range];
+    return [...ranges, range];
   }, []);
 
 export {
