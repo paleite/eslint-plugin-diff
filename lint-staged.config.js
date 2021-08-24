@@ -1,12 +1,4 @@
-const { CLIEngine } = require("eslint");
-
-const cli = new CLIEngine({});
-
-/**
- * @param {string[]} files
- */
-const eslintFiles = (files) =>
-  files.filter((file) => !cli.isPathIgnored(file)).join(" ");
+const { eslintFiles } = require("eslint-files");
 
 module.exports = {
   "*.{html,json,md,yaml,yml}": ["prettier --write"],
@@ -16,7 +8,8 @@ module.exports = {
     /**
      * @param {string[]} files
      */
-    (files) => `eslint --fix ${eslintFiles(files)}`,
+    async (files) =>
+      `eslint --fix --max-warnings=0 ${await eslintFiles(files)}`,
     "prettier --write",
   ],
 };
