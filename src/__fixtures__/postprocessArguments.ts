@@ -1,6 +1,6 @@
 import type { Linter } from "eslint";
 
-const postprocessArguments = [
+const postprocessArguments: [Linter.LintMessage[][], string] = [
   [
     [
       {
@@ -32,7 +32,7 @@ const postprocessArguments = [
       },
     ],
   ],
-  `/mock filename with quotes ", semicolons ; and spaces.js`,
-] as [Linter.LintMessage[][], string];
+  '/mock filename with quotes ", semicolons ; and spaces.js',
+];
 
 export { postprocessArguments };

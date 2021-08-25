@@ -11,7 +11,7 @@ import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
 jest.mock("child_process");
 const mockedChildProcess = mocked(child_process, true);
-const mockFilename = `/mock filename with quotes ", semicolons ; and spaces.js`;
+const mockFilename = '/mock filename with quotes ", semicolons ; and spaces.js';
 mockedChildProcess.execSync.mockReturnValue(Buffer.from(mockFilename));
 const mockedGit = mocked(git, true);
 mockedGit.getDiffFileList = jest
