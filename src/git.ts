@@ -8,13 +8,13 @@ const sanitizeFilePath = (filePath: string) =>
 const diffCacheKey = (filePath: string, staged: boolean): string =>
   JSON.stringify([path.resolve(filePath), staged]);
 
+const diffCache = new Map<string, string>();
 const setCachedDiff = (filePath: string, staged: boolean, diff: string): void =>
   void diffCache.set(diffCacheKey(filePath, staged), diff);
 
 const getCachedDiff = (filePath: string, staged: boolean) =>
   diffCache.get(diffCacheKey(filePath, staged));
 
-const diffCache = new Map<string, string>();
 const getDiffForFile = (filePath: string, staged = false): string => {
   let diff = getCachedDiff(filePath, staged);
   if (diff === undefined) {
@@ -103,7 +103,7 @@ const hasCleanIndex = (filePath: string): boolean => {
 };
 
 const isHunkHeader = (input: string) => {
-  const hunkHeaderRE = new RegExp(/^@@ [^@]* @@/);
+  const hunkHeaderRE = /^@@ [^@]* @@/u;
   return hunkHeaderRE.exec(input);
 };
 
@@ -115,9 +115,8 @@ const getRangeForChangedLines = (line: string) => {
    * linesCountDelimiter: ',2',
    * linesCount: '2',
    */
-  const rangeRE = new RegExp(
-    /^@@ .* \+(?<start>\d+)(?<linesCountDelimiter>,(?<linesCount>\d+))? @@/
-  );
+  const rangeRE =
+    /^@@ .* \+(?<start>\d+)(?<linesCountDelimiter>,(?<linesCount>\d+))? @@/u;
   const range = rangeRE.exec(line);
   if (range === null) {
     throw Error(`Couldn't match regex with line '${line}'`);
