@@ -106,10 +106,11 @@ describe("getDiffFileList", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(diffFileList));
     const staged = false;
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(0);
     const fileListA = getDiffFileList(staged);
     const fileListB = getDiffFileList(staged);
 
-    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
@@ -119,6 +120,7 @@ describe("getDiffFileList", () => {
 
 describe("getGitFileList", () => {
   it("should get the list of committed files", () => {
+    mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(diffFileList));
     expect(getGitFileList()).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );

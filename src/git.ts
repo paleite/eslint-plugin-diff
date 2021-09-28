@@ -102,6 +102,27 @@ const hasCleanIndex = (filePath: string): boolean => {
   return result;
 };
 
+let untrackedFileListCache: string[] | undefined;
+const getUntrackedFileList = (staged = false): string[] => {
+  if (untrackedFileListCache === undefined) {
+    const command = ["git", "ls-files", "--exclude-standard", "--others"]
+      .filter(Boolean)
+      .join(" ");
+
+    if (staged === false) {
+      untrackedFileListCache = child_process
+        .execSync(command)
+        .toString()
+        .trim()
+        .split("\n")
+        .map((filePath) => path.resolve(filePath));
+    } else {
+      untrackedFileListCache = [];
+    }
+  }
+  return untrackedFileListCache;
+};
+
 const isHunkHeader = (input: string) => {
   const hunkHeaderRE = /^@@ [^@]* @@/u;
   return hunkHeaderRE.exec(input);
@@ -157,10 +178,11 @@ const getRangesForDiff = (diff: string): Range[] =>
   }, []);
 
 export {
+  getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
-  getDiffFileList,
   getGitFileList,
+  getUntrackedFileList,
   hasCleanIndex,
 };
 export type { Range };
