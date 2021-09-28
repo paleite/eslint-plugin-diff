@@ -48,7 +48,7 @@ describe("getRangesForDiff", () => {
 
 describe("getDiffForFile", () => {
   it("should get the staged diff of a file", () => {
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(hunks));
+    mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(hunks));
     process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
 
     const diffFromFile = getDiffForFile("./mockfile.js", true);
@@ -70,6 +70,7 @@ describe("getDiffForFile", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(hunks));
 
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(0);
     const diffFromFileA = getDiffForFile("./mockfileCache.js");
     const diffFromFileB = getDiffForFile("./mockfileCache.js");
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(1);
@@ -84,14 +85,16 @@ describe("getDiffForFile", () => {
 describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(diffFileList));
+    mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(diffFileList));
     const staged = false;
-    const fileList = getDiffFileList(staged);
+    const fileListA = getDiffFileList(staged);
+    const fileListB = getDiffFileList(staged);
 
     expect(mockedChildProcess.execSync).toHaveBeenCalled();
-    expect(fileList).toEqual(
+    expect(fileListA).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
+    expect(fileListA).toEqual(fileListB);
   });
 });
 
