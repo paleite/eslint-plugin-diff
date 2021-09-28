@@ -6,6 +6,7 @@ import {
   getDiffForFile,
   getGitFileList,
   getRangesForDiff,
+  hasCleanIndex,
 } from "./git";
 import {
   diffFileList,
@@ -79,6 +80,24 @@ describe("getDiffForFile", () => {
     mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(hunks));
     getDiffForFile("./mockfileMiss.js");
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("hasCleanIndex", () => {
+  it("returns false instead of throwing", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execSync.mockImplementationOnce(() => {
+      throw Error("mocked error");
+    });
+    expect(hasCleanIndex("")).toEqual(false);
+    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+  });
+
+  it("returns true otherwise", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execSync.mockReturnValue(Buffer.from(""));
+    expect(hasCleanIndex("")).toEqual(true);
+    expect(mockedChildProcess.execSync).toHaveBeenCalled();
   });
 });
 
