@@ -1,6 +1,7 @@
 import type { Linter } from "eslint";
 import type { Range } from "./git";
 import {
+  getUntrackedFileList,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
@@ -19,7 +20,9 @@ const STAGED = true;
 const getPreProcessor =
   (staged = false) =>
   (text: string, filename: string) => {
-    const shouldBeProcessed = getDiffFileList(staged).includes(filename);
+    const shouldBeProcessed =
+      getDiffFileList(staged).includes(filename) ||
+      getUntrackedFileList(staged).includes(filename);
 
     return shouldBeProcessed ? [text] : [];
   };

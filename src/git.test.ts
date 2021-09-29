@@ -6,6 +6,7 @@ import {
   getDiffForFile,
   getGitFileList,
   getRangesForDiff,
+  getUntrackedFileList,
   hasCleanIndex,
 } from "./git";
 import {
@@ -115,6 +116,28 @@ describe("getDiffFileList", () => {
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
     expect(fileListA).toEqual(fileListB);
+  });
+});
+
+describe("getUntrackedFileList", () => {
+  it("should get the list of untracked files", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(diffFileList));
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(0);
+    const fileListA = getUntrackedFileList();
+    const staged = false;
+    const fileListB = getUntrackedFileList(staged);
+
+    expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(1);
+    expect(fileListA).toEqual(
+      ["file1", "file2", "file3"].map((p) => path.resolve(p))
+    );
+    expect(fileListA).toEqual(fileListB);
+  });
+
+  it("should not get a list when looking when using staged", () => {
+    const staged = true;
+    expect(getUntrackedFileList(staged)).toEqual([]);
   });
 });
 

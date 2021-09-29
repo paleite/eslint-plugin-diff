@@ -104,21 +104,19 @@ const hasCleanIndex = (filePath: string): boolean => {
 
 let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (staged = false): string[] => {
-  if (untrackedFileListCache === undefined) {
+  if (staged) {
+    untrackedFileListCache = [];
+  } else if (untrackedFileListCache === undefined) {
     const command = ["git", "ls-files", "--exclude-standard", "--others"]
       .filter(Boolean)
       .join(" ");
 
-    if (staged === false) {
-      untrackedFileListCache = child_process
-        .execSync(command)
-        .toString()
-        .trim()
-        .split("\n")
-        .map((filePath) => path.resolve(filePath));
-    } else {
-      untrackedFileListCache = [];
-    }
+    untrackedFileListCache = child_process
+      .execSync(command)
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => path.resolve(filePath));
   }
   return untrackedFileListCache;
 };
