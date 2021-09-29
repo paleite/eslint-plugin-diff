@@ -36,6 +36,10 @@ const getPostProcessor =
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] => {
+    if (!staged && getUntrackedFileList(staged).includes(filename)) {
+      return messages.flat();
+    }
+
     if (staged && !hasCleanIndex(filename)) {
       const fatal = true;
       const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
