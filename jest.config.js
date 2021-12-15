@@ -1,7 +1,9 @@
+const { base } = require("@paleite/jest-config");
+
 /** @typedef {import('ts-jest')} */
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
-  collectCoverageFrom: ["src/**/*.ts"],
+  ...base,
   coverageThreshold: {
     global: {
       branches: 75,
@@ -10,7 +12,4 @@ module.exports = {
       statements: 80,
     },
   },
-  preset: "ts-jest",
-  testEnvironment: "node",
-  modulePathIgnorePatterns: ["<rootDir>/dist/"],
 };

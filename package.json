@@ -30,17 +30,22 @@
     "build": "tsc --build tsconfig.build.json",
     "clean": "tsc --build tsconfig.build.json --clean",
     "format": "prettier --write .",
-    "lint": "eslint --cache --ext .js,.ts --fix --format codeframe .",
-    "release": "np",
-    "test": "jest --coverage",
-    "typecheck": "tsc --project tsconfig.json",
+    "postinstall": "husky install",
+    "lint": "eslint --cache --ext .js,.ts --fix .",
+    "prepublishOnly": "pinst --disable",
     "prepublish": "yarn run clean && yarn run build",
     "postpublish": "pinst --enable",
-    "postinstall": "husky install",
-    "prepublishOnly": "pinst --disable"
+    "release": "np",
+    "test": "jest --coverage",
+    "typecheck": "tsc --project tsconfig.json"
   },
   "devDependencies": {
-    "@tsconfig/node10": "^1.0.8",
+    "@paleite/eslint-config": "canary",
+    "@paleite/eslint-config-base": "canary",
+    "@paleite/eslint-config-typescript": "canary",
+    "@paleite/jest-config": "canary",
+    "@paleite/prettier-config": "canary",
+    "@paleite/tsconfig-node16": "canary",
     "@types/eslint": "^8.2.1",
     "@types/jest": "^27.0.3",
     "@types/node": "^16.11.13",
@@ -53,6 +58,7 @@
     "eslint-plugin-promise": "^5.2.0",
     "husky": "^7.0.4",
     "jest": "^27.4.5",
+    "jest-mock": "^27.4.2",
     "lint-staged": "^12.1.2",
     "np": "^7.6.0",
     "pinst": "^2.1.6",
@@ -64,6 +70,6 @@
     "eslint": ">=6.7.0"
   },
   "engines": {
-    "node": ">=10.23.0"
+    "node": ">=12.0.0"
   }
 }

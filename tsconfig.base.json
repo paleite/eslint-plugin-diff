@@ -1,12 +1,9 @@
 {
-  "extends": "@tsconfig/node10/tsconfig.json",
+  "extends": "@paleite/tsconfig-node16",
   "compilerOptions": {
-    "allowUnreachableCode": false,
-    "composite": true,
-    "moduleResolution": "node",
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "types": ["jest", "node"]
+    // #region Support running on Node 12 until EOL, April 30th, 2022
+    "lib": ["es2019", "es2020.promise", "es2020.bigint", "es2020.string"],
+    "target": "es2019"
+    // #endregion
   }
 }

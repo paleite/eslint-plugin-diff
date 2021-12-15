@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import type { Linter } from "eslint";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 import * as git from "./git";
 import { diff, diffConfig, staged, stagedConfig } from "./processors";
 import {

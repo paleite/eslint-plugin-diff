@@ -1,5 +1,5 @@
 import * as child_process from "child_process";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 
 jest.mock("child_process");
 const mockedChildProcess = mocked(child_process, true);

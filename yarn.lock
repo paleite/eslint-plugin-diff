@@ -521,6 +521,36 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@paleite/eslint-config-base@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-base/-/eslint-config-base-0.0.1-canary.6.tgz#461fdab19f61432d7327aa4a947c494044b610f5"
+  integrity sha512-hc/3JffvanmvBLSUrqWlUsQ/5j0X1kgQ4hurN/d7wd2s/hi2ODTuppzqjBqk6XDr+be7iAtk02/AkKj4RN+ybQ==
+
+"@paleite/eslint-config-typescript@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-typescript/-/eslint-config-typescript-0.0.1-canary.6.tgz#510a231bd8b1b72b3e7a60455d3c217bdd5ae4e3"
+  integrity sha512-xcYshVDC5JT1RPUzS+BJ8Ppg6B2r0F5DPeE6zsl+ellY/rr8k9Dl4cgElZ/0+EtHSgOjXHmDCLFUgXP+vB5Psg==
+
+"@paleite/eslint-config@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config/-/eslint-config-0.0.1-canary.6.tgz#2d0ee6d621d15aeaeda9de3e0d16d14369fcc65b"
+  integrity sha512-ksi3P9yQqsaS1SlXxyRQEgg3f/tqVY9Uka70giYDq3Oqf/N5Gjo9ULapn2UWFTHYnYlCOwuL8gCSTLUBhP0/gA==
+
+"@paleite/jest-config@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/jest-config/-/jest-config-0.0.1-canary.6.tgz#7612e3c7f661bc2d44ca64886b752e4af5de9198"
+  integrity sha512-8oI/W5fUtdJUjF+q/MIZJ3tpWko331SK5yiW+BbxU4K3+vGpddxjN6XLsRkvxeC5OOCrItvkOG6Shx0XK1hUKQ==
+
+"@paleite/prettier-config@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/prettier-config/-/prettier-config-0.0.1-canary.6.tgz#85d71afe48bb0316efbc9e086f0ade438eb7c9d2"
+  integrity sha512-XiF8DVTcXW+i1VcugCZqfkzBZrzRIyhTahoIBX4KjaS+IR1CjWrvzS42RkYYHOEF2Px0MShOYh3UFwESv1sX0Q==
+
+"@paleite/tsconfig-node16@canary":
+  version "0.0.1-canary.6"
+  resolved "https://registry.yarnpkg.com/@paleite/tsconfig-node16/-/tsconfig-node16-0.0.1-canary.6.tgz#fa8cb54d30c377418c0244eaad2e5d022198a1df"
+  integrity sha512-E8z1vHI+9Ev7hbBtr8auqwESllzo2zyGJuogPN60zO9x6GTvb1eZSJOxjptE9SGadwom5WyUrmotlXBo64mzBA==
+
 "@samverschueren/stream-to-observable@^0.3.0", "@samverschueren/stream-to-observable@^0.3.1":
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/@samverschueren/stream-to-observable/-/stream-to-observable-0.3.1.tgz#a21117b19ee9be70c379ec1877537ef2e1c63301"
@@ -575,11 +605,6 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
-
-"@tsconfig/node10@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.8.tgz#c1e4e80d6f964fbecb3359c43bd48b40f7cadad9"
-  integrity sha512-6XFfSQmMgq0CFLY1MslA/CPUfhIL919M1rMsa5lP2P097N2Wd1sSX0tx1u4olM16fLNhtHZpRhedZJphNJqmZg==
 
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.14":
   version "7.1.17"
