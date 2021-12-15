@@ -1,4 +1,4 @@
-/** @type import("eslint").Linter.BaseConfig<import("eslint").Linter.RulesRecord> */
+/** @type import("eslint").Linter.Config */
 module.exports = {
   env: { node: true },
   extends: [
