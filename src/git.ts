@@ -20,6 +20,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
   if (diff === undefined) {
     const command = [
       "git",
+      "--no-pager",
       "diff",
       "--diff-filter=ACM",
       "--relative",
@@ -45,6 +46,7 @@ const getDiffFileList = (staged = false): string[] => {
   if (diffFileListCache === undefined) {
     const command = [
       "git",
+      "--no-pager",
       "diff",
       "--diff-filter=ACM",
       "--name-only",
@@ -84,6 +86,7 @@ const getGitFileList = (): string[] => {
 const hasCleanIndex = (filePath: string): boolean => {
   const command = [
     "git",
+    "--no-pager",
     "diff",
     "--quiet",
     "--relative",
