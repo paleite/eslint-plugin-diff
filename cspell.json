@@ -1,9 +1,5 @@
 {
   "version": "0.2",
-  "ignorePaths": [],
-  "dictionaryDefinitions": [],
-  "dictionaries": [],
-  "words": ["Eriksson", "paleite", "pinst", "Wercker"],
-  "ignoreWords": [],
-  "import": []
+  "words": ["Eriksson", "paleite"],
+  "ignoreWords": ["pinst", "Wercker"]
 }

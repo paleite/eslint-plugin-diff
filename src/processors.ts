@@ -1,10 +1,10 @@
 import type { Linter } from "eslint";
 import type { Range } from "./git";
 import {
-  getUntrackedFileList,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
+  getUntrackedFileList,
   hasCleanIndex,
 } from "./git";
 
@@ -74,7 +74,7 @@ const getPostProcessor =
       .reduce((a, b) => a.concat(b), []);
   };
 
-const getProcessors = (staged = false) => ({
+const getProcessors = (staged = false): Linter.Processor => ({
   preprocess: getPreProcessor(staged),
   postprocess: getPostProcessor(staged),
   supportsAutofix: true,
@@ -83,7 +83,7 @@ const getProcessors = (staged = false) => ({
 const diff = getProcessors();
 const staged = getProcessors(STAGED);
 
-const diffConfig = {
+const diffConfig: Linter.BaseConfig = {
   plugins: ["diff"],
   overrides: [
     {
@@ -93,7 +93,7 @@ const diffConfig = {
   ],
 };
 
-const stagedConfig = {
+const stagedConfig: Linter.BaseConfig = {
   plugins: ["diff"],
   overrides: [
     {

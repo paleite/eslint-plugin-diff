@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
-import path from "path";
 import { mocked } from "jest-mock";
+import path from "path";
 import {
   getDiffFileList,
   getDiffForFile,

@@ -1,6 +1,6 @@
 class Range {
-  readonly inclusiveLowerBound: Readonly<number>;
-  readonly exclusiveUpperBound: Readonly<number>;
+  private readonly inclusiveLowerBound: Readonly<number>;
+  private readonly exclusiveUpperBound: Readonly<number>;
 
   constructor(
     inclusiveLowerBound: Readonly<number>,
