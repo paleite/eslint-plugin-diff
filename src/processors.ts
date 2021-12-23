@@ -21,14 +21,15 @@ const getPreProcessor =
   (staged = false) =>
   (text: string, filename: string) => {
     const shouldBeProcessed =
-      getDiffFileList(staged).includes(filename) ||
-      getUntrackedFileList(staged).includes(filename);
-
+      process.env.VSCODE_CLI !== undefined ||
+      !staged ||
+      getDiffFileList().includes(filename);
     return shouldBeProcessed ? [text] : [];
   };
 
-const isLineWithinRange = (line: number) => (range: Range) =>
-  range.isWithinRange(line);
+const isLineWithinRange = (line: number) => (range: Range) => {
+  return range.isWithinRange(line);
+};
 
 const getPostProcessor =
   (staged = false) =>

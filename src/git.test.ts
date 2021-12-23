@@ -106,10 +106,9 @@ describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execSync.mockReturnValueOnce(Buffer.from(diffFileList));
-    const staged = false;
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList(staged);
-    const fileListB = getDiffFileList(staged);
+    const fileListA = getDiffFileList();
+    const fileListB = getDiffFileList();
 
     expect(mockedChildProcess.execSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(

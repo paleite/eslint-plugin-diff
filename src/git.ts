@@ -2,6 +2,8 @@ import * as child_process from "child_process";
 import * as path from "path";
 import { Range } from "./Range";
 
+const RUNNING_INSIDE_VSCODE = process.env.VSCODE_CLI !== undefined;
+
 const sanitizeFilePath = (filePath: string) =>
   JSON.stringify(path.resolve(filePath));
 
@@ -17,10 +19,9 @@ const getCachedDiff = (filePath: string, staged: boolean) =>
 
 const getDiffForFile = (filePath: string, staged = false): string => {
   let diff = getCachedDiff(filePath, staged);
-  if (diff === undefined) {
+  if (RUNNING_INSIDE_VSCODE || diff === undefined) {
     const command = [
       "git",
-      "--no-pager",
       "diff",
       "--diff-filter=ACM",
       "--relative",
@@ -42,16 +43,15 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 };
 
 let diffFileListCache: string[] | undefined;
-const getDiffFileList = (staged = false): string[] => {
-  if (diffFileListCache === undefined) {
+const getDiffFileList = (): string[] => {
+  if (RUNNING_INSIDE_VSCODE || diffFileListCache === undefined) {
     const command = [
       "git",
-      "--no-pager",
       "diff",
       "--diff-filter=ACM",
       "--name-only",
       "--relative",
-      staged && "--staged",
+    "--staged",
       JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
     ]
       .filter(Boolean)
@@ -69,7 +69,8 @@ const getDiffFileList = (staged = false): string[] => {
 
 let gitFileListCache: string[] | undefined;
 const getGitFileList = (): string[] => {
-  if (gitFileListCache === undefined) {
+  console.log("getGitFileList");
+  if (RUNNING_INSIDE_VSCODE || gitFileListCache === undefined) {
     const command = ["git", "ls-files"].filter(Boolean).join(" ");
 
     gitFileListCache = child_process
@@ -86,7 +87,6 @@ const getGitFileList = (): string[] => {
 const hasCleanIndex = (filePath: string): boolean => {
   const command = [
     "git",
-    "--no-pager",
     "diff",
     "--quiet",
     "--relative",
@@ -109,7 +109,7 @@ let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (staged = false): string[] => {
   if (staged) {
     untrackedFileListCache = [];
-  } else if (untrackedFileListCache === undefined) {
+  } else if (RUNNING_INSIDE_VSCODE || untrackedFileListCache === undefined) {
     const command = ["git", "ls-files", "--exclude-standard", "--others"]
       .filter(Boolean)
       .join(" ");
