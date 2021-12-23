@@ -51,7 +51,7 @@ const getDiffFileList = (): string[] => {
       "--diff-filter=ACM",
       "--name-only",
       "--relative",
-    "--staged",
+      "--staged",
       JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
     ]
       .filter(Boolean)
