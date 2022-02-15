@@ -16,17 +16,15 @@ mockedChildProcess.execSync.mockReturnValue(Buffer.from(mockFilename));
 const mockedGit = mocked(git, true);
 
 // @ts-expect-error todo: fix type error here
-mockedGit.getDiffFileList = jest
-  .fn()
-  .mockReturnValue([mockFilename, "README.md"]);
+mockedGit.getDiffFileList = jest.fn();
 
 const [messages, filename] = postprocessArguments;
 
 describe("processors", () => {
-  it("diff preprocess", () => {
-    const validFilename = filename;
-    const sourceCode = "/** Some source code */";
+  const validFilename = filename;
+  const sourceCode = "/** Some source code */";
 
+  it("diff preprocess", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     expect(
@@ -34,10 +32,25 @@ describe("processors", () => {
     ).toEqual([sourceCode]);
   });
 
-  it("staged preprocess", () => {
-    const validFilename = filename;
-    const sourceCode = "/** Some source code */";
+  /**
+   * Linked issue: https://github.com/paleite/eslint-plugin-diff/issues/14
+   */
+  it("diff preprocess should not exclude files in a Vscode plugin context", () => {
+    process.env.VSCODE_CLI = "true";
+    process.env.VSCODE_PID = "9293";
 
+    mockedChildProcess.execSync.mockReturnValue(Buffer.from(""));
+
+    expect(
+      diff.preprocess && diff.preprocess(sourceCode, validFilename)
+    ).toEqual([sourceCode]);
+
+    // clean it up
+    process.env.VSCODE_PID = undefined;
+    process.env.VSCODE_CLI = undefined;
+  });
+
+  it("staged preprocess", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     expect(

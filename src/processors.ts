@@ -11,6 +11,13 @@ import {
 const STAGED = true;
 
 /**
+ * Returns a boolean whether we are in the context
+ * of a Vscode plugin or not.
+ */
+const isVsCodePluginContext = (): boolean =>
+  process.env.VSCODE_PID !== undefined;
+
+/**
  * Exclude unchanged files from being processed
  *
  * Since we're excluding unchanged files in the post-processor, we can exclude
@@ -22,6 +29,7 @@ const getPreProcessor =
   (text: string, filename: string) => {
     const shouldBeProcessed =
       process.env.VSCODE_CLI !== undefined ||
+      isVsCodePluginContext() ||
       !staged ||
       getDiffFileList().includes(filename);
     return shouldBeProcessed ? [text] : [];
