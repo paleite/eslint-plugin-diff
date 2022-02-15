@@ -14,6 +14,8 @@ const mockedChildProcess = mocked(child_process, true);
 const mockFilename = '/mock filename with quotes ", semicolons ; and spaces.js';
 mockedChildProcess.execSync.mockReturnValue(Buffer.from(mockFilename));
 const mockedGit = mocked(git, true);
+
+// @ts-expect-error todo: fix type error here
 mockedGit.getDiffFileList = jest
   .fn()
   .mockReturnValue([mockFilename, "README.md"]);
@@ -27,7 +29,9 @@ describe("processors", () => {
 
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
 
-    expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
+    expect(
+      diff.preprocess && diff.preprocess(sourceCode, validFilename)
+    ).toEqual([sourceCode]);
   });
 
   it("staged preprocess", () => {
@@ -36,13 +40,17 @@ describe("processors", () => {
 
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
 
-    expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
+    expect(
+      diff.preprocess && diff.preprocess(sourceCode, validFilename)
+    ).toEqual([sourceCode]);
   });
 
   it("diff postprocess", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
 
-    expect(diff.postprocess(messages, filename)).toMatchSnapshot();
+    expect(
+      diff.postprocess && diff.postprocess(messages, filename)
+    ).toMatchSnapshot();
 
     expect(mockedChildProcess.execSync).toHaveBeenCalled();
   });
@@ -50,7 +58,9 @@ describe("processors", () => {
   it("staged postprocess", () => {
     mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureStaged));
 
-    expect(staged.postprocess(messages, filename)).toMatchSnapshot();
+    expect(
+      staged.postprocess && staged.postprocess(messages, filename)
+    ).toMatchSnapshot();
 
     expect(mockedChildProcess.execSync).toHaveBeenCalled();
   });
@@ -64,8 +74,12 @@ describe("processors", () => {
       ...restMessageArray,
     ];
 
-    expect(diff.postprocess(messages, filename)).toHaveLength(2);
-    expect(diff.postprocess(messagesWithFatal, filename)).toHaveLength(3);
+    expect(
+      diff.postprocess && diff.postprocess(messages, filename)
+    ).toHaveLength(2);
+    expect(
+      diff.postprocess && diff.postprocess(messagesWithFatal, filename)
+    ).toHaveLength(3);
 
     expect(mockedChildProcess.execSync).toHaveBeenCalled();
   });
