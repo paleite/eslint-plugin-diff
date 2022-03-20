@@ -1,4 +1,4 @@
-# eslint-plugin-diff
+# eslint-plugin-diff ![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)
 
 Run ESLint on your changed lines only. Now with CI support!
 
