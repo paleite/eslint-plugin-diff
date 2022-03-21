@@ -75,7 +75,7 @@ const getPostProcessor =
       .reduce((a, b) => a.concat(b), []);
   };
 
-const getProcessors = (staged = false): Linter.Processor => ({
+const getProcessors = (staged = false): Required<Linter.Processor> => ({
   preprocess: getPreProcessor(staged),
   postprocess: getPostProcessor(staged),
   supportsAutofix: true,

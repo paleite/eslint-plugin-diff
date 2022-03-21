@@ -1,7 +1,6 @@
 import * as child_process from "child_process";
 import type { Linter } from "eslint";
 import { mocked } from "jest-mock";
-import * as git from "./git";
 import { diff, diffConfig, staged, stagedConfig } from "./processors";
 import {
   diff as fixtureDiff,
@@ -11,12 +10,15 @@ import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
 jest.mock("child_process");
 const mockedChildProcess = mocked(child_process, true);
-const mockFilename = '/mock filename with quotes ", semicolons ; and spaces.js';
-mockedChildProcess.execSync.mockReturnValue(Buffer.from(mockFilename));
-const mockedGit = mocked(git, true);
-mockedGit.getDiffFileList = jest
-  .fn()
-  .mockReturnValue([mockFilename, "README.md"]);
+mockedChildProcess.execSync.mockReturnValue(
+  Buffer.from('/mock filename ", ; .js')
+);
+jest.mock("./git", () => ({
+  ...jest.requireActual("./git"),
+  getDiffFileList: jest
+    .fn()
+    .mockReturnValue(['/mock filename ", ; .js', "README.md"]),
+}));
 
 const [messages, filename] = postprocessArguments;
 

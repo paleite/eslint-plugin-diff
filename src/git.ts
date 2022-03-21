@@ -23,6 +23,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
     const command = [
       "git",
       "diff",
+      "--diff-algorithm=histogram",
       "--diff-filter=ACM",
       "--relative",
       staged && "--staged",
@@ -48,6 +49,7 @@ const getDiffFileList = (): string[] => {
     const command = [
       "git",
       "diff",
+      "--diff-algorithm=histogram",
       "--diff-filter=ACM",
       "--name-only",
       "--relative",
@@ -69,7 +71,6 @@ const getDiffFileList = (): string[] => {
 
 let gitFileListCache: string[] | undefined;
 const getGitFileList = (): string[] => {
-  console.log("getGitFileList");
   if (RUNNING_INSIDE_VSCODE || gitFileListCache === undefined) {
     const command = ["git", "ls-files"].filter(Boolean).join(" ");
 
