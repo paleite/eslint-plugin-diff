@@ -1,5 +1,4 @@
 import type { Linter } from "eslint";
-import type { Range } from "./git";
 import {
   getDiffFileList,
   getDiffForFile,
@@ -7,6 +6,7 @@ import {
   getUntrackedFileList,
   hasCleanIndex,
 } from "./git";
+import type { Range } from "./Range";
 
 const STAGED = true;
 
@@ -24,6 +24,7 @@ const getPreProcessor =
       process.env.VSCODE_CLI !== undefined ||
       !staged ||
       getDiffFileList().includes(filename);
+
     return shouldBeProcessed ? [text] : [];
   };
 
@@ -53,6 +54,7 @@ const getPostProcessor =
         line: 0,
         ruleId: null,
       };
+
       return [fatalError];
     }
 

@@ -66,6 +66,7 @@ const getDiffFileList = (): string[] => {
       .split("\n")
       .map((filePath) => path.resolve(filePath));
   }
+
   return diffFileListCache;
 };
 
@@ -122,11 +123,13 @@ const getUntrackedFileList = (staged = false): string[] => {
       .split("\n")
       .map((filePath) => path.resolve(filePath));
   }
+
   return untrackedFileListCache;
 };
 
 const isHunkHeader = (input: string) => {
   const hunkHeaderRE = /^@@ [^@]* @@/u;
+
   return hunkHeaderRE.exec(input);
 };
 
@@ -187,4 +190,3 @@ export {
   getUntrackedFileList,
   hasCleanIndex,
 };
-export type { Range };
