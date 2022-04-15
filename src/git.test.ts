@@ -56,7 +56,7 @@ describe("getDiffForFile", () => {
     const diffFromFile = getDiffForFile("./mockfile.js", true);
 
     const expectedArguments =
-      'git diff --diff-algorithm=histogram --diff-filter=ACM --relative --staged --unified=0 "1234567"';
+      'git diff --diff-algorithm=histogram --diff-filter=ACM -M100% --relative --staged --unified=0 "1234567"';
     expect(
       mockedChildProcess.execSync.mock.calls[
         mockedChildProcess.execSync.mock.calls.length - 1
