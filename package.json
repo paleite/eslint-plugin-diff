@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-diff",
-  "version": "1.0.13-5",
+  "version": "1.0.13-6",
   "description": "Run ESLint on your changes only",
   "keywords": [
     "eslint",
