@@ -10,7 +10,7 @@ import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
 jest.mock("child_process");
 const mockedChildProcess = mocked(child_process, true);
-mockedChildProcess.execSync.mockReturnValue(
+mockedChildProcess.execFileSync.mockReturnValue(
   Buffer.from('/mock filename ", ; .js')
 );
 jest.mock("./git", () => ({
@@ -27,7 +27,7 @@ describe("processors", () => {
     const validFilename = filename;
     const sourceCode = "/** Some source code */";
 
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
   });
@@ -36,29 +36,29 @@ describe("processors", () => {
     const validFilename = filename;
     const sourceCode = "/** Some source code */";
 
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
   });
 
   it("diff postprocess", () => {
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     expect(diff.postprocess(messages, filename)).toMatchSnapshot();
 
-    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
   });
 
   it("staged postprocess", () => {
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureStaged));
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureStaged));
 
     expect(staged.postprocess(messages, filename)).toMatchSnapshot();
 
-    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
   });
 
   it("should report fatal errors", () => {
-    mockedChildProcess.execSync.mockReturnValue(Buffer.from(fixtureDiff));
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
 
     const [[firstMessage, ...restMessage], ...restMessageArray] = messages;
     const messagesWithFatal: Linter.LintMessage[][] = [
@@ -69,7 +69,7 @@ describe("processors", () => {
     expect(diff.postprocess(messages, filename)).toHaveLength(2);
     expect(diff.postprocess(messagesWithFatal, filename)).toHaveLength(3);
 
-    expect(mockedChildProcess.execSync).toHaveBeenCalled();
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
   });
 });
 

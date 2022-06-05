@@ -3,7 +3,9 @@ import { mocked } from "jest-mock";
 
 jest.mock("child_process");
 const mockedChildProcess = mocked(child_process, true);
-mockedChildProcess.execSync.mockReturnValue(Buffer.from("line1\nline2\nline3"));
+mockedChildProcess.execFileSync.mockReturnValue(
+  Buffer.from("line1\nline2\nline3")
+);
 
 import { configs, processors } from "./index";
 
