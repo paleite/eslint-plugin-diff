@@ -2,88 +2,49 @@ import * as child_process from "child_process";
 import * as path from "path";
 import { Range } from "./Range";
 
-const RUNNING_INSIDE_VSCODE = process.env.VSCODE_CLI !== undefined;
 const COMMAND = "git";
 
 const sanitizeFilePath = (filePath: string) =>
   JSON.stringify(path.resolve(filePath));
 
-const diffCacheKey = (filePath: string, staged: boolean): string =>
-  JSON.stringify([path.resolve(filePath), staged]);
-
-const diffCache = new Map<string, string>();
-const setCachedDiff = (filePath: string, staged: boolean, diff: string): void =>
-  void diffCache.set(diffCacheKey(filePath, staged), diff);
-
-const getCachedDiff = (filePath: string, staged: boolean) =>
-  diffCache.get(diffCacheKey(filePath, staged));
-
 const getDiffForFile = (filePath: string, staged = false): string => {
-  let diff = getCachedDiff(filePath, staged);
-  if (RUNNING_INSIDE_VSCODE || diff === undefined) {
-    const args = [
-      "diff",
-      "--diff-algorithm=histogram",
-      "--diff-filter=ACM",
-      "-M100%",
-      "--relative",
-      staged && "--staged",
-      "--unified=0",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
-      "--",
-      sanitizeFilePath(filePath),
-    ].reduce<string[]>(
-      (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-      []
-    );
+  const args = [
+    "diff",
+    "--diff-algorithm=histogram",
+    "--diff-filter=ACM",
+    "-M100%",
+    "--relative",
+    staged && "--staged",
+    "--unified=0",
+    JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
+    "--",
+    sanitizeFilePath(filePath),
+  ].reduce<string[]>(
+    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
+    []
+  );
 
-    const result = child_process.execFileSync(COMMAND, args).toString();
-    setCachedDiff(filePath, staged, result);
-    diff = result;
-  }
-
-  return diff;
+  return child_process.execFileSync(COMMAND, args).toString();
 };
 
-let diffFileListCache: string[] | undefined;
 const getDiffFileList = (): string[] => {
-  if (RUNNING_INSIDE_VSCODE || diffFileListCache === undefined) {
-    const args = [
-      "diff",
-      "--diff-algorithm=histogram",
-      "--diff-filter=ACM",
-      "-M100%",
-      "--name-only",
-      "--relative",
-      "--staged",
-      JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
-    ];
+  const args = [
+    "diff",
+    "--diff-algorithm=histogram",
+    "--diff-filter=ACM",
+    "-M100%",
+    "--name-only",
+    "--relative",
+    "--staged",
+    JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
+  ];
 
-    diffFileListCache = child_process
-      .execFileSync(COMMAND, args)
-      .toString()
-      .trim()
-      .split("\n")
-      .map((filePath) => path.resolve(filePath));
-  }
-
-  return diffFileListCache;
-};
-
-let gitFileListCache: string[] | undefined;
-const getGitFileList = (): string[] => {
-  if (RUNNING_INSIDE_VSCODE || gitFileListCache === undefined) {
-    const args = ["ls-files"];
-
-    gitFileListCache = child_process
-      .execFileSync(COMMAND, args)
-      .toString()
-      .trim()
-      .split("\n")
-      .map((filePath) => path.resolve(filePath));
-  }
-
-  return gitFileListCache;
+  return child_process
+    .execFileSync(COMMAND, args)
+    .toString()
+    .trim()
+    .split("\n")
+    .map((filePath) => path.resolve(filePath));
 };
 
 const hasCleanIndex = (filePath: string): boolean => {
@@ -106,20 +67,19 @@ const hasCleanIndex = (filePath: string): boolean => {
   return result;
 };
 
-let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (staged = false): string[] => {
   if (staged) {
-    untrackedFileListCache = [];
-  } else if (RUNNING_INSIDE_VSCODE || untrackedFileListCache === undefined) {
-    const args = ["ls-files", "--exclude-standard", "--others"];
-
-    untrackedFileListCache = child_process
-      .execFileSync(COMMAND, args)
-      .toString()
-      .trim()
-      .split("\n")
-      .map((filePath) => path.resolve(filePath));
+    return [];
   }
+
+  const args = ["ls-files", "--exclude-standard", "--others"];
+
+  const untrackedFileListCache = child_process
+    .execFileSync(COMMAND, args)
+    .toString()
+    .trim()
+    .split("\n")
+    .map((filePath) => path.resolve(filePath));
 
   return untrackedFileListCache;
 };
@@ -183,7 +143,6 @@ export {
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
-  getGitFileList,
   getUntrackedFileList,
   hasCleanIndex,
 };

@@ -1,16 +1,13 @@
+const typescriptProjects = ["./tsconfig.json", "./tsconfig.eslint.json"];
+
 /** @type import("eslint").Linter.Config */
 module.exports = {
   root: true,
   extends: ["@paleite"],
-  parserOptions: {
-    project: [
-      `${__dirname}/tsconfig.json`,
-      `${__dirname}/tsconfig.eslint.json`,
-    ],
-  },
+  parserOptions: { project: typescriptProjects, tsconfigRootDir: __dirname },
   overrides: [
     {
-      files: ["lint-staged.config.js", "jest.config.js"],
+      files: [".*.js", "*.js"],
 
       rules: {
         "@typescript-eslint/no-var-requires": "off",

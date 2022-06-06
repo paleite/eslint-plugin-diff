@@ -13,7 +13,7 @@ const mockedChildProcess = mocked(child_process, true);
 mockedChildProcess.execFileSync.mockReturnValue(
   Buffer.from('/mock filename ", ; .js')
 );
-jest.mock("./git", () => ({
+jest.mock("./git", (): unknown => ({
   ...jest.requireActual("./git"),
   getDiffFileList: jest
     .fn()

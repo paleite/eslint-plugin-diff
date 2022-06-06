@@ -4,7 +4,6 @@ import path from "path";
 import {
   getDiffFileList,
   getDiffForFile,
-  getGitFileList,
   getRangesForDiff,
   getUntrackedFileList,
   hasCleanIndex,
@@ -68,21 +67,6 @@ describe("getDiffForFile", () => {
     expect(diffFromFile).toContain("diff --git");
     expect(diffFromFile).toContain("@@");
   });
-
-  it("should hit the cached diff of a file", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const diffFromFileA = getDiffForFile("./mockfileCache.js");
-    const diffFromFileB = getDiffForFile("./mockfileCache.js");
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
-    expect(diffFromFileA).toEqual(diffFromFileB);
-
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    getDiffForFile("./mockfileMiss.js");
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe("hasCleanIndex", () => {
@@ -111,13 +95,11 @@ describe("getDiffFileList", () => {
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
     const fileListA = getDiffFileList();
-    const fileListB = getDiffFileList();
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
-    expect(fileListA).toEqual(fileListB);
   });
 });
 
@@ -129,10 +111,15 @@ describe("getUntrackedFileList", () => {
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
     const fileListA = getUntrackedFileList();
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
+
+    mockedChildProcess.execFileSync.mockReturnValueOnce(
+      Buffer.from(diffFileList)
+    );
     const staged = false;
     const fileListB = getUntrackedFileList(staged);
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(2);
 
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
     );
@@ -142,16 +129,5 @@ describe("getUntrackedFileList", () => {
   it("should not get a list when looking when using staged", () => {
     const staged = true;
     expect(getUntrackedFileList(staged)).toEqual([]);
-  });
-});
-
-describe("getGitFileList", () => {
-  it("should get the list of committed files", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
-    );
-    expect(getGitFileList()).toEqual(
-      ["file1", "file2", "file3"].map((p) => path.resolve(p))
-    );
   });
 });

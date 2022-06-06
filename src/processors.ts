@@ -58,6 +58,8 @@ const getPostProcessor =
       return [fatalError];
     }
 
+    const diff = getDiffForFile(filename, staged);
+
     return messages
       .map((message) => {
         const filteredMessage = message.filter(({ fatal, line }) => {
@@ -65,9 +67,9 @@ const getPostProcessor =
             return true;
           }
 
-          const isLineWithinSomeRange = getRangesForDiff(
-            getDiffForFile(filename, staged)
-          ).some(isLineWithinRange(line));
+          const isLineWithinSomeRange = getRangesForDiff(diff).some(
+            isLineWithinRange(line)
+          );
 
           return isLineWithinSomeRange;
         });
