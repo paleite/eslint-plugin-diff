@@ -1,36 +1,42 @@
 # eslint-plugin-diff ![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)
 
-Run ESLint on your changed lines only. Now with CI support!
+Run ESLint on your changed lines only.
 
 ## What problem does it solve?
 
-Introducing new ESLint rules (or updating 3rd party configs) in a large codebase can be tedious. This plugin allows your team to ease into new rules by only linting all new/modified code, eventually migrating to the new/updated rules.
+The feedback your developers get in a pull-request should be focused on the changes they've made, but traditional setups don't allow for this. With this plugin you can run ESLint on your changed lines only, making all warnings and errors **relevant to you**, and at the same time avoiding becoming overwhelmed with linter errors.
 
-It can be used in CI environments as well.
+### 💰 Your company's budget is precious
+
+When updating your linter or its dependencies, you often get new linter warnings and errors in your code, which can lead to a huge increase of the cost of your project if you try to fix all of them. This plugin allows you to run ESLint on only the changed lines of your code, so the new errors won't get triggered on the code other developers have already manually reviewed and approved.
+
+### 🚀 Your team's velocity is important
+
+Having a healthy and high-quality code-base is a pre-requisite for high velocity and having too many errors in your linter's output can get overwhelming, oftentimes disheartening the developers, at the cost of the quality of the code. Having a linter that runs on only the changed lines of your code will ensure your developers don't get overwhelmed, ensuring your code-base will remain healthy, and your team productive.
+
+### 🧠 Your developers' focus is vital
+
+Let's face it – Developers are bombarded with errors and notifications about systems being broken, code being wrong and people requiring their attention. If a linter has too much output, it becomes a chore for your developers just to assess whether or not their changes actually caused an issue, or if it's just old code they haven't even touched. With this plugin, all the linter output your developers see will be related to whatever they have personally changed, requiring much less focus on parsing the linter's output.
+
+### How does it solve it?
+
+When creating pull-requests, this plugin will enable you to run ESLint on only the changed lines of your pull-request, increasing the focus of your code review. This is a great way to reduce the amount of time spent on code review while still maintaining a high quality code base and increase the quality of your feedback.
+
+As an added bonus, it also makes introducing new ESLint rules (or updating 3rd party configs) in a large codebase trivial, because you avoid becoming blocked by new ESLint issues in already-approved code.
 
 ## Installation
 
-```sh
-$ yarn add -D eslint-plugin-diff
-```
+Install the plugin and extend your ESLint config.
 
-## Usage
-
-If you want to define which commit or commit-range to diff between (useful in CI), you can set the environment variable `ESLINT_PLUGIN_DIFF_COMMIT` (otherwise the plugin will default to `HEAD`):
+### Install
 
 ```sh
-$ ESLINT_PLUGIN_DIFF_COMMIT="a8fdc20..5a9f19c" yarn run eslint .
-# or
-$ ESLINT_PLUGIN_DIFF_COMMIT="${GITHUB_SHA}.." yarn run eslint .
+yarn add -D eslint eslint-plugin-diff
 ```
 
-See [git's official documentation on the syntax](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-emgitdiffemltoptionsgtltcommitgt--ltpathgt82308203)
+### Extend config
 
-It's recommended to use [`"plugin:diff/diff"` (see config)](#config-diff--diff-all-changes-since-head-staged-and-unstaged).
-
-### Config `diff` — Diff all changes since HEAD (staged and unstaged)
-
-Extend your config in **`.eslintrc`**:
+Extend your ESLint config with `"plugin:diff/diff"`:
 
 ```json
 {
@@ -38,18 +44,31 @@ Extend your config in **`.eslintrc`**:
 }
 ```
 
-_Equivalent to `git diff HEAD`_
+You can also choose `"plugin:diff/staged"` if you prefer to lint only staged
+files.
 
-### Config `staged` — Diff staged changes only
+## CI Setup
 
-> **Useful for pre-commit hooks, e.g. when running ESLint with lint-staged**
+To lint all the changes of a PR, you only have to set
+`ESLINT_PLUGIN_DIFF_COMMIT` before running ESLint.
 
-Extend your config in **`.eslintrc`**:
+### For GitHub Actions
 
-```json
-{
-  "extends": ["plugin:diff/staged"]
-}
+```sh
+export ESLINT_PLUGIN_DIFF_COMMIT="origin/$GITHUB_BASE_REF";
+npx --no-install eslint --ext .js,.ts,.tsx .
 ```
 
-_Equivalent to `git diff HEAD --staged`_
+### For BitBucket Pipelines
+
+```sh
+export ESLINT_PLUGIN_DIFF_COMMIT="origin/$BITBUCKET_PR_DESTINATION_BRANCH";
+npx --no-install eslint --ext .js,.ts,.tsx .
+```
+
+## Note
+
+- You can use any valid commit syntax for `ESLINT_PLUGIN_DIFF_COMMIT`. See [git's official documentation on the syntax](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-emgitdiffemltoptionsgtltcommitgt--ltpathgt82308203)
+- You can choose to lint all changes (using `"plugin:diff/diff"`) or staged changes only (using `"plugin:diff/staged"`).
+- We recommend using `"plugin:diff/diff"`, which is equivalent to running `git diff HEAD`.
+- `"plugin:diff/staged"` is equivalent to running `git diff HEAD --staged`
