@@ -1,11 +1,8 @@
 import * as child_process from "child_process";
-import * as path from "path";
+import { resolve } from "path";
 import { Range } from "./Range";
 
 const COMMAND = "git";
-
-const sanitizeFilePath = (filePath: string) =>
-  JSON.stringify(path.resolve(filePath));
 
 const getDiffForFile = (filePath: string, staged = false): string => {
   const args = [
@@ -16,9 +13,9 @@ const getDiffForFile = (filePath: string, staged = false): string => {
     "--relative",
     staged && "--staged",
     "--unified=0",
-    JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
-    sanitizeFilePath(filePath),
+    resolve(filePath),
   ].reduce<string[]>(
     (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
     []
@@ -36,7 +33,7 @@ const getDiffFileList = (): string[] => {
     "--name-only",
     "--relative",
     "--staged",
-    JSON.stringify(process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD"),
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
   ];
 
   return child_process
@@ -44,7 +41,7 @@ const getDiffFileList = (): string[] => {
     .toString()
     .trim()
     .split("\n")
-    .map((filePath) => path.resolve(filePath));
+    .map((filePath) => resolve(filePath));
 };
 
 const hasCleanIndex = (filePath: string): boolean => {
@@ -54,7 +51,7 @@ const hasCleanIndex = (filePath: string): boolean => {
     "--relative",
     "--unified=0",
     "--",
-    sanitizeFilePath(filePath),
+    resolve(filePath),
   ];
 
   let result = true;
@@ -79,7 +76,7 @@ const getUntrackedFileList = (staged = false): string[] => {
     .toString()
     .trim()
     .split("\n")
-    .map((filePath) => path.resolve(filePath));
+    .map((filePath) => resolve(filePath));
 
   return untrackedFileListCache;
 };
