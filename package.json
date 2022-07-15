@@ -33,12 +33,13 @@
     "postinstall": "husky install",
     "lint": "eslint --cache --ext .js,.ts --fix .",
     "prepublishOnly": "pinst --disable",
-    "prepublish": "yarn run clean && yarn run build",
+    "prepublish": "yarn run clean && yarn run build && yarn run minify",
     "postpublish": "pinst --enable",
     "release": "np",
     "size": "size-limit",
     "test": "jest --coverage",
-    "typecheck": "tsc --project tsconfig.json"
+    "typecheck": "tsc --project tsconfig.json",
+    "minify": "find dist/ -maxdepth 1 -iname '*.js' -exec node_modules/.bin/terser --compress --ecma 2020 --mangle --module --output {} -- {} \\;"
   },
   "devDependencies": {
     "@paleite/eslint-config": "^1.0.2",
@@ -66,6 +67,7 @@
     "pinst": "^3.0.0",
     "prettier": "^2.6.2",
     "size-limit": "^7.0.8",
+    "terser": "^5.14.2",
     "ts-jest": "^28.0.4",
     "typescript": "^4.7.3"
   },
