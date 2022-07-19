@@ -56,7 +56,7 @@ describe("getDiffForFile", () => {
 
     const expectedCommand = "git";
     const expectedArgs =
-      'diff --no-ext-diff --diff-algorithm=histogram --diff-filter=ACM -M100% --relative --staged --unified=0 1234567';
+      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --staged --unified=0 1234567";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];

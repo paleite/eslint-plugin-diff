@@ -7,10 +7,10 @@ const COMMAND = "git";
 const getDiffForFile = (filePath: string, staged = false): string => {
   const args = [
     "diff",
-    "--no-ext-diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
-    "-M100%",
+    "--find-renames=100%",
+    "--no-ext-diff",
     "--relative",
     staged && "--staged",
     "--unified=0",
@@ -28,11 +28,11 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 const getDiffFileList = (): string[] => {
   const args = [
     "diff",
-    "--no-ext-diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
-    "-M100%",
+    "--find-renames=100%",
     "--name-only",
+    "--no-ext-diff",
     "--relative",
     "--staged",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",

@@ -1,6 +1,9 @@
 import type { Linter } from "eslint";
 
-const postprocessArguments: [Linter.LintMessage[][], string] = [
+const postprocessArguments: [
+  [[Linter.LintMessage, ...Linter.LintMessage[]], ...Linter.LintMessage[][]],
+  string
+] = [
   [
     [
       {
