@@ -7,6 +7,7 @@ const COMMAND = "git";
 const getDiffForFile = (filePath: string, staged = false): string => {
   const args = [
     "diff",
+    "--no-ext-diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "-M100%",
@@ -27,6 +28,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
 const getDiffFileList = (): string[] => {
   const args = [
     "diff",
+    "--no-ext-diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "-M100%",
@@ -47,6 +49,7 @@ const getDiffFileList = (): string[] => {
 const hasCleanIndex = (filePath: string): boolean => {
   const args = [
     "diff",
+    "--no-ext-diff",
     "--quiet",
     "--relative",
     "--unified=0",
