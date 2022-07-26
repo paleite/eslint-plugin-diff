@@ -128,8 +128,8 @@ const getRangeForChangedLines = (line: string) => {
   return hasAddedLines ? new Range(start, end) : null;
 };
 
-const getRangesForDiff = (diff: string): Range[] => {
-  return diff.split("\n").reduce<Range[]>((ranges, line) => {
+const getRangesForDiff = (diff: string): Range[] =>
+  diff.split("\n").reduce<Range[]>((ranges, line) => {
     if (!isHunkHeader(line)) {
       return ranges;
     }
@@ -141,7 +141,6 @@ const getRangesForDiff = (diff: string): Range[] => {
 
     return [...ranges, range];
   }, []);
-};
 
 export {
   getDiffFileList,

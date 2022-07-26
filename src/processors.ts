@@ -20,6 +20,7 @@ const STAGED = true;
 const getPreProcessor = (staged = false) => {
   const untrackedFileList = getUntrackedFileList(staged);
   const diffFileList = getDiffFileList(staged);
+
   return (text: string, filename: string) => {
     const shouldBeProcessed =
       process.env.VSCODE_CLI !== undefined ||
@@ -30,9 +31,29 @@ const getPreProcessor = (staged = false) => {
   };
 };
 
-const isLineWithinRange = (line: number) => (range: Range) => {
-  return range.isWithinRange(line);
-};
+const isLineWithinRange = (line: number) => (range: Range) =>
+  range.isWithinRange(line);
+
+function getUnstagedChangesError(filename: string) {
+  // When we only want to diff staged files, but the file is partially
+  // staged, the ranges of the staged diff might not match the ranges of the
+  // unstaged diff and could cause a conflict, so we return a fatal
+  // error-message instead.
+
+  const fatal = true;
+  const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
+  const severity: Linter.Severity = 2;
+  const fatalError: Linter.LintMessage = {
+    fatal,
+    message,
+    severity,
+    column: 0,
+    line: 0,
+    ruleId: null,
+  };
+
+  return [fatalError];
+}
 
 const getPostProcessor = (staged = false) => {
   const untrackedFileList = getUntrackedFileList(staged);
@@ -53,44 +74,26 @@ const getPostProcessor = (staged = false) => {
     }
 
     if (staged && !hasCleanIndex(filename)) {
-      // When we only want to diff staged files, but the file is partially
-      // staged, the ranges of the staged diff might not match the ranges of the
-      // unstaged diff and could cause a conflict, so we return a fatal
-      // error-message instead.
-      const fatal = true;
-      const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
-      const severity: Linter.Severity = 2;
-      const fatalError: Linter.LintMessage = {
-        fatal,
-        message,
-        severity,
-        column: 0,
-        line: 0,
-        ruleId: null,
-      };
-
-      return [fatalError];
+      return getUnstagedChangesError(filename);
     }
 
     const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
 
-    return messages
-      .map((message) => {
-        const filteredMessage = message.filter(({ fatal, line }) => {
-          if (fatal === true) {
-            return true;
-          }
+    return messages.flatMap((message) => {
+      const filteredMessage = message.filter(({ fatal, line }) => {
+        if (fatal === true) {
+          return true;
+        }
 
-          const isLineWithinSomeRange = rangesForDiff.some(
-            isLineWithinRange(line)
-          );
+        const isLineWithinSomeRange = rangesForDiff.some(
+          isLineWithinRange(line)
+        );
 
-          return isLineWithinSomeRange;
-        });
+        return isLineWithinSomeRange;
+      });
 
-        return filteredMessage;
-      })
-      .reduce((a, b) => a.concat(b), []);
+      return filteredMessage;
+    });
   };
 };
 

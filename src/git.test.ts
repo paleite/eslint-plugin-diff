@@ -60,7 +60,7 @@ describe("getDiffForFile", () => {
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
-    const args = argsIncludingFile.slice(0, argsIncludingFile.length - 2);
+    const args = argsIncludingFile.slice(0, -2);
 
     expect(command).toBe(expectedCommand);
     expect(args.join(" ")).toEqual(expectedArgs);
