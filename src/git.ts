@@ -25,7 +25,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
   return child_process.execFileSync(COMMAND, args).toString();
 };
 
-const getDiffFileList = (): string[] => {
+const getDiffFileList = (staged = false): string[] => {
   const args = [
     "diff",
     "--diff-algorithm=histogram",
@@ -34,9 +34,12 @@ const getDiffFileList = (): string[] => {
     "--name-only",
     "--no-ext-diff",
     "--relative",
-    "--staged",
+    staged && "--staged",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
-  ];
+  ].reduce<string[]>(
+    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
+    []
+  );
 
   return child_process
     .execFileSync(COMMAND, args)
@@ -125,8 +128,8 @@ const getRangeForChangedLines = (line: string) => {
   return hasAddedLines ? new Range(start, end) : null;
 };
 
-const getRangesForDiff = (diff: string): Range[] =>
-  diff.split("\n").reduce<Range[]>((ranges, line) => {
+const getRangesForDiff = (diff: string): Range[] => {
+  return diff.split("\n").reduce<Range[]>((ranges, line) => {
     if (!isHunkHeader(line)) {
       return ranges;
     }
@@ -138,6 +141,7 @@ const getRangesForDiff = (diff: string): Range[] =>
 
     return [...ranges, range];
   }, []);
+};
 
 export {
   getDiffFileList,
