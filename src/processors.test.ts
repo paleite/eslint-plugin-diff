@@ -1,84 +1,93 @@
-import * as child_process from "child_process";
+jest.mock("./git", () => ({
+  ...jest.requireActual<typeof git>("./git"),
+  getUntrackedFileList: jest.fn(),
+  getDiffFileList: jest.fn(),
+  getDiffForFile: jest.fn(),
+  hasCleanIndex: jest.fn(),
+}));
+
 import type { Linter } from "eslint";
-import { mocked } from "jest-mock";
-import { diff, diffConfig, staged, stagedConfig } from "./processors";
+import * as git from "./git";
 import {
   diff as fixtureDiff,
   staged as fixtureStaged,
 } from "./__fixtures__/diff";
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
-jest.mock("child_process");
-const mockedChildProcess = mocked(child_process, true);
-mockedChildProcess.execFileSync.mockReturnValue(
-  Buffer.from('/mock filename ", ; .js')
-);
-jest.mock("./git", (): unknown => ({
-  ...jest.requireActual("./git"),
-  getDiffFileList: jest
-    .fn()
-    .mockReturnValue(['/mock filename ", ; .js', "README.md"]),
-}));
-
 const [messages, filename] = postprocessArguments;
 
+const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
+gitMocked.getDiffFileList.mockReturnValue([filename]);
+gitMocked.getUntrackedFileList.mockReturnValue([]);
+
 describe("processors", () => {
-  it("diff preprocess", () => {
+  it("preprocess (diff and staged)", async () => {
+    // The preprocessor does not depend on `staged` being true or false, so it's
+    // sufficient to only test one of them.
     const validFilename = filename;
     const sourceCode = "/** Some source code */";
 
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
+    const { diff: diffProcessors } = await import("./processors");
 
-    expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
+    expect(diffProcessors.preprocess(sourceCode, validFilename)).toEqual([
+      sourceCode,
+    ]);
   });
 
-  it("staged preprocess", () => {
-    const validFilename = filename;
-    const sourceCode = "/** Some source code */";
+  it("diff postprocess", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
 
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
+    const { diff: diffProcessors } = await import("./processors");
 
-    expect(diff.preprocess(sourceCode, validFilename)).toEqual([sourceCode]);
+    expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
   });
 
-  it("diff postprocess", () => {
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
+  it("staged postprocess", async () => {
+    gitMocked.hasCleanIndex.mockReturnValueOnce(true);
+    gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
 
-    expect(diff.postprocess(messages, filename)).toMatchSnapshot();
+    const { staged: stagedProcessors } = await import("./processors");
 
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
+    expect(stagedProcessors.postprocess(messages, filename)).toMatchSnapshot();
   });
 
-  it("staged postprocess", () => {
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureStaged));
-
-    expect(staged.postprocess(messages, filename)).toMatchSnapshot();
-
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
-  });
-
-  it("should report fatal errors", () => {
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(fixtureDiff));
-
+  it("should report fatal errors", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
     const [[firstMessage, ...restMessage], ...restMessageArray] = messages;
     const messagesWithFatal: Linter.LintMessage[][] = [
       [{ ...firstMessage, fatal: true }, ...restMessage],
       ...restMessageArray,
     ];
 
-    expect(diff.postprocess(messages, filename)).toHaveLength(2);
-    expect(diff.postprocess(messagesWithFatal, filename)).toHaveLength(3);
+    const { diff: diffProcessors } = await import("./processors");
 
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
+    expect(diffProcessors.postprocess(messages, filename)).toHaveLength(2);
+    expect(
+      diffProcessors.postprocess(messagesWithFatal, filename)
+    ).toHaveLength(3);
   });
 });
 
 describe("configs", () => {
-  it("diff", () => {
+  it("diff", async () => {
+    const { diffConfig } = await import("./processors");
     expect(diffConfig).toMatchSnapshot();
   });
 
-  it("staged", () => {
+  it("staged", async () => {
+    const { stagedConfig } = await import("./processors");
     expect(stagedConfig).toMatchSnapshot();
+  });
+});
+
+describe("fatal error-message", () => {
+  it("getUnstagedChangesError", async () => {
+    const { getUnstagedChangesError } = await import("./processors");
+
+    const result = getUnstagedChangesError("mock filename.ts")[0];
+    expect(result?.fatal).toBe(true);
+    expect(result?.message).toMatchInlineSnapshot(
+      `"mock filename.ts has unstaged changes. Please stage or remove the changes."`
+    );
   });
 });

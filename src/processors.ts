@@ -17,15 +17,22 @@ const STAGED = true;
  * them from being processed in the first place, as a performance optimization.
  * This is increasingly useful the more files there are in the repository.
  */
-const getPreProcessor = (staged = false) => {
-  const untrackedFileList = getUntrackedFileList(staged);
-  const diffFileList = getDiffFileList(staged);
-
+const getPreProcessor = (
+  untrackedFileList: string[],
+  diffFileList: string[]
+) => {
   return (text: string, filename: string) => {
     const shouldBeProcessed =
       process.env.VSCODE_CLI !== undefined ||
       diffFileList.includes(filename) ||
       untrackedFileList.includes(filename);
+    // console.error({
+    //   untrackedFileList,
+    //   diffFileList,
+    //   text,
+    //   filename,
+    //   shouldBeProcessed,
+    // });
 
     return shouldBeProcessed ? [text] : [];
   };
@@ -34,6 +41,9 @@ const getPreProcessor = (staged = false) => {
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
 
+/**
+ * @internal
+ */
 function getUnstagedChangesError(filename: string) {
   // When we only want to diff staged files, but the file is partially
   // staged, the ranges of the staged diff might not match the ranges of the
@@ -55,9 +65,7 @@ function getUnstagedChangesError(filename: string) {
   return [fatalError];
 }
 
-const getPostProcessor = (staged = false) => {
-  const untrackedFileList = getUntrackedFileList(staged);
-
+const getPostProcessor = (untrackedFileList: string[], staged = false) => {
   return (
     messages: Linter.LintMessage[][],
     filename: string
@@ -97,11 +105,16 @@ const getPostProcessor = (staged = false) => {
   };
 };
 
-const getProcessors = (staged = false): Required<Linter.Processor> => ({
-  preprocess: getPreProcessor(staged),
-  postprocess: getPostProcessor(staged),
-  supportsAutofix: true,
-});
+const getProcessors = (staged = false): Required<Linter.Processor> => {
+  const untrackedFileList = getUntrackedFileList(staged);
+  const diffFileList = getDiffFileList(staged);
+
+  return {
+    preprocess: getPreProcessor(untrackedFileList, diffFileList),
+    postprocess: getPostProcessor(untrackedFileList, staged),
+    supportsAutofix: true,
+  };
+};
 
 const diff = getProcessors();
 const staged = getProcessors(STAGED);
@@ -126,4 +139,4 @@ const stagedConfig: Linter.BaseConfig = {
   ],
 };
 
-export { diff, diffConfig, staged, stagedConfig };
+export { diff, diffConfig, staged, stagedConfig, getUnstagedChangesError };
