@@ -1,0 +1,14 @@
+name: Run ESLint on your changes only
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install modules
+        run: yarn
+      - name: Run ESLint on your changes only
+        env:
+          ESLINT_PLUGIN_DIFF_COMMIT: $GITHUB_HEAD_REF
+        run: eslint --ext .js,.jsx,.ts,.tsx .
