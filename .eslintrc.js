@@ -3,7 +3,7 @@ const typescriptProjects = ["./tsconfig.json", "./tsconfig.eslint.json"];
 /** @type import("eslint").Linter.Config */
 module.exports = {
   root: true,
-  extends: ["@paleite"],
+  extends: ["@paleite", "plugin:diff/diff"],
   parserOptions: { project: typescriptProjects, tsconfigRootDir: __dirname },
   overrides: [
     {
