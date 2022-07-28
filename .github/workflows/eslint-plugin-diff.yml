@@ -11,4 +11,4 @@ jobs:
       - name: Run ESLint on your changes only
         env:
           ESLINT_PLUGIN_DIFF_COMMIT: $GITHUB_HEAD_REF
-        run: eslint --ext .js,.jsx,.ts,.tsx .
+        run: node_modules/.bin/eslint --ext .js,.jsx,.ts,.tsx .
