@@ -84,10 +84,10 @@ describe("fatal error-message", () => {
   it("getUnstagedChangesError", async () => {
     const { getUnstagedChangesError } = await import("./processors");
 
-    const result = getUnstagedChangesError("mock filename.ts")[0];
-    expect(result?.fatal).toBe(true);
-    expect(result?.message).toMatchInlineSnapshot(
-      `"mock filename.ts has unstaged changes. Please stage or remove the changes."`
+    const [result] = getUnstagedChangesError("mock filename.ts");
+    expect(result.fatal).toBe(true);
+    expect(result.message).toMatchInlineSnapshot(
+      '"mock filename.ts has unstaged changes. Please stage or remove the changes."'
     );
   });
 });

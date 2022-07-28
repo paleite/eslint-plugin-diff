@@ -17,26 +17,16 @@ const STAGED = true;
  * them from being processed in the first place, as a performance optimization.
  * This is increasingly useful the more files there are in the repository.
  */
-const getPreProcessor = (
-  untrackedFileList: string[],
-  diffFileList: string[]
-) => {
-  return (text: string, filename: string) => {
+const getPreProcessor =
+  (untrackedFileList: string[], diffFileList: string[]) =>
+  (text: string, filename: string) => {
     const shouldBeProcessed =
       process.env.VSCODE_CLI !== undefined ||
       diffFileList.includes(filename) ||
       untrackedFileList.includes(filename);
-    // console.error({
-    //   untrackedFileList,
-    //   diffFileList,
-    //   text,
-    //   filename,
-    //   shouldBeProcessed,
-    // });
 
     return shouldBeProcessed ? [text] : [];
   };
-};
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
@@ -44,7 +34,7 @@ const isLineWithinRange = (line: number) => (range: Range) =>
 /**
  * @internal
  */
-function getUnstagedChangesError(filename: string) {
+function getUnstagedChangesError(filename: string): [Linter.LintMessage] {
   // When we only want to diff staged files, but the file is partially
   // staged, the ranges of the staged diff might not match the ranges of the
   // unstaged diff and could cause a conflict, so we return a fatal
@@ -65,8 +55,9 @@ function getUnstagedChangesError(filename: string) {
   return [fatalError];
 }
 
-const getPostProcessor = (untrackedFileList: string[], staged = false) => {
-  return (
+const getPostProcessor =
+  (untrackedFileList: string[], staged = false) =>
+  (
     messages: Linter.LintMessage[][],
     filename: string
   ): Linter.LintMessage[] => {
@@ -103,7 +94,6 @@ const getPostProcessor = (untrackedFileList: string[], staged = false) => {
       return filteredMessage;
     });
   };
-};
 
 const getProcessors = (staged = false): Required<Linter.Processor> => {
   const untrackedFileList = getUntrackedFileList(staged);
