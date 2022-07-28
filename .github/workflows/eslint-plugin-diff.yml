@@ -6,9 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Install modules
         run: yarn
       - name: Run ESLint on your changes only
         env:
-          ESLINT_PLUGIN_DIFF_COMMIT: $GITHUB_HEAD_REF
-        run: node_modules/.bin/eslint --ext .js,.jsx,.ts,.tsx .
+          ESLINT_PLUGIN_DIFF_COMMIT: origin/${{ github.event.pull_request.base.ref }}
+        run: |
+          echo "ESLINT_PLUGIN_DIFF_COMMIT: $ESLINT_PLUGIN_DIFF_COMMIT"
+          git diff $ESLINT_PLUGIN_DIFF_COMMIT
+          git --version
+          node_modules/.bin/eslint --ext .js,.jsx,.ts,.tsx .
