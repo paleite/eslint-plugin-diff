@@ -54,9 +54,23 @@ To lint all the changes of a PR, you only have to set
 
 ### For GitHub Actions
 
-```sh
-export ESLINT_PLUGIN_DIFF_COMMIT="origin/$GITHUB_BASE_REF";
-npx --no-install eslint --ext .js,.ts,.tsx .
+```yml
+name: Run ESLint on your changes only
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install modules
+        run: npm install
+      - name: Fetch the base branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
+      - name: Run ESLint on your changes only
+        env:
+          ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.ref }}
+        run: npx --no-install eslint --ext .js,.jsx,.ts,.tsx .
 ```
 
 ### For BitBucket Pipelines
