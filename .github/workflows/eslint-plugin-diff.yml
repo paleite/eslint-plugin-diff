@@ -6,6 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Check if CI environment
+        run: |
+          if [[ -z "$CI" ]]; then
+              echo "Must provide CI in environment" 1>&2
+              exit 1
+          fi
+          echo "CI='$CI'"
       - name: Install modules
         run: yarn
       - name: Link the plugin
