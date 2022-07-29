@@ -119,6 +119,9 @@ const diffConfig: Linter.BaseConfig = {
   ],
 };
 
+const ciConfig: Linter.BaseConfig =
+  process.env.CI !== undefined ? diffConfig : {};
+
 const stagedConfig: Linter.BaseConfig = {
   plugins: ["diff"],
   overrides: [
@@ -129,4 +132,11 @@ const stagedConfig: Linter.BaseConfig = {
   ],
 };
 
-export { diff, diffConfig, staged, stagedConfig, getUnstagedChangesError };
+export {
+  ciConfig,
+  diff,
+  diffConfig,
+  staged,
+  stagedConfig,
+  getUnstagedChangesError,
+};

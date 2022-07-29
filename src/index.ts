@@ -1,6 +1,10 @@
-import { diff, diffConfig, staged, stagedConfig } from "./processors";
+import { ciConfig, diff, diffConfig, staged, stagedConfig } from "./processors";
 
-const configs = { diff: diffConfig, staged: stagedConfig };
+const configs = {
+  ci: ciConfig,
+  diff: diffConfig,
+  staged: stagedConfig,
+};
 const processors = { diff, staged };
 
 module.exports = { configs, processors };
