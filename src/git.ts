@@ -71,6 +71,19 @@ const hasCleanIndex = (filePath: string): boolean => {
   return result;
 };
 
+const fetchFromOrigin = (branch: string) => {
+  const args = [
+    "fetch",
+    // "--quiet", // TODO: Uncomment this flag when testing is done
+    "origin",
+    branch,
+  ];
+
+  try {
+    child_process.execFileSync(COMMAND, args, OPTIONS).toString();
+  } catch (err: unknown) {}
+};
+
 const getUntrackedFileList = (staged = false): string[] => {
   if (staged) {
     return [];
@@ -144,6 +157,7 @@ const getRangesForDiff = (diff: string): Range[] =>
   }, []);
 
 export {
+  fetchFromOrigin,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,

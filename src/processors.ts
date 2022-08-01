@@ -1,5 +1,7 @@
 import type { Linter } from "eslint";
+import { guessBranch } from "./ci";
 import {
+  fetchFromOrigin,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
@@ -7,8 +9,6 @@ import {
   hasCleanIndex,
 } from "./git";
 import type { Range } from "./Range";
-
-const STAGED = true;
 
 /**
  * Exclude unchanged files from being processed
@@ -95,7 +95,22 @@ const getPostProcessor =
     });
   };
 
-const getProcessors = (staged = false): Required<Linter.Processor> => {
+type ProcessorType = "diff" | "staged" | "ci";
+
+const getProcessors = (
+  processorType: ProcessorType
+): Required<Linter.Processor> => {
+  const staged = processorType === "staged";
+  if (processorType === "ci") {
+    if (process.env.CI === undefined) {
+      throw Error("Expected CI environment");
+    }
+
+    const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
+    if (branch !== undefined) {
+      fetchFromOrigin(branch);
+    }
+  }
   const untrackedFileList = getUntrackedFileList(staged);
   const diffFileList = getDiffFileList(staged);
 
@@ -106,8 +121,9 @@ const getProcessors = (staged = false): Required<Linter.Processor> => {
   };
 };
 
-const diff = getProcessors();
-const staged = getProcessors(STAGED);
+const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
+const diff = getProcessors("diff");
+const staged = getProcessors("staged");
 
 const diffConfig: Linter.BaseConfig = {
   plugins: ["diff"],
@@ -120,7 +136,17 @@ const diffConfig: Linter.BaseConfig = {
 };
 
 const ciConfig: Linter.BaseConfig =
-  process.env.CI !== undefined ? diffConfig : {};
+  process.env.CI === undefined
+    ? {}
+    : {
+        plugins: ["diff"],
+        overrides: [
+          {
+            files: ["*"],
+            processor: "diff/ci",
+          },
+        ],
+      };
 
 const stagedConfig: Linter.BaseConfig = {
   plugins: ["diff"],
@@ -133,6 +159,7 @@ const stagedConfig: Linter.BaseConfig = {
 };
 
 export {
+  ci,
   ciConfig,
   diff,
   diffConfig,
