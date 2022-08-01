@@ -10,6 +10,14 @@ import {
 } from "./git";
 import type { Range } from "./Range";
 
+if (process.env.CI !== undefined) {
+  const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
+  if (branch !== undefined) {
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branch;
+    fetchFromOrigin(branch);
+  }
+}
+
 /**
  * Exclude unchanged files from being processed
  *
@@ -101,16 +109,6 @@ const getProcessors = (
   processorType: ProcessorType
 ): Required<Linter.Processor> => {
   const staged = processorType === "staged";
-  if (processorType === "ci") {
-    if (process.env.CI === undefined) {
-      throw Error("Expected CI environment");
-    }
-
-    const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
-    if (branch !== undefined) {
-      fetchFromOrigin(branch);
-    }
-  }
   const untrackedFileList = getUntrackedFileList(staged);
   const diffFileList = getDiffFileList(staged);
 
