@@ -1,5 +1,7 @@
 import type { Linter } from "eslint";
+import { guessBranch } from "./ci";
 import {
+  fetchFromOrigin,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
@@ -8,7 +10,15 @@ import {
 } from "./git";
 import type { Range } from "./Range";
 
-const STAGED = true;
+if (process.env.CI !== undefined) {
+  const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
+  if (branch !== undefined) {
+    const branchWithoutOrigin = branch.replace(/^origin\//, "");
+    const branchWithOrigin = `origin/${branchWithoutOrigin}`;
+    fetchFromOrigin(branchWithoutOrigin);
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+  }
+}
 
 /**
  * Exclude unchanged files from being processed
@@ -34,7 +44,7 @@ const isLineWithinRange = (line: number) => (range: Range) =>
 /**
  * @internal
  */
-function getUnstagedChangesError(filename: string): [Linter.LintMessage] {
+const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
   // When we only want to diff staged files, but the file is partially
   // staged, the ranges of the staged diff might not match the ranges of the
   // unstaged diff and could cause a conflict, so we return a fatal
@@ -53,7 +63,7 @@ function getUnstagedChangesError(filename: string): [Linter.LintMessage] {
   };
 
   return [fatalError];
-}
+};
 
 const getPostProcessor =
   (untrackedFileList: string[], staged = false) =>
@@ -95,7 +105,12 @@ const getPostProcessor =
     });
   };
 
-const getProcessors = (staged = false): Required<Linter.Processor> => {
+type ProcessorType = "diff" | "staged" | "ci";
+
+const getProcessors = (
+  processorType: ProcessorType
+): Required<Linter.Processor> => {
+  const staged = processorType === "staged";
   const untrackedFileList = getUntrackedFileList(staged);
   const diffFileList = getDiffFileList(staged);
 
@@ -106,8 +121,9 @@ const getProcessors = (staged = false): Required<Linter.Processor> => {
   };
 };
 
-const diff = getProcessors();
-const staged = getProcessors(STAGED);
+const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
+const diff = getProcessors("diff");
+const staged = getProcessors("staged");
 
 const diffConfig: Linter.BaseConfig = {
   plugins: ["diff"],
@@ -119,6 +135,19 @@ const diffConfig: Linter.BaseConfig = {
   ],
 };
 
+const ciConfig: Linter.BaseConfig =
+  process.env.CI === undefined
+    ? {}
+    : {
+        plugins: ["diff"],
+        overrides: [
+          {
+            files: ["*"],
+            processor: "diff/ci",
+          },
+        ],
+      };
+
 const stagedConfig: Linter.BaseConfig = {
   plugins: ["diff"],
   overrides: [
@@ -129,4 +158,12 @@ const stagedConfig: Linter.BaseConfig = {
   ],
 };
 
-export { diff, diffConfig, staged, stagedConfig, getUnstagedChangesError };
+export {
+  ci,
+  ciConfig,
+  diff,
+  diffConfig,
+  staged,
+  stagedConfig,
+  getUnstagedChangesError,
+};

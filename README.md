@@ -36,7 +36,11 @@ yarn add -D eslint eslint-plugin-diff
 
 ### Extend config
 
-Extend your ESLint config with `"plugin:diff/diff"`:
+Extend your ESLint config with one of our configs.
+
+#### `"plugin:diff/diff"` (recommended)
+
+Only lint changes
 
 ```json
 {
@@ -44,12 +48,35 @@ Extend your ESLint config with `"plugin:diff/diff"`:
 }
 ```
 
-You can also choose `"plugin:diff/staged"` if you prefer to lint only staged
-files.
+#### `"plugin:diff/ci"`
+
+In a CI-environment, only lint changes. Locally, skip the plugin (i.e. lint everything).
+
+> NOTE: This requires the environment variable `CI` to be defined, which most CI-provides set automatically.
+
+```json
+{
+  "extends": ["plugin:diff/ci"]
+}
+```
+
+#### `"plugin:diff/staged"`
+
+Only lint the changes you've staged for an upcoming commit.
+
+```json
+{
+  "extends": ["plugin:diff/staged"]
+}
+```
+
+## Enable the plugin in CI only
+
+If you want to enable the plugin in CI only, you can use extend the config with the the plugin locally, but enable it
 
 ## CI Setup
 
-To lint all the changes of a PR, you only have to set
+To lint all the changes of a pull-request, you only have to set
 `ESLINT_PLUGIN_DIFF_COMMIT` before running ESLint.
 
 ### For GitHub Actions
@@ -65,7 +92,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install modules
         run: npm install
-      - name: Fetch the base branch
+      - name: Fetch the base branch, so we can use `git diff`
         run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
       - name: Run ESLint on your changes only
         env:

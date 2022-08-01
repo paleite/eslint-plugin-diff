@@ -1,5 +1,4 @@
 import * as child_process from "child_process";
-import { mocked } from "jest-mock";
 import path from "path";
 import {
   getDiffFileList,
@@ -16,7 +15,7 @@ import {
 
 jest.mock("child_process");
 
-const mockedChildProcess = mocked(child_process, true);
+const mockedChildProcess = jest.mocked(child_process, true);
 
 const OLD_ENV = process.env;
 

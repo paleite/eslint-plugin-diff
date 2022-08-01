@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { Range } from "./Range";
 
 const COMMAND = "git";
+const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
 
 const getDiffForFile = (filePath: string, staged = false): string => {
   const args = [
@@ -22,7 +23,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
     []
   );
 
-  return child_process.execFileSync(COMMAND, args, options).toString();
+  return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
 
 const getDiffFileList = (staged = false): string[] => {
@@ -36,13 +37,14 @@ const getDiffFileList = (staged = false): string[] => {
     "--relative",
     staged && "--staged",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    "--",
   ].reduce<string[]>(
     (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
     []
   );
 
   return child_process
-    .execFileSync(COMMAND, args, options)
+    .execFileSync(COMMAND, args, OPTIONS)
     .toString()
     .trim()
     .split("\n")
@@ -60,17 +62,21 @@ const hasCleanIndex = (filePath: string): boolean => {
     resolve(filePath),
   ];
 
-  let result = true;
   try {
-    child_process.execFileSync(COMMAND, args, options).toString();
+    child_process.execFileSync(COMMAND, args, OPTIONS);
   } catch (err: unknown) {
-    result = false;
+    return false;
   }
 
-  return result;
+  return true;
 };
 
-const options = { maxBuffer: 1024 * 1024 * 100 };
+const fetchFromOrigin = (branch: string) => {
+  const args = ["fetch", "--quiet", "origin", branch];
+
+  child_process.execFileSync(COMMAND, args, OPTIONS);
+};
+
 const getUntrackedFileList = (staged = false): string[] => {
   if (staged) {
     return [];
@@ -79,7 +85,7 @@ const getUntrackedFileList = (staged = false): string[] => {
   const args = ["ls-files", "--exclude-standard", "--others"];
 
   const untrackedFileListCache = child_process
-    .execFileSync(COMMAND, args, options)
+    .execFileSync(COMMAND, args, OPTIONS)
     .toString()
     .trim()
     .split("\n")
@@ -144,6 +150,7 @@ const getRangesForDiff = (diff: string): Range[] =>
   }, []);
 
 export {
+  fetchFromOrigin,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,

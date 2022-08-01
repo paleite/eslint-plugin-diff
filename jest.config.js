@@ -4,12 +4,13 @@ const { base } = require("@paleite/jest-config");
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
   ...base,
+  coveragePathIgnorePatterns: [".test-d.ts"],
   coverageThreshold: {
     global: {
-      branches: 75,
-      functions: 80,
-      lines: 80,
-      statements: 80,
+      statements: 90,
+      branches: 90,
+      functions: 90,
+      lines: 90,
     },
   },
 };

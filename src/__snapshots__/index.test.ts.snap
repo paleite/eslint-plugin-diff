@@ -2,6 +2,19 @@
 
 exports[`plugin should match expected export 1`] = `
 Object {
+  "ci": Object {
+    "overrides": Array [
+      Object {
+        "files": Array [
+          "*",
+        ],
+        "processor": "diff/ci",
+      },
+    ],
+    "plugins": Array [
+      "diff",
+    ],
+  },
   "diff": Object {
     "overrides": Array [
       Object {
@@ -33,6 +46,11 @@ Object {
 
 exports[`plugin should match expected export 2`] = `
 Object {
+  "ci": Object {
+    "postprocess": [Function],
+    "preprocess": [Function],
+    "supportsAutofix": true,
+  },
   "diff": Object {
     "postprocess": [Function],
     "preprocess": [Function],

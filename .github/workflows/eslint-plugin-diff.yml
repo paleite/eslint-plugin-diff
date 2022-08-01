@@ -12,9 +12,5 @@ jobs:
         run: |
           yarn link
           yarn link "eslint-plugin-diff"
-      - name: Fetch the base branch
-        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
       - name: Run ESLint on your changes only
-        env:
-          ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.ref }}
-        run: npx --no-install eslint --ext .js,.jsx,.ts,.tsx .
+        run: yarn run lint

@@ -15,10 +15,11 @@ import {
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
 const [messages, filename] = postprocessArguments;
+const untrackedFilename = "an-untracked-file.js";
 
 const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
 gitMocked.getDiffFileList.mockReturnValue([filename]);
-gitMocked.getUntrackedFileList.mockReturnValue([]);
+gitMocked.getUntrackedFileList.mockReturnValue([untrackedFilename]);
 
 describe("processors", () => {
   it("preprocess (diff and staged)", async () => {
@@ -40,6 +41,31 @@ describe("processors", () => {
     const { diff: diffProcessors } = await import("./processors");
 
     expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
+  });
+
+  it("diff postprocess with no messages", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
+
+    const { diff: diffProcessors } = await import("./processors");
+
+    const noMessages: Linter.LintMessage[][] = [];
+    expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
+      noMessages
+    );
+  });
+
+  it("diff postprocess for untracked files with messages", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
+
+    const { staged: stagedProcessors } = await import("./processors");
+
+    const untrackedFilesMessages: Linter.LintMessage[] = [
+      { ruleId: "mock", severity: 1, message: "mock msg", line: 1, column: 1 },
+    ];
+
+    expect(
+      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename)
+    ).toEqual(untrackedFilesMessages);
   });
 
   it("staged postprocess", async () => {
@@ -65,6 +91,24 @@ describe("processors", () => {
     expect(
       diffProcessors.postprocess(messagesWithFatal, filename)
     ).toHaveLength(3);
+  });
+
+  it("should report fatal errors for staged postprocess with unclean index", async () => {
+    gitMocked.hasCleanIndex.mockReturnValueOnce(false);
+    gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
+
+    const { staged: stagedProcessors } = await import("./processors");
+
+    const fileWithDirtyIndex = "file-with-dirty-index.js";
+    const [errorMessage] = stagedProcessors.postprocess(
+      messages,
+      fileWithDirtyIndex
+    );
+
+    expect(errorMessage?.fatal).toBe(true);
+    expect(errorMessage?.message).toMatchInlineSnapshot(
+      `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`
+    );
   });
 });
 
