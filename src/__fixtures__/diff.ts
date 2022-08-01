@@ -46,13 +46,6 @@ index cb3c131..874b8f9 100644
 -import { b } from "../context/b";
 -import { c } from "../context/c";`;
 
-const filenamesAB = `a/dirty.js
-b/dirty.js
-`;
-
-const filenamesA = `a/dirty.js
-`;
-
 const diffFileList = "file1\nfile2\nfile3\n";
 
 export {
@@ -60,7 +53,5 @@ export {
   staged,
   hunks,
   includingOnlyRemovals,
-  filenamesAB,
-  filenamesA,
   diffFileList,
 };

@@ -592,34 +592,34 @@
     fastq "^1.6.0"
 
 "@paleite/eslint-config-base@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-base/-/eslint-config-base-1.0.5.tgz#756a3bcd47f6091e45cec8895aa6dadcd91839a5"
-  integrity sha512-tWwZ1Duk8t+NILyADkLeU6UKVjC2YjSYnsV3z9TprmzDCIx+VU0a/uA8HYgo+bA1S9xJizqpz/ehbhXIpMvxig==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-base/-/eslint-config-base-1.0.7.tgz#48f3596c4e3ac087643d619519e4b733d5eac05b"
+  integrity sha512-u6NDrjt9bA97oMyzztC31ov/VFuIph9lzEIOkJzhKGQGwYYajM+wz6MfKplSWod49HKd2QdkjG/9v7VcsQ81+A==
 
 "@paleite/eslint-config-typescript@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-typescript/-/eslint-config-typescript-1.0.5.tgz#149e3b6f461b02be45af71bf846e614e42d03e9d"
-  integrity sha512-SSXsJdalHTr8TnI/z7hwiQNZfemMymO73pSebnmzSopGqfppcC/iJtRfl8oMj7vV2KZ3B4cpIJIW7yx8S559uQ==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config-typescript/-/eslint-config-typescript-1.0.7.tgz#8719ba060cbfa2114f639f9e6c945a131715dc79"
+  integrity sha512-rHKKlZ+Teb5f9caXk4JvMWqqdo5MEmdG57esNVLjKCDg2nKvaRL1lvylPjPQCS2Ym+I6jN+A+4/OLQzyVcYHKQ==
 
 "@paleite/eslint-config@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/eslint-config/-/eslint-config-1.0.5.tgz#5f36b6f72f822d6bfd821731a4c37d095df7e7e9"
-  integrity sha512-LW6WSO1KSC0HqJIL0JpC3rkUK9txEAbD8W96fGLvcauCzdMxxdTyRSZJPzj2E6NW0DEG3qdf8pn18PTSZ71nmw==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/eslint-config/-/eslint-config-1.0.7.tgz#2afc925d15407fdaa31b30c0f816e4ae97a3832a"
+  integrity sha512-Qrqb42diao6OEUGq+rKD3SesKCfWLefW/xS8d7YFy4/DPQsg6mC+q3+b6fv00MuhvSfurgQiOcvGb/3kZaV7RQ==
 
 "@paleite/jest-config@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/jest-config/-/jest-config-1.0.5.tgz#f32e13f2b128179edbca037481a3176d309011bb"
-  integrity sha512-kI6ErlvUE3juflQ99ROT/rRZq3/7R1cfVosmXUo9xeBMklRN/gUHVF83MF5HveTsK3oC0nRBNskNFB/8wUzPVA==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/jest-config/-/jest-config-1.0.7.tgz#d5a3767ae695db68a5490bb852cb695bed0f5fc5"
+  integrity sha512-8gxBkgOymujDt84jCPfKW9FvqG+6Jxe/IxAc4b0cQom+fLd09+jm6MpdX88OpNyVBanLEPFM5xlLZ2qlIna5Ng==
 
 "@paleite/prettier-config@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/prettier-config/-/prettier-config-1.0.5.tgz#35342703a1b359a6cd03fa841e47a50aaf2063e1"
-  integrity sha512-EVC+Rkayjh1mmhztMcteKgxTu07WJ0EQOb9gvTHUn5lWI+y5I5s/Tn+FGMYyWTjag7d2MamOeUwBqa7iqbKQSw==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/prettier-config/-/prettier-config-1.0.7.tgz#0634356179f43ce58c9a712c40c68e3ee8111d14"
+  integrity sha512-atH269SDAhTUZrHchaem2gMTPpHH3dCjPvywSvjXXorvijwebfwGhcTNhrWeqrhO3IkjSAsZ2qeWQ2AiX5XfIg==
 
 "@paleite/tsconfig-node16@^1.0.2":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@paleite/tsconfig-node16/-/tsconfig-node16-1.0.5.tgz#c99ad4d005f1bee8b6ce8b43a04218704fd40d2b"
-  integrity sha512-HQoe7gLQc/pfx8VLQn/Q79qTlvVloKTUsGLeBwxeTMz1bPj5IETxvlF8lXMLGNghYCNFwm6UPloZ23ScQA3cSA==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@paleite/tsconfig-node16/-/tsconfig-node16-1.0.7.tgz#a1e974e140683f2fddda9a800dfde461567f6e4b"
+  integrity sha512-NG5DnUSBGbZoHp3kMz8wH8UAzBnKlBCa947d7Vc6J7zzivYpJ38NVIi5K/PzRjesYb2/IfRVJGm8F3S4Za3U6A==
 
 "@pkgr/utils@^2.3.0":
   version "2.3.0"
