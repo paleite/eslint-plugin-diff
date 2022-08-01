@@ -62,14 +62,13 @@ const hasCleanIndex = (filePath: string): boolean => {
     resolve(filePath),
   ];
 
-  let result = true;
   try {
-    child_process.execFileSync(COMMAND, args, OPTIONS).toString();
+    child_process.execFileSync(COMMAND, args, OPTIONS);
   } catch (err: unknown) {
-    result = false;
+    return false;
   }
 
-  return result;
+  return true;
 };
 
 const fetchFromOrigin = (branch: string) => {
@@ -80,9 +79,7 @@ const fetchFromOrigin = (branch: string) => {
     branch,
   ];
 
-  try {
-    child_process.execFileSync(COMMAND, args, OPTIONS).toString();
-  } catch (err: unknown) {}
+  child_process.execFileSync(COMMAND, args, OPTIONS);
 };
 
 const getUntrackedFileList = (staged = false): string[] => {
