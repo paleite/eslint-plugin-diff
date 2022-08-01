@@ -6,22 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Check if CI environment
-        run: |
-          env
-          if [[ -z "$CI" ]]; then
-              echo "Must provide CI in environment" 1>&2
-              exit 1
-          fi
-          echo "CI='$CI'"
       - name: Install modules
         run: yarn
       - name: Link the plugin
         run: |
           yarn link
           yarn link "eslint-plugin-diff"
-      - name: Fetch the base branch
-        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
       - name: Run ESLint on your changes only
         env:
           ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.ref }}
