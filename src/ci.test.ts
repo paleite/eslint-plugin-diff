@@ -9,13 +9,13 @@ describe("guessBranch", () => {
   it("ensure the branch is guessed if ESLINT_PLUGIN_COMMIT is not already set", async () => {
     delete process.env.ESLINT_PLUGIN_COMMIT;
     const { guessBranch } = await import("./ci");
-    expect(() => guessBranch()).not.toThrowError(/ESLINT_PLUGIN_COMMIT/);
+    expect(() => guessBranch()).not.toThrowError(/ESLINT_PLUGIN_COMMIT/u);
   });
 
   it("ensure the branch is not guessed if ESLINT_PLUGIN_COMMIT is already set", async () => {
     process.env.ESLINT_PLUGIN_COMMIT = "origin/main";
     const { guessBranch } = await import("./ci");
-    expect(() => guessBranch()).toThrowError(/ESLINT_PLUGIN_COMMIT/);
+    expect(() => guessBranch()).toThrowError(/ESLINT_PLUGIN_COMMIT/u);
   });
 
   it("fails when too many providers were found as candidates", async () => {
@@ -30,7 +30,7 @@ describe("guessBranch", () => {
     process.env.CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME = "CORRECT";
     process.env.TRAVIS_BRANCH = "CORRECT";
     const { guessBranch } = await import("./ci");
-    expect(() => guessBranch()).toThrowError(/Too many CI providers found/);
+    expect(() => guessBranch()).toThrowError(/Too many CI providers found/u);
   });
 });
 

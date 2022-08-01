@@ -74,34 +74,24 @@ const PROVIDERS = {
 
 type CiProviderName = keyof typeof PROVIDERS;
 
-function guessProviders() {
-  return Object.values(PROVIDERS).reduce<
-    { name: CiProviderName; branch: string }[]
-  >((acc, cur) => {
-    if (!cur.isSupported || cur.diffBranch === undefined) {
-      return acc;
-    }
-    const branch = process.env[cur.diffBranch] ?? "";
-    if (branch === "") {
-      return acc;
-    }
+const guessProviders = () =>
+  Object.values(PROVIDERS).reduce<{ name: CiProviderName; branch: string }[]>(
+    (acc, { name, ...cur }) => {
+      if (!cur.isSupported || cur.diffBranch === undefined) {
+        return acc;
+      }
 
-    return [...acc, { name: cur.name, branch }];
-  }, []);
-}
+      const branch = process.env[cur.diffBranch] ?? "";
+      if (branch === "") {
+        return acc;
+      }
 
-function formatProviderNames(
-  guessedProviders: { name: CiProviderName; branch: string }[]
-) {
-  const guessedProviderNames = guessedProviders.map(({ name }) => name);
-  const lastName = guessedProviderNames.at(-1);
+      return [...acc, { name, branch }];
+    },
+    []
+  );
 
-  const formattedProviderNames =
-    guessedProviderNames.slice(0, -1).join(", ") + " and " + lastName;
-  return formattedProviderNames;
-}
-
-const guessBranch = () => {
+const guessBranch = (): string | undefined => {
   if ((process.env.ESLINT_PLUGIN_COMMIT ?? "").length > 0) {
     throw Error("ESLINT_PLUGIN_COMMIT already set");
   }
@@ -109,9 +99,11 @@ const guessBranch = () => {
   const guessedProviders = guessProviders();
   if (guessedProviders.length > 1) {
     throw Error(
-      `Too many CI providers found (${formatProviderNames(
-        guessedProviders
-      )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_COMMIT="main"`
+      `Too many CI providers found (${guessedProviders
+        .map(({ name }) => name)
+        .join(
+          ", "
+        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_COMMIT="main"`
     );
   }
 

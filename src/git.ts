@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { Range } from "./Range";
 
 const COMMAND = "git";
+const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
 
 const getDiffForFile = (filePath: string, staged = false): string => {
   const args = [
@@ -22,7 +23,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
     []
   );
 
-  return child_process.execFileSync(COMMAND, args, options).toString();
+  return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
 
 const getDiffFileList = (staged = false): string[] => {
@@ -42,7 +43,7 @@ const getDiffFileList = (staged = false): string[] => {
   );
 
   return child_process
-    .execFileSync(COMMAND, args, options)
+    .execFileSync(COMMAND, args, OPTIONS)
     .toString()
     .trim()
     .split("\n")
@@ -62,7 +63,7 @@ const hasCleanIndex = (filePath: string): boolean => {
 
   let result = true;
   try {
-    child_process.execFileSync(COMMAND, args, options).toString();
+    child_process.execFileSync(COMMAND, args, OPTIONS).toString();
   } catch (err: unknown) {
     result = false;
   }
@@ -70,7 +71,6 @@ const hasCleanIndex = (filePath: string): boolean => {
   return result;
 };
 
-const options = { maxBuffer: 1024 * 1024 * 100 };
 const getUntrackedFileList = (staged = false): string[] => {
   if (staged) {
     return [];
@@ -79,7 +79,7 @@ const getUntrackedFileList = (staged = false): string[] => {
   const args = ["ls-files", "--exclude-standard", "--others"];
 
   const untrackedFileListCache = child_process
-    .execFileSync(COMMAND, args, options)
+    .execFileSync(COMMAND, args, OPTIONS)
     .toString()
     .trim()
     .split("\n")

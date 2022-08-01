@@ -1,8 +1,7 @@
 import * as child_process from "child_process";
-import { mocked } from "jest-mock";
 
 jest.mock("child_process");
-const mockedChildProcess = mocked(child_process, true);
+const mockedChildProcess = jest.mocked(child_process, true);
 mockedChildProcess.execFileSync.mockReturnValue(
   Buffer.from("line1\nline2\nline3")
 );

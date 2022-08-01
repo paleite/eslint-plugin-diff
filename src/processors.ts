@@ -34,7 +34,7 @@ const isLineWithinRange = (line: number) => (range: Range) =>
 /**
  * @internal
  */
-function getUnstagedChangesError(filename: string): [Linter.LintMessage] {
+const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
   // When we only want to diff staged files, but the file is partially
   // staged, the ranges of the staged diff might not match the ranges of the
   // unstaged diff and could cause a conflict, so we return a fatal
@@ -53,7 +53,7 @@ function getUnstagedChangesError(filename: string): [Linter.LintMessage] {
   };
 
   return [fatalError];
-}
+};
 
 const getPostProcessor =
   (untrackedFileList: string[], staged = false) =>
