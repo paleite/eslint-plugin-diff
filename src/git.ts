@@ -37,6 +37,7 @@ const getDiffFileList = (staged = false): string[] => {
     "--relative",
     staged && "--staged",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    "--",
   ].reduce<string[]>(
     (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
     []
