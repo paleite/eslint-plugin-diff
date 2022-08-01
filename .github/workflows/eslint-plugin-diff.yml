@@ -8,6 +8,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check if CI environment
         run: |
+          env
           if [[ -z "$CI" ]]; then
               echo "Must provide CI in environment" 1>&2
               exit 1
