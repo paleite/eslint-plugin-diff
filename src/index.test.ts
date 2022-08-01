@@ -1,3 +1,4 @@
+process.env.CI = "true";
 import * as child_process from "child_process";
 
 jest.mock("child_process");

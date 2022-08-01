@@ -7,10 +7,10 @@ module.exports = {
   coveragePathIgnorePatterns: [".test-d.ts"],
   coverageThreshold: {
     global: {
-      statements: 100,
-      branches: 89,
-      functions: 100,
-      lines: 100,
+      statements: 90,
+      branches: 90,
+      functions: 90,
+      lines: 90,
     },
   },
 };
