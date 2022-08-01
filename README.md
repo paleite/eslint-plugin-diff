@@ -76,7 +76,7 @@ If you want to enable the plugin in CI only, you can use extend the config with 
 
 ## CI Setup
 
-To lint all the changes of a PR, you only have to set
+To lint all the changes of a pull-request, you only have to set
 `ESLINT_PLUGIN_DIFF_COMMIT` before running ESLint.
 
 ### For GitHub Actions

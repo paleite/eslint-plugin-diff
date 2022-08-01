@@ -2,6 +2,7 @@
 
 exports[`plugin should match expected export 1`] = `
 Object {
+  "ci": Object {},
   "diff": Object {
     "overrides": Array [
       Object {
