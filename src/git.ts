@@ -72,12 +72,7 @@ const hasCleanIndex = (filePath: string): boolean => {
 };
 
 const fetchFromOrigin = (branch: string) => {
-  const args = [
-    "fetch",
-    // "--quiet", // TODO: Uncomment this flag when testing is done
-    "origin",
-    branch,
-  ];
+  const args = ["fetch", "--quiet", "origin", branch];
 
   child_process.execFileSync(COMMAND, args, OPTIONS);
 };
