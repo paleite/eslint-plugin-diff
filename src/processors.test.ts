@@ -15,10 +15,11 @@ import {
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 
 const [messages, filename] = postprocessArguments;
+const untrackedFilename = "an-untracked-file.js";
 
 const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
 gitMocked.getDiffFileList.mockReturnValue([filename]);
-gitMocked.getUntrackedFileList.mockReturnValue([]);
+gitMocked.getUntrackedFileList.mockReturnValue([untrackedFilename]);
 
 describe("processors", () => {
   it("preprocess (diff and staged)", async () => {
@@ -51,6 +52,20 @@ describe("processors", () => {
     expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
       noMessages
     );
+  });
+
+  it("diff postprocess for untracked files with messages", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
+
+    const { staged: stagedProcessors } = await import("./processors");
+
+    const untrackedFilesMessages: Linter.LintMessage[] = [
+      { ruleId: "mock", severity: 1, message: "mock msg", line: 1, column: 1 },
+    ];
+
+    expect(
+      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename)
+    ).toEqual(untrackedFilesMessages);
   });
 
   it("staged postprocess", async () => {
