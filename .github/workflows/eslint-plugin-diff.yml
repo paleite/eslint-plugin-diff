@@ -13,4 +13,4 @@ jobs:
           yarn link
           yarn link "eslint-plugin-diff"
       - name: Run ESLint on your changes only
-        run: npx --no-install eslint --ext .js,.jsx,.ts,.tsx .
+        run: yarn run lint
