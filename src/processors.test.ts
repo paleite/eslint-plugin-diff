@@ -42,6 +42,17 @@ describe("processors", () => {
     expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
   });
 
+  it("diff postprocess with no messages", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
+
+    const { diff: diffProcessors } = await import("./processors");
+
+    const noMessages: Linter.LintMessage[][] = [];
+    expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
+      noMessages
+    );
+  });
+
   it("staged postprocess", async () => {
     gitMocked.hasCleanIndex.mockReturnValueOnce(true);
     gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
