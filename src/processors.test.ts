@@ -92,6 +92,24 @@ describe("processors", () => {
       diffProcessors.postprocess(messagesWithFatal, filename)
     ).toHaveLength(3);
   });
+
+  it("should report fatal errors for staged postprocess with unclean index", async () => {
+    gitMocked.hasCleanIndex.mockReturnValueOnce(false);
+    gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
+
+    const { staged: stagedProcessors } = await import("./processors");
+
+    const fileWithDirtyIndex = "file-with-dirty-index.js";
+    const [errorMessage] = stagedProcessors.postprocess(
+      messages,
+      fileWithDirtyIndex
+    );
+
+    expect(errorMessage?.fatal).toBe(true);
+    expect(errorMessage?.message).toMatchInlineSnapshot(
+      `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`
+    );
+  });
 });
 
 describe("configs", () => {
