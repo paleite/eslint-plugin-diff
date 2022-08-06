@@ -77,19 +77,25 @@ const fetchFromOrigin = (branch: string) => {
   child_process.execFileSync(COMMAND, args, OPTIONS);
 };
 
-const getUntrackedFileList = (staged = false): string[] => {
+let untrackedFileListCache: string[];
+const getUntrackedFileList = (
+  staged = false,
+  shouldRefresh = false
+): string[] => {
   if (staged) {
     return [];
   }
 
-  const args = ["ls-files", "--exclude-standard", "--others"];
+  if (untrackedFileListCache === undefined || shouldRefresh) {
+    const args = ["ls-files", "--exclude-standard", "--others"];
 
-  const untrackedFileListCache = child_process
-    .execFileSync(COMMAND, args, OPTIONS)
-    .toString()
-    .trim()
-    .split("\n")
-    .map((filePath) => resolve(filePath));
+    untrackedFileListCache = child_process
+      .execFileSync(COMMAND, args, OPTIONS)
+      .toString()
+      .trim()
+      .split("\n")
+      .map((filePath) => resolve(filePath));
+  }
 
   return untrackedFileListCache;
 };

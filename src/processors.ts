@@ -28,8 +28,14 @@ if (process.env.CI !== undefined) {
  * This is increasingly useful the more files there are in the repository.
  */
 const getPreProcessor =
-  (untrackedFileList: string[], diffFileList: string[]) =>
+  (diffFileList: string[], staged: boolean) =>
   (text: string, filename: string) => {
+    let untrackedFileList = getUntrackedFileList(staged);
+    const shouldRefresh =
+      !diffFileList.includes(filename) && !untrackedFileList.includes(filename);
+    if (shouldRefresh) {
+      untrackedFileList = getUntrackedFileList(staged, true);
+    }
     const shouldBeProcessed =
       process.env.VSCODE_CLI !== undefined ||
       diffFileList.includes(filename) ||
@@ -66,7 +72,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (untrackedFileList: string[], staged = false) =>
+  (staged = false) =>
   (
     messages: Linter.LintMessage[][],
     filename: string
@@ -75,7 +81,7 @@ const getPostProcessor =
       // No need to filter, just return
       return [];
     }
-
+    const untrackedFileList = getUntrackedFileList(staged);
     if (untrackedFileList.includes(filename)) {
       // We don't need to filter the messages of untracked files because they
       // would all be kept anyway, so we return them as-is.
@@ -111,12 +117,11 @@ const getProcessors = (
   processorType: ProcessorType
 ): Required<Linter.Processor> => {
   const staged = processorType === "staged";
-  const untrackedFileList = getUntrackedFileList(staged);
   const diffFileList = getDiffFileList(staged);
 
   return {
-    preprocess: getPreProcessor(untrackedFileList, diffFileList),
-    postprocess: getPostProcessor(untrackedFileList, staged),
+    preprocess: getPreProcessor(diffFileList, staged),
+    postprocess: getPostProcessor(staged),
     supportsAutofix: true,
   };
 };
