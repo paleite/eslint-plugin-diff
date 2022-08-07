@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -22,5 +24,4 @@ jobs:
       - run: yarn test --runInBand
       - run: curl -Os https://uploader.codecov.io/latest/linux/codecov
       - run: chmod +x codecov
-      - run: echo "The current SHA is $GITHUB_SHA"
       - run: ./codecov
