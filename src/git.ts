@@ -77,7 +77,7 @@ const fetchFromOrigin = (branch: string) => {
   child_process.execFileSync(COMMAND, args, OPTIONS);
 };
 
-let untrackedFileListCache: string[];
+let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (
   staged = false,
   shouldRefresh = false
