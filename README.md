@@ -54,7 +54,7 @@ Only lint changes
 
 In a CI-environment, only lint changes. Locally, skip the plugin (i.e. lint everything).
 
-> NOTE: This requires the environment variable `CI` to be defined, which most CI-provides set automatically.
+> NOTE: This requires the environment variable `CI` to be defined, which most CI-providers set automatically.
 
 ```json
 {
