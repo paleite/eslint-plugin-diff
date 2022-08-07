@@ -26,3 +26,7 @@ jobs:
           cache: "yarn"
       - name: Install modules
         run: yarn install --frozen-lockfile
+      - run: yarn test --runInBand
+      - run: curl -Os https://uploader.codecov.io/latest/linux/codecov
+      - run: chmod +x codecov
+      - run: ./codecov
