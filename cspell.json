@@ -1,5 +1,5 @@
 {
   "version": "0.2",
-  "words": ["ahmadnassri", "Eriksson", "paleite"],
+  "words": ["ahmadnassri", "codecov", "Eriksson", "paleite"],
   "ignoreWords": ["pinst", "Wercker"]
 }
