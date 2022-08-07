@@ -1,4 +1,6 @@
-# eslint-plugin-diff ![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)
+# eslint-plugin-diff
+
+![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white) [![codecov](https://codecov.io/gh/paleite/eslint-plugin-diff/branch/main/graph/badge.svg?token=W0LPKHZCF5)](https://codecov.io/gh/paleite/eslint-plugin-diff)
 
 Run ESLint on your changed lines only.
 
