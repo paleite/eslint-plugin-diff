@@ -3,6 +3,19 @@ const OLD_ENV = process.env;
 beforeEach(() => {
   jest.resetModules(); // Most important - it clears the cache
   process.env = { ...OLD_ENV }; // Make a copy
+
+  // When running in CI, we want to avoid triggering the "Too many CI providers
+  // found"-error, so we delete all known `diffBranch`-occurrences here.
+  delete process.env.SYSTEM_PULLREQUEST_TARGETBRANCH;
+  delete process.env.bamboo_repository_pr_targetBranch;
+  delete process.env.BITBUCKET_PR_DESTINATION_BRANCH;
+  delete process.env.BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH;
+  delete process.env.DRONE_TARGET_BRANCH;
+  delete process.env.GITHUB_BASE_REF;
+  delete process.env.APPVEYOR_PULL_REQUEST_NUMBER;
+  delete process.env.APPVEYOR_REPO_BRANCH;
+  delete process.env.CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME;
+  delete process.env.TRAVIS_BRANCH;
 });
 
 describe("guessBranch", () => {
