@@ -22,4 +22,5 @@ jobs:
       - run: yarn test --runInBand
       - run: curl -Os https://uploader.codecov.io/latest/linux/codecov
       - run: chmod +x codecov
+      - run: echo "The current SHA is $GITHUB_SHA"
       - run: ./codecov
