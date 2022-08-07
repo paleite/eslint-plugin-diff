@@ -117,7 +117,9 @@ describe("getUntrackedFileList", () => {
     );
     const staged = false;
     const fileListB = getUntrackedFileList(staged);
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(2);
+    // `getUntrackedFileList` uses a cache, so the number of calls to
+    // `execFileSync` will not have increased.
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
 
     expect(fileListA).toEqual(
       ["file1", "file2", "file3"].map((p) => path.resolve(p))
