@@ -1,1 +1,1 @@
-module.exports = [{ limit: "3.72kB", path: "dist/" }];
+module.exports = [{ limit: "5kB", path: "dist/" }];
