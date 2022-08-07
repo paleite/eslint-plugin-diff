@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**.md"
+  pull_request_target:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**.md"
+
+env:
+  HUSKY: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: "yarn"
+      - name: Install modules
+        run: yarn install --frozen-lockfile
