@@ -124,7 +124,12 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (trackedFileSet: Set<string>, staged: boolean, initialize?: () => void) =>
+  (
+    trackedFileSet: Set<string>,
+    staged: boolean,
+    includeFixes: boolean,
+    initialize?: () => void,
+  ) =>
   (
     messages: Linter.LintMessage[][],
     filename: string,
@@ -148,8 +153,12 @@ const getPostProcessor =
     const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
 
     return messages.flatMap((message) => {
-      const filteredMessage = message.filter(({ fatal, line }) => {
+      const filteredMessage = message.filter(({ fatal, line, fix }) => {
         if (fatal === true) {
+          return true;
+        }
+
+        if (includeFixes && fix !== undefined) {
           return true;
         }
 
@@ -172,12 +181,18 @@ type DiffProcessor = Linter.Processor &
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
+  const includeFixes = process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
   const initialize = processorType === "ci" ? createCiInitializer() : undefined;
   const trackedFileSet = new Set(getTrackedFileList());
 
   return {
     preprocess: getPreProcessor(trackedFileSet, staged, initialize),
-    postprocess: getPostProcessor(trackedFileSet, staged, initialize),
+    postprocess: getPostProcessor(
+      trackedFileSet,
+      staged,
+      includeFixes,
+      initialize,
+    ),
     supportsAutofix: true,
   };
 };

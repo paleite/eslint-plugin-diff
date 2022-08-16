@@ -83,6 +83,12 @@ If `CI` is set and `ESLINT_PLUGIN_DIFF_COMMIT` is not set, the plugin attempts p
 
 When set, the plugin can refresh the initial diff snapshot once to avoid delayed diagnostics in editor workflows.
 
+### `ESLINT_PLUGIN_DIFF_INCLUDE_FIXES`
+
+When set to `true`, the plugin keeps lint messages with available fixes even
+when those messages are outside changed diff hunks. This can make `eslint --fix`
+apply file-wide changes in modified files.
+
 ## Recipes
 
 ### Local diff vs default base (`HEAD`)
