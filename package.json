@@ -36,7 +36,6 @@
     "prepublish": "yarn run clean && yarn run build ",
     "postpublish": "pinst --enable",
     "release": "np",
-    "size": "size-limit",
     "test": "jest --coverage",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
@@ -47,7 +46,6 @@
     "@paleite/jest-config": "^1.0.7",
     "@paleite/prettier-config": "^1.0.7",
     "@paleite/tsconfig-node16": "^1.0.7",
-    "@size-limit/file": "^8.0.0",
     "@types/eslint": "^8.4.5",
     "@types/jest": "^28.1.6",
     "@types/node": "^16.11.26",
@@ -65,8 +63,6 @@
     "pinst": "^3.0.0",
     "prettier": "^2.7.1",
     "pretty-quick": "^3.1.3",
-    "size-limit": "^8.0.0",
-    "terser": "^5.14.2",
     "ts-jest": "^28.0.7",
     "tsd": "^0.22.0",
     "typescript": "^4.7.4"
