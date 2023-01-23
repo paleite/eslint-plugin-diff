@@ -15,7 +15,7 @@ import {
 
 jest.mock("child_process");
 
-const mockedChildProcess = jest.mocked(child_process, true);
+const mockedChildProcess = jest.mocked(child_process, { shallow: true });
 
 const OLD_ENV = process.env;
 

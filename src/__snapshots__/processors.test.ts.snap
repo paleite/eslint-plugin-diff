@@ -1,40 +1,40 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`configs diff 1`] = `
-Object {
-  "overrides": Array [
-    Object {
-      "files": Array [
+{
+  "overrides": [
+    {
+      "files": [
         "*",
       ],
       "processor": "diff/diff",
     },
   ],
-  "plugins": Array [
+  "plugins": [
     "diff",
   ],
 }
 `;
 
 exports[`configs staged 1`] = `
-Object {
-  "overrides": Array [
-    Object {
-      "files": Array [
+{
+  "overrides": [
+    {
+      "files": [
         "*",
       ],
       "processor": "diff/staged",
     },
   ],
-  "plugins": Array [
+  "plugins": [
     "diff",
   ],
 }
 `;
 
 exports[`processors diff postprocess 1`] = `
-Array [
-  Object {
+[
+  {
     "column": 1,
     "line": 2,
     "message": "Expected { after 'if' condition.",
@@ -43,7 +43,7 @@ Array [
     "ruleId": "curly",
     "severity": 1,
   },
-  Object {
+  {
     "column": 1,
     "line": 3,
     "message": "Expected { after 'if' condition.",
@@ -56,8 +56,8 @@ Array [
 `;
 
 exports[`processors staged postprocess 1`] = `
-Array [
-  Object {
+[
+  {
     "column": 1,
     "line": 2,
     "message": "Expected { after 'if' condition.",

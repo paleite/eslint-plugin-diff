@@ -1,43 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`plugin should match expected export 1`] = `
-Object {
-  "ci": Object {
-    "overrides": Array [
-      Object {
-        "files": Array [
+{
+  "ci": {
+    "overrides": [
+      {
+        "files": [
           "*",
         ],
         "processor": "diff/ci",
       },
     ],
-    "plugins": Array [
+    "plugins": [
       "diff",
     ],
   },
-  "diff": Object {
-    "overrides": Array [
-      Object {
-        "files": Array [
+  "diff": {
+    "overrides": [
+      {
+        "files": [
           "*",
         ],
         "processor": "diff/diff",
       },
     ],
-    "plugins": Array [
+    "plugins": [
       "diff",
     ],
   },
-  "staged": Object {
-    "overrides": Array [
-      Object {
-        "files": Array [
+  "staged": {
+    "overrides": [
+      {
+        "files": [
           "*",
         ],
         "processor": "diff/staged",
       },
     ],
-    "plugins": Array [
+    "plugins": [
       "diff",
     ],
   },
@@ -45,18 +45,18 @@ Object {
 `;
 
 exports[`plugin should match expected export 2`] = `
-Object {
-  "ci": Object {
+{
+  "ci": {
     "postprocess": [Function],
     "preprocess": [Function],
     "supportsAutofix": true,
   },
-  "diff": Object {
+  "diff": {
     "postprocess": [Function],
     "preprocess": [Function],
     "supportsAutofix": true,
   },
-  "staged": Object {
+  "staged": {
     "postprocess": [Function],
     "preprocess": [Function],
     "supportsAutofix": true,
