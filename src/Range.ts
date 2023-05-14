@@ -19,12 +19,12 @@ class Range {
   }
 
   isWithinRange(n: Readonly<number>): boolean {
-
     log(
       `Checking if ${n} is within range ${this.inclusiveLowerBound} - ${this.exclusiveUpperBound}`
     );
     const result =
       this.inclusiveLowerBound <= n && n < this.exclusiveUpperBound;
+
     return result;
   }
 }

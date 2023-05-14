@@ -96,6 +96,7 @@ const getPostProcessor = (staged = false) => {
     "Creating post-processor for",
     staged ? "staged files only" : "changed files"
   );
+
   return (
     messages: Linter.LintMessage[][],
     filename: string
@@ -127,10 +128,6 @@ const getPostProcessor = (staged = false) => {
         staged
       )
     );
-
-    if (new Date().getTime()) {
-      console.log("curly");
-    }
 
     return messages.flatMap((message) => {
       const filteredMessage = message.filter(({ fatal, line }) => {

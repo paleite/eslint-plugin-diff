@@ -59,6 +59,7 @@ const getDiffFileList = (commit: string, staged = false): string[] => {
     .map((filePath) => resolve(filePath));
 
   log(diffFileList);
+
   return diffFileList;
 };
 
