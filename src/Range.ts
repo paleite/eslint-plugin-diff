@@ -1,3 +1,5 @@
+import { log } from "./logging";
+
 class Range {
   private readonly inclusiveLowerBound: Readonly<number>;
   private readonly exclusiveUpperBound: Readonly<number>;
@@ -17,7 +19,13 @@ class Range {
   }
 
   isWithinRange(n: Readonly<number>): boolean {
-    return this.inclusiveLowerBound <= n && n < this.exclusiveUpperBound;
+
+    log(
+      `Checking if ${n} is within range ${this.inclusiveLowerBound} - ${this.exclusiveUpperBound}`
+    );
+    const result =
+      this.inclusiveLowerBound <= n && n < this.exclusiveUpperBound;
+    return result;
   }
 }
 
