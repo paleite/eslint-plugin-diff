@@ -1,3 +1,5 @@
+import { log } from "./logging";
+
 type CiProviderCommon<T extends CiProviderName> = { name: T };
 
 type CiProvider<T extends CiProviderName = CiProviderName> =
@@ -74,24 +76,28 @@ const PROVIDERS = {
 
 type CiProviderName = keyof typeof PROVIDERS;
 
-const guessProviders = () =>
-  Object.values(PROVIDERS).reduce<{ name: CiProviderName; branch: string }[]>(
-    (acc, { name, ...cur }) => {
-      if (!cur.isSupported || cur.diffBranch === undefined) {
-        return acc;
-      }
+const guessProviders = () => {
+  log("Guessing CI providers");
 
-      const branch = process.env[cur.diffBranch] ?? "";
-      if (branch === "") {
-        return acc;
-      }
+  return Object.values(PROVIDERS).reduce<
+    { name: CiProviderName; branch: string }[]
+  >((acc, { name, ...cur }) => {
+    if (!cur.isSupported || cur.diffBranch === undefined) {
+      return acc;
+    }
 
-      return [...acc, { name, branch }];
-    },
-    []
-  );
+    const branch = process.env[cur.diffBranch] ?? "";
+    if (branch === "") {
+      return acc;
+    }
+
+    return [...acc, { name, branch }];
+  }, []);
+};
 
 const guessBranch = (): string | undefined => {
+  log("Guessing branch");
+
   if ((process.env.ESLINT_PLUGIN_COMMIT ?? "").length > 0) {
     throw Error("ESLINT_PLUGIN_COMMIT already set");
   }

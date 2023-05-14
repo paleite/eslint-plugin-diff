@@ -51,7 +51,11 @@ describe("getDiffForFile", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
     process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js", true);
+    const diffFromFile = getDiffForFile(
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT,
+      "./mockfile.js",
+      true
+    );
 
     const expectedCommand = "git";
     const expectedArgs =
@@ -93,7 +97,7 @@ describe("getDiffFileList", () => {
       Buffer.from(diffFileList)
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList();
+    const fileListA = getDiffFileList("HEAD");
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(

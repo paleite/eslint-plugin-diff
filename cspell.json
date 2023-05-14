@@ -1,5 +1,12 @@
 {
   "version": "0.2",
-  "words": ["ahmadnassri", "codecov", "Eriksson", "paleite"],
-  "ignoreWords": ["pinst", "Wercker"]
+  "words": ["Unstaged"],
+  "ignoreWords": [
+    "ahmadnassri",
+    "codecov",
+    "Eriksson",
+    "paleite",
+    "pinst",
+    "Wercker"
+  ]
 }
