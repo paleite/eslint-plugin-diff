@@ -72,10 +72,6 @@ Only lint the changes you've staged for an upcoming commit.
 }
 ```
 
-## Enable the plugin in CI only
-
-If you want to enable the plugin in CI only, you can use extend the config with the the plugin locally, but enable it
-
 ## CI Setup
 
 To lint all the changes of a pull-request, you only have to set
