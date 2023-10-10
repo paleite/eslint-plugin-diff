@@ -2,38 +2,40 @@
 
 ![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white) [![codecov](https://codecov.io/gh/paleite/eslint-plugin-diff/branch/main/graph/badge.svg?token=W0LPKHZCF5)](https://codecov.io/gh/paleite/eslint-plugin-diff)
 
-Run ESLint on your changed lines only.
+You've got changes, we've got checks. Run ESLint on your modified lines only.
 
-## What problem does it solve?
+## What's the big deal?
 
-The feedback your developers get in a pull-request should be focused on the changes they've made, but traditional setups don't allow for this. With this plugin you can run ESLint on your changed lines only, making all warnings and errors **relevant to you**, and at the same time avoiding becoming overwhelmed with linter errors.
+Imagine a world where your developers receive feedback that's laser-focused on the changes they've made. Traditional setups can't offer this. But with our plugin, you can run ESLint on your changed lines only. This means all warnings and errors are **directly relevant to you**, saving you from drowning in a sea of linter errors.
 
-### 💰 Your company's budget is precious
+### 💰 Protect your budget
 
-When updating your linter or its dependencies, you often get new linter warnings and errors in your code, which can lead to a huge increase of the cost of your project if you try to fix all of them. This plugin allows you to run ESLint on only the changed lines of your code, so the new errors won't get triggered on the code other developers have already manually reviewed and approved.
+Updating your linter or its dependencies can trigger a flood of new linter warnings and errors. Fixing them all can skyrocket your project costs. But with our plugin, you can run ESLint on only the changed lines of your code. This means new errors won't pop up in code that other developers have already reviewed and approved.
 
-### 🚀 Your team's velocity is important
+### 🚀 Boost your team's velocity
 
-Having a healthy and high-quality code-base is a pre-requisite for high velocity and having too many errors in your linter's output can get overwhelming, oftentimes disheartening the developers, at the cost of the quality of the code. Having a linter that runs on only the changed lines of your code will ensure your developers don't get overwhelmed, ensuring your code-base will remain healthy, and your team productive.
+A healthy, high-quality code-base is the fuel for high velocity. But too many errors in your linter's output can slow you down. Our plugin ensures your linter runs on only the changed lines of your code. This keeps your developers from feeling overwhelmed, your code-base healthy, and your team productive.
 
-### 🧠 Your developers' focus is vital
+### 🧠 Keep your developers focused
 
-Let's face it – Developers are bombarded with errors and notifications about systems being broken, code being wrong and people requiring their attention. If a linter has too much output, it becomes a chore for your developers just to assess whether or not their changes actually caused an issue, or if it's just old code they haven't even touched. With this plugin, all the linter output your developers see will be related to whatever they have personally changed, requiring much less focus on parsing the linter's output.
+Developers are constantly bombarded with errors and notifications. If a linter has too much output, it can be hard to tell if their changes caused an issue or if it's just old code. With our plugin, all the linter output your developers see will be related to their changes, making it easier to focus on the task at hand.
 
-### How does it solve it?
+### How does it work?
 
-When creating pull-requests, this plugin will enable you to run ESLint on only the changed lines of your pull-request, increasing the focus of your code review. This is a great way to reduce the amount of time spent on code review while still maintaining a high quality code base and increase the quality of your feedback.
+When creating pull-requests, this plugin enables you to run ESLint on only the changed lines. This sharpens the focus of your code review and reduces the time spent on it, while still maintaining a high-quality code base.
 
-As an added bonus, it also makes introducing new ESLint rules (or updating 3rd party configs) in a large codebase trivial, because you avoid becoming blocked by new ESLint issues in already-approved code.
+As a bonus, introducing new ESLint rules (or updating 3rd party configs) in a large codebase becomes a breeze, because you avoid getting blocked by new ESLint issues in already-approved code.
 
 ## Installation
 
-Install the plugin and extend your ESLint config.
+Get the plugin and extend your ESLint config.
 
 ### Install
 
 ```sh
+npm install --save-dev eslint eslint-plugin-diff
 yarn add -D eslint eslint-plugin-diff
+pnpm add -D eslint eslint-plugin-diff
 ```
 
 ### Extend config
