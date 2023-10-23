@@ -37,7 +37,7 @@ const getPreProcessor =
       untrackedFileList = getUntrackedFileList(staged, true);
     }
     const shouldBeProcessed =
-      process.env.VSCODE_CLI !== undefined ||
+      process.env.VSCODE_PID !== undefined ||
       diffFileList.includes(filename) ||
       untrackedFileList.includes(filename);
 
