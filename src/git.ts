@@ -5,7 +5,7 @@ import { Range } from "./Range";
 const COMMAND = "git";
 const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
 
-const getDiffForFile = (filePath: string, staged = false): string => {
+const getDiffForFile = (filePath: string, staged: boolean): string => {
   const args = [
     "diff",
     "--diff-algorithm=histogram",
@@ -26,7 +26,7 @@ const getDiffForFile = (filePath: string, staged = false): string => {
   return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
 
-const getDiffFileList = (staged = false): string[] => {
+const getDiffFileList = (staged: boolean): string[] => {
   const args = [
     "diff",
     "--diff-algorithm=histogram",
@@ -79,7 +79,7 @@ const fetchFromOrigin = (branch: string) => {
 
 let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (
-  staged = false,
+  staged: boolean,
   shouldRefresh = false
 ): string[] => {
   if (staged) {

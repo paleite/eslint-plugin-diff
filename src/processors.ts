@@ -72,7 +72,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (staged = false) =>
+  (staged: boolean) =>
   (
     messages: Linter.LintMessage[][],
     filename: string

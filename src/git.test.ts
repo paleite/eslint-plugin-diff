@@ -66,6 +66,46 @@ describe("getDiffForFile", () => {
     expect(diffFromFile).toContain("diff --git");
     expect(diffFromFile).toContain("@@");
   });
+
+  it("should work when using staged = false", () => {
+    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
+
+    const diffFromFile = getDiffForFile("./mockfile.js", false);
+
+    const expectedCommand = "git";
+    const expectedArgs =
+      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
+
+    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
+    const [command, argsIncludingFile = []] = lastCall ?? [""];
+    const args = argsIncludingFile.slice(0, -2);
+
+    expect(command).toBe(expectedCommand);
+    expect(args.join(" ")).toEqual(expectedArgs);
+    expect(diffFromFile).toContain("diff --git");
+    expect(diffFromFile).toContain("@@");
+  });
+
+  it("should use HEAD when no commit was defined", () => {
+    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = undefined;
+
+    const diffFromFile = getDiffForFile("./mockfile.js", false);
+
+    const expectedCommand = "git";
+    const expectedArgs =
+      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
+
+    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
+    const [command, argsIncludingFile = []] = lastCall ?? [""];
+    const args = argsIncludingFile.slice(0, -2);
+
+    expect(command).toBe(expectedCommand);
+    expect(args.join(" ")).toEqual(expectedArgs);
+    expect(diffFromFile).toContain("diff --git");
+    expect(diffFromFile).toContain("@@");
+  });
 });
 
 describe("hasCleanIndex", () => {
@@ -93,7 +133,7 @@ describe("getDiffFileList", () => {
       Buffer.from(diffFileList)
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList();
+    const fileListA = getDiffFileList(false);
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
@@ -109,7 +149,7 @@ describe("getUntrackedFileList", () => {
       Buffer.from(diffFileList)
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getUntrackedFileList();
+    const fileListA = getUntrackedFileList(false);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
 
     mockedChildProcess.execFileSync.mockReturnValueOnce(
