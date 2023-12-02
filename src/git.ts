@@ -53,7 +53,7 @@ const getDiffFileList = (staged: boolean): string[] => {
 
 const hasCleanIndex = (filePath: string): boolean => {
   const args = [
-    "diff",
+    "diff-files",
     "--no-ext-diff",
     "--quiet",
     "--relative",
