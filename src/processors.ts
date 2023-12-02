@@ -33,7 +33,9 @@ const getPreProcessor =
   (text: string, filename: string) => {
     let untrackedFileList = getUntrackedFileList(diffType);
     const shouldRefresh =
-      !diffFileList.includes(filename) && !untrackedFileList.includes(filename);
+      diffType === "working" &&
+      !diffFileList.includes(filename) &&
+      !untrackedFileList.includes(filename);
     if (shouldRefresh) {
       untrackedFileList = getUntrackedFileList(diffType, true);
     }
