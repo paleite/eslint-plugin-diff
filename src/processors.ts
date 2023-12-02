@@ -1,5 +1,6 @@
 import type { Linter } from "eslint";
 import { guessBranch } from "./ci";
+import type { DiffType } from "./git";
 import {
   fetchFromOrigin,
   getDiffFileList,
@@ -28,13 +29,13 @@ if (process.env.CI !== undefined) {
  * This is increasingly useful the more files there are in the repository.
  */
 const getPreProcessor =
-  (diffFileList: string[], staged: boolean) =>
+  (diffFileList: string[], diffType: DiffType) =>
   (text: string, filename: string) => {
-    let untrackedFileList = getUntrackedFileList(staged);
+    let untrackedFileList = getUntrackedFileList(diffType);
     const shouldRefresh =
       !diffFileList.includes(filename) && !untrackedFileList.includes(filename);
     if (shouldRefresh) {
-      untrackedFileList = getUntrackedFileList(staged, true);
+      untrackedFileList = getUntrackedFileList(diffType, true);
     }
     const shouldBeProcessed =
       process.env.VSCODE_PID !== undefined ||
@@ -72,7 +73,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (staged: boolean) =>
+  (diffType: DiffType) =>
   (
     messages: Linter.LintMessage[][],
     filename: string
@@ -81,18 +82,18 @@ const getPostProcessor =
       // No need to filter, just return
       return [];
     }
-    const untrackedFileList = getUntrackedFileList(staged);
+    const untrackedFileList = getUntrackedFileList(diffType);
     if (untrackedFileList.includes(filename)) {
       // We don't need to filter the messages of untracked files because they
       // would all be kept anyway, so we return them as-is.
       return messages.flat();
     }
 
-    if (staged && !hasCleanIndex(filename)) {
+    if (diffType === "staged" && !hasCleanIndex(filename)) {
       return getUnstagedChangesError(filename);
     }
 
-    const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
+    const rangesForDiff = getRangesForDiff(getDiffForFile(filename, diffType));
 
     return messages.flatMap((message) => {
       const filteredMessage = message.filter(({ fatal, line }) => {
@@ -111,18 +112,21 @@ const getPostProcessor =
     });
   };
 
-type ProcessorType = "diff" | "staged" | "ci";
+type ProcessorType = "diff" | "committed" | "staged" | "ci";
 
 const getProcessors = (
   processorType: ProcessorType
 ): Required<Linter.Processor> => {
-  const staged = processorType === "staged";
-  const diffFileList = getDiffFileList(staged);
+  const diffType =
+    processorType === "staged" || processorType === "committed"
+      ? processorType
+      : "working";
+  const diffFileList = getDiffFileList(diffType);
 
   return {
-    preprocess: getPreProcessor(diffFileList, staged),
-    postprocess: getPostProcessor(staged),
-    supportsAutofix: true,
+    preprocess: getPreProcessor(diffFileList, diffType),
+    postprocess: getPostProcessor(diffType),
+    supportsAutofix: processorType !== "committed",
   };
 };
 
