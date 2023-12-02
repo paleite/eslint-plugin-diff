@@ -74,6 +74,16 @@ Only lint the changes you've staged for an upcoming commit.
 }
 ```
 
+#### `"plugin:diff/committed"`
+
+Only lint the changes you've committed, for running in a pre-push hook. You should set `ESLINT_PLUGIN_DIFF_COMMIT` in your pre-push hook for this to be useful.
+
+```json
+{
+  "extends": ["plugin:diff/committed"]
+}
+```
+
 ## CI Setup
 
 To lint all the changes of a pull-request, you only have to set
