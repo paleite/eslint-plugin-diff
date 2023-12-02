@@ -18,10 +18,7 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
     resolve(filePath),
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
-  );
+  ].filter((cur): cur is string => typeof cur === "string");
 
   return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
@@ -38,10 +35,7 @@ const getDiffFileList = (staged: boolean): string[] => {
     staged && "--cached",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
-  );
+  ].filter((cur): cur is string => typeof cur === "string");
 
   return child_process
     .execFileSync(COMMAND, args, OPTIONS)
