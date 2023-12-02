@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { Range } from "./Range";
 
 const COMMAND = "git";
-const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
+const OPTIONS = { encoding: "utf8" as const, maxBuffer: 1024 * 1024 * 100 };
 
 const getDiffForFile = (filePath: string, staged: boolean): string => {
   const args = [
@@ -20,7 +20,7 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
     resolve(filePath),
   ].filter((cur): cur is string => typeof cur === "string");
 
-  return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
+  return child_process.execFileSync(COMMAND, args, OPTIONS);
 };
 
 const getDiffFileList = (staged: boolean): string[] => {
@@ -39,7 +39,6 @@ const getDiffFileList = (staged: boolean): string[] => {
 
   return child_process
     .execFileSync(COMMAND, args, OPTIONS)
-    .toString()
     .trim()
     .split("\n")
     .map((filePath) => resolve(filePath));
@@ -85,7 +84,6 @@ const getUntrackedFileList = (
 
     untrackedFileListCache = child_process
       .execFileSync(COMMAND, args, OPTIONS)
-      .toString()
       .trim()
       .split("\n")
       .map((filePath) => resolve(filePath));
