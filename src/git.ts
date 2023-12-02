@@ -68,6 +68,27 @@ const hasCleanIndex = (filePath: string): boolean => {
   return true;
 };
 
+const hasCleanTree = (filePath: string): boolean => {
+  const args = [
+    "diff-index",
+    "--no-ext-diff",
+    "--quiet",
+    "--relative",
+    "--unified=0",
+    "HEAD",
+    "--",
+    resolve(filePath),
+  ];
+
+  try {
+    child_process.execFileSync(COMMAND, args, OPTIONS);
+  } catch (err: unknown) {
+    return false;
+  }
+
+  return true;
+};
+
 const fetchFromOrigin = (branch: string) => {
   const args = ["fetch", "--quiet", "origin", branch];
 
@@ -151,6 +172,13 @@ const getRangesForDiff = (diff: string): Range[] =>
     return [...ranges, range];
   }, []);
 
+const readFileFromGit = (filePath: string) => {
+  const getBlob = ["ls-tree", "--object-only", "HEAD", resolve(filePath)];
+  const blob = child_process.execFileSync(COMMAND, getBlob, OPTIONS).trim();
+  const catFile = ["cat-file", "blob", blob];
+  return child_process.execFileSync(COMMAND, catFile, OPTIONS);
+};
+
 export {
   fetchFromOrigin,
   getDiffFileList,
@@ -158,4 +186,6 @@ export {
   getRangesForDiff,
   getUntrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 };

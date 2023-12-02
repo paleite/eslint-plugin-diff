@@ -8,6 +8,8 @@ import {
   getRangesForDiff,
   getUntrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 } from "./git";
 import type { Range } from "./Range";
 
@@ -43,6 +45,14 @@ const getPreProcessor =
       process.env.VSCODE_PID !== undefined ||
       diffFileList.includes(filename) ||
       untrackedFileList.includes(filename);
+
+    if (
+      diffType === "committed" &&
+      shouldBeProcessed &&
+      !hasCleanTree(filename)
+    ) {
+      return [readFileFromGit(filename)];
+    }
 
     return shouldBeProcessed ? [text] : [];
   };
