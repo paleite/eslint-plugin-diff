@@ -145,6 +145,7 @@ const getProcessors = (
 const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
+const committed = getProcessors("committed");
 
 const diffConfig: Linter.BaseConfig = {
   plugins: ["diff"],
@@ -179,6 +180,16 @@ const stagedConfig: Linter.BaseConfig = {
   ],
 };
 
+const committedConfig: Linter.BaseConfig = {
+  plugins: ["diff"],
+  overrides: [
+    {
+      files: ["*"],
+      processor: "diff/committed",
+    },
+  ],
+};
+
 export {
   ci,
   ciConfig,
@@ -186,5 +197,7 @@ export {
   diffConfig,
   staged,
   stagedConfig,
+  committed,
+  committedConfig,
   getUnstagedChangesError,
 };
