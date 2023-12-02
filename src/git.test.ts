@@ -55,7 +55,7 @@ describe("getDiffForFile", () => {
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --staged --unified=0 1234567";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --cached --unified=0 1234567";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
@@ -75,7 +75,7 @@ describe("getDiffForFile", () => {
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
@@ -95,7 +95,7 @@ describe("getDiffForFile", () => {
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];

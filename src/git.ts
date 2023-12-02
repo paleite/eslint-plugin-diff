@@ -7,13 +7,13 @@ const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
 
 const getDiffForFile = (filePath: string, staged: boolean): string => {
   const args = [
-    "diff",
+    "diff-index",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    staged && "--cached",
     "--unified=0",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
@@ -28,14 +28,14 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
 
 const getDiffFileList = (staged: boolean): string[] => {
   const args = [
-    "diff",
+    "diff-index",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--name-only",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    staged && "--cached",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
   ].reduce<string[]>(
