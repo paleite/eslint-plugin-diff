@@ -36,6 +36,7 @@ const getDiffFileList = (diffType: DiffType): string[] => {
     "--no-ext-diff",
     "--relative",
     diffType === "staged" && "--cached",
+    diffType === "committed" && "-r",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     diffType === "committed" && "HEAD",
     "--",
