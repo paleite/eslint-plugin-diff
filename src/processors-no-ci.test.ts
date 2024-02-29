@@ -19,7 +19,7 @@ describe("processors without CI", () => {
     jest.doMock("./git", () => ({
       ...jest.requireActual<typeof import("./git.js")>("./git"),
       getDiffFileList: jest.fn(() => []),
-      getUntrackedFileList: jest.fn(() => []),
+      getTrackedFileList: jest.fn(() => []),
       getDiffForFile: jest.fn(() => ""),
       hasCleanIndex: jest.fn(() => true),
     }));
@@ -48,5 +48,3 @@ describe("processors without CI", () => {
     });
   });
 });
-
-export {};
