@@ -95,8 +95,8 @@ const getPostProcessor =
     const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
 
     return messages.flatMap((message) => {
-      const filteredMessage = message.filter(({ fatal, line }) => {
-        if (fatal === true) {
+      const filteredMessage = message.filter(({ fatal, line, fix }) => {
+        if (fatal === true || fix) {
           return true;
         }
 
