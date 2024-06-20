@@ -13,10 +13,8 @@ import type { Range } from "./Range";
 if (process.env.CI !== undefined) {
   const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
   if (branch !== undefined) {
-    const branchWithoutOrigin = branch.replace(/^origin\//, "");
-    const branchWithOrigin = `origin/${branchWithoutOrigin}`;
-    fetchFromOrigin(branchWithoutOrigin);
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+    fetchFromOrigin(branch);
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branch;
   }
 }
 
