@@ -32,6 +32,10 @@ const postprocessArguments: [
         column: 1,
         nodeType: "IfStatement",
         messageId: "missingCurlyAfterCondition",
+        fix: {
+          range: [0, 3],
+          text: ''
+        }
       },
     ],
   ],
