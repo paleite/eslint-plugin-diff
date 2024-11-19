@@ -126,24 +126,22 @@ const getProcessors = (
   };
 };
 
-const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
-const diff = getProcessors("diff");
-const staged = getProcessors("staged");
+const isEnabled: boolean =
+  process.env.ESLINT_PLUGIN_DIFF_ENABLED === "false" ? false : true;
 
-const diffConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/diff",
-    },
-  ],
-};
+const ci = (
+  isEnabled && process.env.CI !== undefined ? getProcessors("ci") : {}
+) as Required<Linter.Processor>;
+const diff = (
+  isEnabled ? getProcessors("diff") : {}
+) as Required<Linter.Processor>;
+const staged = (
+  isEnabled ? getProcessors("staged") : {}
+) as Required<Linter.Processor>;
 
 const ciConfig: Linter.BaseConfig =
-  process.env.CI === undefined
-    ? {}
-    : {
+  isEnabled && process.env.CI !== undefined
+    ? {
         plugins: ["diff"],
         overrides: [
           {
@@ -151,17 +149,32 @@ const ciConfig: Linter.BaseConfig =
             processor: "diff/ci",
           },
         ],
-      };
+      }
+    : {};
 
-const stagedConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/staged",
-    },
-  ],
-};
+const diffConfig: Linter.BaseConfig = isEnabled
+  ? {
+      plugins: ["diff"],
+      overrides: [
+        {
+          files: ["*"],
+          processor: "diff/diff",
+        },
+      ],
+    }
+  : {};
+
+const stagedConfig: Linter.BaseConfig = isEnabled
+  ? {
+      plugins: ["diff"],
+      overrides: [
+        {
+          files: ["*"],
+          processor: "diff/staged",
+        },
+      ],
+    }
+  : {};
 
 export {
   ci,
