@@ -51,6 +51,17 @@ const getDiffFileList = (staged: boolean): string[] => {
     .map((filePath) => resolve(filePath));
 };
 
+const getTrackedFileList = (): string[] => {
+  const args = [ "ls-files" ];
+
+  return child_process
+    .execFileSync(COMMAND, args, OPTIONS)
+    .toString()
+    .trim()
+    .split("\n")
+    .map((filePath) => resolve(filePath))
+};
+
 const hasCleanIndex = (filePath: string): boolean => {
   const args = [
     "diff",
@@ -75,29 +86,6 @@ const fetchFromOrigin = (branch: string) => {
   const args = ["fetch", "--quiet", "origin", branch];
 
   child_process.execFileSync(COMMAND, args, OPTIONS);
-};
-
-let untrackedFileListCache: string[] | undefined;
-const getUntrackedFileList = (
-  staged: boolean,
-  shouldRefresh = false
-): string[] => {
-  if (staged) {
-    return [];
-  }
-
-  if (untrackedFileListCache === undefined || shouldRefresh) {
-    const args = ["ls-files", "--exclude-standard", "--others"];
-
-    untrackedFileListCache = child_process
-      .execFileSync(COMMAND, args, OPTIONS)
-      .toString()
-      .trim()
-      .split("\n")
-      .map((filePath) => resolve(filePath));
-  }
-
-  return untrackedFileListCache;
 };
 
 const isHunkHeader = (input: string) => {
@@ -160,6 +148,6 @@ export {
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
-  getUntrackedFileList,
+  getTrackedFileList,
   hasCleanIndex,
 };
