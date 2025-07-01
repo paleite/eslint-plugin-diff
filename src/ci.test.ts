@@ -19,16 +19,16 @@ beforeEach(() => {
 });
 
 describe("guessBranch", () => {
-  it("ensure the branch is guessed if ESLINT_PLUGIN_COMMIT is not already set", async () => {
-    delete process.env.ESLINT_PLUGIN_COMMIT;
+  it("ensure the branch is guessed if ESLINT_PLUGIN_DIFF_COMMIT is not already set", async () => {
+    delete process.env.ESLINT_PLUGIN_DIFF_COMMIT;
     const { guessBranch } = await import("./ci");
-    expect(() => guessBranch()).not.toThrowError(/ESLINT_PLUGIN_COMMIT/u);
+    expect(() => guessBranch()).not.toThrowError(/ESLINT_PLUGIN_DIFF_COMMIT/u);
   });
 
-  it("ensure the branch is not guessed if ESLINT_PLUGIN_COMMIT is already set", async () => {
-    process.env.ESLINT_PLUGIN_COMMIT = "origin/main";
+  it("ensure the branch is not guessed if ESLINT_PLUGIN_DIFF_COMMIT is already set", async () => {
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "origin/main";
     const { guessBranch } = await import("./ci");
-    expect(() => guessBranch()).toThrowError(/ESLINT_PLUGIN_COMMIT/u);
+    expect(() => guessBranch()).toThrowError(/ESLINT_PLUGIN_DIFF_COMMIT/u);
   });
 
   it("fails when too many providers were found as candidates", async () => {

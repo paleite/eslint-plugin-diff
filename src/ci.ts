@@ -92,8 +92,8 @@ const guessProviders = () =>
   );
 
 const guessBranch = (): string | undefined => {
-  if ((process.env.ESLINT_PLUGIN_COMMIT ?? "").length > 0) {
-    throw Error("ESLINT_PLUGIN_COMMIT already set");
+  if ((process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "").length > 0) {
+    throw Error("ESLINT_PLUGIN_DIFF_COMMIT already set");
   }
 
   const guessedProviders = guessProviders();
@@ -103,7 +103,7 @@ const guessBranch = (): string | undefined => {
         .map(({ name }) => name)
         .join(
           ", "
-        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_COMMIT="main"`
+        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_DIFF_COMMIT="main"`
     );
   }
 
