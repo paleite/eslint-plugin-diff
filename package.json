@@ -1,33 +1,51 @@
 {
-  "name": "eslint-plugin-diff",
-  "version": "2.0.3",
-  "description": "Run ESLint on your changes only",
+  "name": "eslint-plugin-diff-flat-config",
+  "version": "1.0.0",
+  "description": "Run ESLint on your changes only - with ESLint flat config support",
   "keywords": [
     "eslint",
     "eslintplugin",
     "eslint-plugin",
-    "diff"
+    "diff",
+    "git",
+    "staged",
+    "flat-config"
   ],
-  "homepage": "https://github.com/paleite/eslint-plugin-diff#readme",
+  "homepage": "https://github.com/kirlev/eslint-plugin-diff-flat-config#readme",
   "bugs": {
-    "url": "https://github.com/paleite/eslint-plugin-diff/issues"
+    "url": "https://github.com/kirlev/eslint-plugin-diff-flat-config/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/paleite/eslint-plugin-diff.git"
+    "url": "git+https://github.com/kirlev/eslint-plugin-diff-flat-config.git"
   },
   "license": "MIT",
-  "author": "Patrick Eriksson <paleite@users.noreply.github.com> (https://github.com/paleite)",
+  "author": "Nir Levi <kirlev@users.noreply.github.com> (https://github.com/kirlev)",
+  "contributors": [
+    "Patrick Eriksson <paleite@users.noreply.github.com> (https://github.com/paleite)"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
-    ".github/ISSUE_TEMPLATE/feature_request.md",
     "/dist/",
-    "CODE_OF_CONDUCT.md",
-    "SECURITY.md"
+    "LICENSE.md",
+    "README.md"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json && npm run build:esm",
+    "build:esm": "echo 'export * from \"./index.js\";' > dist/index.mjs && echo 'import plugin from \"./index.js\"; export default plugin;' >> dist/index.mjs",
     "clean": "tsc --build tsconfig.build.json --clean",
     "format": "prettier --write .",
     "lint": "eslint --cache --ext .js,.ts --fix .",
@@ -46,12 +64,12 @@
     "@paleite/jest-config": "^1.0.9",
     "@paleite/prettier-config": "^1.0.9",
     "@paleite/tsconfig-node16": "^1.0.9",
-    "@types/eslint": "^8.4.10",
+    "@types/eslint": "^9.6.0",
     "@types/jest": "^29.2.6",
     "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.48.2",
-    "@typescript-eslint/parser": "^5.48.2",
-    "eslint": "^8.32.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
@@ -69,10 +87,10 @@
     "uuid": "^9.0.0"
   },
   "peerDependencies": {
-    "eslint": ">=6.7.0"
+    "eslint": ">=9.0.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "resolutions": {
     "cosmiconfig": "^8.1.3"

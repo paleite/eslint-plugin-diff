@@ -1,5 +1,6 @@
 import type { Linter } from "eslint";
 import { guessBranch } from "./ci";
+import { PLUGIN_VERSION } from "./version";
 import {
   fetchFromOrigin,
   getDiffFileList,
@@ -115,11 +116,15 @@ type ProcessorType = "diff" | "staged" | "ci";
 
 const getProcessors = (
   processorType: ProcessorType
-): Required<Linter.Processor> => {
+): Linter.Processor => {
   const staged = processorType === "staged";
   const diffFileList = getDiffFileList(staged);
 
   return {
+    meta: {
+      name: `diff/${processorType}`,
+      version: PLUGIN_VERSION,
+    },
     preprocess: getPreProcessor(diffFileList, staged),
     postprocess: getPostProcessor(staged),
     supportsAutofix: true,
@@ -130,45 +135,4 @@ const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
 
-const diffConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/diff",
-    },
-  ],
-};
-
-const ciConfig: Linter.BaseConfig =
-  process.env.CI === undefined
-    ? {}
-    : {
-        plugins: ["diff"],
-        overrides: [
-          {
-            files: ["*"],
-            processor: "diff/ci",
-          },
-        ],
-      };
-
-const stagedConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/staged",
-    },
-  ],
-};
-
-export {
-  ci,
-  ciConfig,
-  diff,
-  diffConfig,
-  staged,
-  stagedConfig,
-  getUnstagedChangesError,
-};
+export { ci, diff, staged, getUnstagedChangesError };

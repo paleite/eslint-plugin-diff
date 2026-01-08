@@ -1,37 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`configs diff 1`] = `
-{
-  "overrides": [
-    {
-      "files": [
-        "*",
-      ],
-      "processor": "diff/diff",
-    },
-  ],
-  "plugins": [
-    "diff",
-  ],
-}
-`;
-
-exports[`configs staged 1`] = `
-{
-  "overrides": [
-    {
-      "files": [
-        "*",
-      ],
-      "processor": "diff/staged",
-    },
-  ],
-  "plugins": [
-    "diff",
-  ],
-}
-`;
-
 exports[`processors diff postprocess 1`] = `
 [
   {

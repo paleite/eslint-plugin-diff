@@ -1,13 +1,10 @@
 {
   "extends": "@paleite/tsconfig-node16",
   "compilerOptions": {
-    // #region Support running on Node 14 until EOL, April 30th, 2023
+    // Node 18+ target settings
     // Recommended Node TSConfig settings (Node Target Mapping):
     // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping#recommended-node-tsconfig-settings
-    // Node release EOLs:
-    // https://nodejs.org/en/about/releases/
-    "lib": ["ES2020"],
-    "target": "ES2020"
-    // #endregion
+    "lib": ["ES2022"],
+    "target": "ES2022"
   }
 }

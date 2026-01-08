@@ -30,7 +30,7 @@ describe("processors", () => {
 
     const { diff: diffProcessors } = await import("./processors");
 
-    expect(diffProcessors.preprocess(sourceCode, validFilename)).toEqual([
+    expect(diffProcessors.preprocess!(sourceCode, validFilename)).toEqual([
       sourceCode,
     ]);
   });
@@ -40,7 +40,7 @@ describe("processors", () => {
 
     const { diff: diffProcessors } = await import("./processors");
 
-    expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
+    expect(diffProcessors.postprocess!(messages, filename)).toMatchSnapshot();
   });
 
   it("diff postprocess with no messages", async () => {
@@ -49,7 +49,7 @@ describe("processors", () => {
     const { diff: diffProcessors } = await import("./processors");
 
     const noMessages: Linter.LintMessage[][] = [];
-    expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
+    expect(diffProcessors.postprocess!(noMessages, filename)).toEqual(
       noMessages
     );
   });
@@ -64,7 +64,7 @@ describe("processors", () => {
     ];
 
     expect(
-      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename)
+      stagedProcessors.postprocess!([untrackedFilesMessages], untrackedFilename)
     ).toEqual(untrackedFilesMessages);
   });
 
@@ -74,7 +74,7 @@ describe("processors", () => {
 
     const { staged: stagedProcessors } = await import("./processors");
 
-    expect(stagedProcessors.postprocess(messages, filename)).toMatchSnapshot();
+    expect(stagedProcessors.postprocess!(messages, filename)).toMatchSnapshot();
   });
 
   it("should report fatal errors", async () => {
@@ -87,9 +87,9 @@ describe("processors", () => {
 
     const { diff: diffProcessors } = await import("./processors");
 
-    expect(diffProcessors.postprocess(messages, filename)).toHaveLength(2);
+    expect(diffProcessors.postprocess!(messages, filename)).toHaveLength(2);
     expect(
-      diffProcessors.postprocess(messagesWithFatal, filename)
+      diffProcessors.postprocess!(messagesWithFatal, filename)
     ).toHaveLength(3);
   });
 
@@ -100,7 +100,7 @@ describe("processors", () => {
     const { staged: stagedProcessors } = await import("./processors");
 
     const fileWithDirtyIndex = "file-with-dirty-index.js";
-    const [errorMessage] = stagedProcessors.postprocess(
+    const [errorMessage] = stagedProcessors.postprocess!(
       messages,
       fileWithDirtyIndex
     );
@@ -112,15 +112,23 @@ describe("processors", () => {
   });
 });
 
-describe("configs", () => {
-  it("diff", async () => {
-    const { diffConfig } = await import("./processors");
-    expect(diffConfig).toMatchSnapshot();
+describe("processor meta", () => {
+  it("diff processor should have meta", async () => {
+    const { diff: diffProcessors } = await import("./processors");
+    const { PLUGIN_VERSION } = await import("./version");
+    expect(diffProcessors.meta).toEqual({
+      name: "diff/diff",
+      version: PLUGIN_VERSION,
+    });
   });
 
-  it("staged", async () => {
-    const { stagedConfig } = await import("./processors");
-    expect(stagedConfig).toMatchSnapshot();
+  it("staged processor should have meta", async () => {
+    const { staged: stagedProcessors } = await import("./processors");
+    const { PLUGIN_VERSION } = await import("./version");
+    expect(stagedProcessors.meta).toEqual({
+      name: "diff/staged",
+      version: PLUGIN_VERSION,
+    });
   });
 });
 
