@@ -11,13 +11,50 @@ import {
 } from "./git";
 import type { Range } from "./Range";
 
+/**
+ * Determines if a git ref looks like a branch name that should be fetched from origin.
+ * Returns false for:
+ * - Commit SHAs (7-40 hex characters)
+ * - Relative refs (HEAD~n, HEAD^, etc.)
+ * - Refs already prefixed with origin/
+ */
+const isBranchName = (ref: string): boolean => {
+  // Already has origin/ prefix
+  if (ref.startsWith("origin/")) {
+    return false;
+  }
+
+  // Looks like a commit SHA (7-40 hex characters only)
+  if (/^[0-9a-f]{7,40}$/i.test(ref)) {
+    return false;
+  }
+
+  // Relative refs like HEAD~5, HEAD^, HEAD^^, HEAD~2^, etc.
+  if (/^HEAD[~^]/i.test(ref)) {
+    return false;
+  }
+
+  // HEAD by itself
+  if (ref.toUpperCase() === "HEAD") {
+    return false;
+  }
+
+  // Everything else is treated as a branch name
+  return true;
+};
+
 if (process.env.CI !== undefined) {
-  const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
-  if (branch !== undefined) {
-    const branchWithoutOrigin = branch.replace(/^origin\//, "");
-    const branchWithOrigin = `origin/${branchWithoutOrigin}`;
-    fetchFromOrigin(branchWithoutOrigin);
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+  const ref = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
+  if (ref !== undefined) {
+    if (isBranchName(ref)) {
+      // It's a branch name - fetch from origin and use origin/<branch>
+      const branchWithoutOrigin = ref.replace(/^origin\//, "");
+      const branchWithOrigin = `origin/${branchWithoutOrigin}`;
+      fetchFromOrigin(branchWithoutOrigin);
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+    }
+    // For SHAs, relative refs, etc. - leave ESLINT_PLUGIN_DIFF_COMMIT unchanged
+    // The git diff command will use it directly
   }
 }
 
@@ -114,9 +151,7 @@ const getPostProcessor =
 
 type ProcessorType = "diff" | "staged" | "ci";
 
-const getProcessors = (
-  processorType: ProcessorType
-): Linter.Processor => {
+const getProcessors = (processorType: ProcessorType): Linter.Processor => {
   const staged = processorType === "staged";
   const diffFileList = getDiffFileList(staged);
 
