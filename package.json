@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-diff-flat-config",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Run ESLint on your changes only - with ESLint flat config support",
   "keywords": [
     "eslint",
