@@ -1,6 +1,6 @@
 jest.mock("./git", () => ({
   ...jest.requireActual<typeof git>("./git"),
-  getUntrackedFileList: jest.fn(),
+  getTrackedFileList: jest.fn(),
   getDiffFileList: jest.fn(),
   getDiffForFile: jest.fn(),
   hasCleanIndex: jest.fn(),
@@ -19,7 +19,7 @@ const untrackedFilename = "an-untracked-file.js";
 
 const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
 gitMocked.getDiffFileList.mockReturnValue([filename]);
-gitMocked.getUntrackedFileList.mockReturnValue([untrackedFilename]);
+gitMocked.getTrackedFileList.mockReturnValue([filename, "file-with-dirty-index.js"]);
 
 describe("processors", () => {
   it("preprocess (diff and staged)", async () => {

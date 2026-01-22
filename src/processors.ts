@@ -5,7 +5,7 @@ import {
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
-  getUntrackedFileList,
+  getTrackedFileList,
   hasCleanIndex,
 } from "./git";
 import type { Range } from "./Range";
@@ -28,18 +28,12 @@ if (process.env.CI !== undefined) {
  * This is increasingly useful the more files there are in the repository.
  */
 const getPreProcessor =
-  (diffFileList: string[], staged: boolean) =>
+  (trackedFileSet: Set<string>, diffFileList: string[]) =>
   (text: string, filename: string) => {
-    let untrackedFileList = getUntrackedFileList(staged);
-    const shouldRefresh =
-      !diffFileList.includes(filename) && !untrackedFileList.includes(filename);
-    if (shouldRefresh) {
-      untrackedFileList = getUntrackedFileList(staged, true);
-    }
     const shouldBeProcessed =
       process.env.VSCODE_PID !== undefined ||
       diffFileList.includes(filename) ||
-      untrackedFileList.includes(filename);
+      !trackedFileSet.has(filename);
 
     return shouldBeProcessed ? [text] : [];
   };
@@ -72,7 +66,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (staged: boolean) =>
+  (trackedFileSet: Set<string>, staged: boolean) =>
   (
     messages: Linter.LintMessage[][],
     filename: string
@@ -81,8 +75,7 @@ const getPostProcessor =
       // No need to filter, just return
       return [];
     }
-    const untrackedFileList = getUntrackedFileList(staged);
-    if (untrackedFileList.includes(filename)) {
+    if (!trackedFileSet.has(filename)) {
       // We don't need to filter the messages of untracked files because they
       // would all be kept anyway, so we return them as-is.
       return messages.flat();
@@ -117,11 +110,12 @@ const getProcessors = (
   processorType: ProcessorType
 ): Required<Linter.Processor> => {
   const staged = processorType === "staged";
+  const trackedFileSet = new Set(getTrackedFileList());
   const diffFileList = getDiffFileList(staged);
 
   return {
-    preprocess: getPreProcessor(diffFileList, staged),
-    postprocess: getPostProcessor(staged),
+    preprocess: getPreProcessor(trackedFileSet, diffFileList),
+    postprocess: getPostProcessor(trackedFileSet, staged),
     supportsAutofix: true,
   };
 };
