@@ -11,12 +11,21 @@ import {
 import type { Range } from "./Range";
 
 if (process.env.CI !== undefined) {
-  const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
-  if (branch !== undefined) {
-    const branchWithoutOrigin = branch.replace(/^origin\//, "");
-    const branchWithOrigin = `origin/${branchWithoutOrigin}`;
-    fetchFromOrigin(branchWithoutOrigin);
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+  const ref = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
+  if (ref !== undefined) {
+    if (ref.match(/^[a-f0-9]{40}$/i)) {
+      // Commit hash
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT = ref;
+    } else if (ref.match(/^refs\//i)) {
+      // This is a namespace-qualified ref - take it as-is
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT = ref;
+    } else {
+      // Assume that the upstream is named 'origin', and force that prefix
+      const branchWithoutOrigin = ref.replace(/^origin\//, "");
+      const branchWithOrigin = `origin/${branchWithoutOrigin}`;
+      fetchFromOrigin(branchWithoutOrigin);
+      process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+    }
   }
 }
 
