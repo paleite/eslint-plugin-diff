@@ -45,6 +45,13 @@ exports[`processors diff postprocess 1`] = `
   },
   {
     "column": 1,
+    "fix": Object {
+      "range": Array [
+        0,
+        3,
+      ],
+      "text": "",
+    },
     "line": 3,
     "message": "Expected { after 'if' condition.",
     "messageId": "missingCurlyAfterCondition",
@@ -60,6 +67,22 @@ exports[`processors staged postprocess 1`] = `
   {
     "column": 1,
     "line": 2,
+    "message": "Expected { after 'if' condition.",
+    "messageId": "missingCurlyAfterCondition",
+    "nodeType": "IfStatement",
+    "ruleId": "curly",
+    "severity": 1,
+  },
+  Object {
+    "column": 1,
+    "fix": Object {
+      "range": Array [
+        0,
+        3,
+      ],
+      "text": "",
+    },
+    "line": 3,
     "message": "Expected { after 'if' condition.",
     "messageId": "missingCurlyAfterCondition",
     "nodeType": "IfStatement",
