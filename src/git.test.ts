@@ -48,14 +48,14 @@ describe("getRangesForDiff", () => {
 
 describe("getDiffForFile", () => {
   it("should get the staged diff of a file", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    mockedChildProcess.execFileSync.mockReturnValueOnce(hunks);
     process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js", true);
+    const diffFromFile = getDiffForFile("./mockfile.js", "staged");
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --staged --unified=0 1234567";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --cached --unified=0 1234567";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
@@ -68,14 +68,14 @@ describe("getDiffForFile", () => {
   });
 
   it("should work when using staged = false", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    mockedChildProcess.execFileSync.mockReturnValueOnce(hunks);
     process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
+    const diffFromFile = getDiffForFile("./mockfile.js", "working");
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
@@ -88,14 +88,14 @@ describe("getDiffForFile", () => {
   });
 
   it("should use HEAD when no commit was defined", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    mockedChildProcess.execFileSync.mockReturnValueOnce(hunks);
     process.env.ESLINT_PLUGIN_DIFF_COMMIT = undefined;
 
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
+    const diffFromFile = getDiffForFile("./mockfile.js", "working");
 
     const expectedCommand = "git";
     const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
+      "diff-index --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, argsIncludingFile = []] = lastCall ?? [""];
@@ -120,7 +120,7 @@ describe("hasCleanIndex", () => {
 
   it("returns true otherwise", () => {
     jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
+    mockedChildProcess.execFileSync.mockReturnValue("");
     expect(hasCleanIndex("")).toEqual(true);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
   });
@@ -129,11 +129,9 @@ describe("hasCleanIndex", () => {
 describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
-    );
+    mockedChildProcess.execFileSync.mockReturnValueOnce(diffFileList);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList(false);
+    const fileListA = getDiffFileList("working");
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
@@ -145,18 +143,13 @@ describe("getDiffFileList", () => {
 describe("getUntrackedFileList", () => {
   it("should get the list of untracked files", () => {
     jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
-    );
+    mockedChildProcess.execFileSync.mockReturnValueOnce(diffFileList);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getUntrackedFileList(false);
+    const fileListA = getUntrackedFileList("working");
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
 
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
-    );
-    const staged = false;
-    const fileListB = getUntrackedFileList(staged);
+    mockedChildProcess.execFileSync.mockReturnValueOnce(diffFileList);
+    const fileListB = getUntrackedFileList("working");
     // `getUntrackedFileList` uses a cache, so the number of calls to
     // `execFileSync` will not have increased.
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
@@ -168,7 +161,10 @@ describe("getUntrackedFileList", () => {
   });
 
   it("should not get a list when looking when using staged", () => {
-    const staged = true;
-    expect(getUntrackedFileList(staged)).toEqual([]);
+    expect(getUntrackedFileList("staged")).toEqual([]);
+  });
+
+  it("should not get a list when looking when using committed", () => {
+    expect(getUntrackedFileList("committed")).toEqual([]);
   });
 });

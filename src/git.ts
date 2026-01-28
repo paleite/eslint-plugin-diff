@@ -2,50 +2,48 @@ import * as child_process from "child_process";
 import { resolve } from "path";
 import { Range } from "./Range";
 
-const COMMAND = "git";
-const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
+export type DiffType = "staged" | "committed" | "working";
 
-const getDiffForFile = (filePath: string, staged: boolean): string => {
+const COMMAND = "git";
+const OPTIONS = { encoding: "utf8" as const, maxBuffer: 1024 * 1024 * 100 };
+
+const getDiffForFile = (filePath: string, diffType: DiffType): string => {
   const args = [
-    "diff",
+    diffType === "committed" ? "diff-tree" : "diff-index",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    diffType === "staged" && "--cached",
     "--unified=0",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    diffType === "committed" && "HEAD",
     "--",
     resolve(filePath),
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
-  );
+  ].filter((cur): cur is string => typeof cur === "string");
 
-  return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
+  return child_process.execFileSync(COMMAND, args, OPTIONS);
 };
 
-const getDiffFileList = (staged: boolean): string[] => {
+const getDiffFileList = (diffType: DiffType): string[] => {
   const args = [
-    "diff",
+    diffType === "committed" ? "diff-tree" : "diff-index",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--name-only",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    diffType === "staged" && "--cached",
+    diffType === "committed" && "-r",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    diffType === "committed" && "HEAD",
     "--",
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
-  );
+  ].filter((cur): cur is string => typeof cur === "string");
 
   return child_process
     .execFileSync(COMMAND, args, OPTIONS)
-    .toString()
     .trim()
     .split("\n")
     .map((filePath) => resolve(filePath));
@@ -53,11 +51,32 @@ const getDiffFileList = (staged: boolean): string[] => {
 
 const hasCleanIndex = (filePath: string): boolean => {
   const args = [
-    "diff",
+    "diff-files",
     "--no-ext-diff",
     "--quiet",
     "--relative",
     "--unified=0",
+    "--",
+    resolve(filePath),
+  ];
+
+  try {
+    child_process.execFileSync(COMMAND, args, OPTIONS);
+  } catch (err: unknown) {
+    return false;
+  }
+
+  return true;
+};
+
+const hasCleanTree = (filePath: string): boolean => {
+  const args = [
+    "diff-index",
+    "--no-ext-diff",
+    "--quiet",
+    "--relative",
+    "--unified=0",
+    "HEAD",
     "--",
     resolve(filePath),
   ];
@@ -79,10 +98,10 @@ const fetchFromOrigin = (branch: string) => {
 
 let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (
-  staged: boolean,
+  diffType: DiffType,
   shouldRefresh = false
 ): string[] => {
-  if (staged) {
+  if (diffType !== "working") {
     return [];
   }
 
@@ -91,7 +110,6 @@ const getUntrackedFileList = (
 
     untrackedFileListCache = child_process
       .execFileSync(COMMAND, args, OPTIONS)
-      .toString()
       .trim()
       .split("\n")
       .map((filePath) => resolve(filePath));
@@ -155,6 +173,13 @@ const getRangesForDiff = (diff: string): Range[] =>
     return [...ranges, range];
   }, []);
 
+const readFileFromGit = (filePath: string) => {
+  const getBlob = ["ls-tree", "--object-only", "HEAD", resolve(filePath)];
+  const blob = child_process.execFileSync(COMMAND, getBlob, OPTIONS).trim();
+  const catFile = ["cat-file", "blob", blob];
+  return child_process.execFileSync(COMMAND, catFile, OPTIONS);
+};
+
 export {
   fetchFromOrigin,
   getDiffFileList,
@@ -162,4 +187,6 @@ export {
   getRangesForDiff,
   getUntrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 };
