@@ -122,6 +122,29 @@ export ESLINT_PLUGIN_DIFF_COMMIT="origin/$BITBUCKET_PR_DESTINATION_BRANCH";
 npx --no-install eslint --ext .js,.ts,.tsx .
 ```
 
+### For GitLab CI
+
+When running in merge request pipelines, set `ESLINT_PLUGIN_DIFF_COMMIT` from
+the merge request target branch:
+
+```sh
+export ESLINT_PLUGIN_DIFF_COMMIT="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-$CI_MERGE_REQUEST_TARGET_BRANCH_NAME}";
+npx --no-install eslint --ext .js,.ts,.tsx .
+```
+
+## Compatibility Notes
+
+- `eslint-plugin-diff` uses ESLint processors. ESLint only allows one processor
+  per file, so processor-based integrations (for example some `eslint-plugin-vue`
+  setups) may conflict. In those cases, scope `eslint-plugin-diff` to file
+  patterns where no competing processor is required.
+- `"plugin:diff/staged"` only filters diagnostics to staged line ranges. It does
+  not override your existing ESLint rules/configuration, but it can look like
+  config differences when files are partially staged. If this is confusing in a
+  team workflow, prefer `"plugin:diff/diff"` in CI and run full lint locally.
+- If you need a temporary bypass, remove the plugin config for that run (or set
+  `ESLINT_PLUGIN_DIFF_COMMIT` explicitly for deterministic results).
+
 ## Maintainer Release Flow
 
 - Run `pnpm run release` locally to create the version/tag/release metadata.
