@@ -35,15 +35,26 @@ if (process.env.CI !== undefined) {
 const getPreProcessor =
   (diffFileList: string[], staged: boolean) =>
   (text: string, filename: string) => {
+    let diffFileListCache = diffFileList;
+    if (
+      process.env.VSCODE_PID !== undefined &&
+      !diffFileListCache.includes(filename)
+    ) {
+      // Editors can invoke ESLint before our initial diff snapshot includes the
+      // latest edit. Refresh once to avoid "second edit" diagnostics.
+      diffFileListCache = getDiffFileList(staged);
+    }
+
     let untrackedFileList = getUntrackedFileList(staged);
     const shouldRefresh =
-      !diffFileList.includes(filename) && !untrackedFileList.includes(filename);
+      !diffFileListCache.includes(filename) &&
+      !untrackedFileList.includes(filename);
     if (shouldRefresh) {
       untrackedFileList = getUntrackedFileList(staged, true);
     }
     const shouldBeProcessed =
       process.env.VSCODE_PID !== undefined ||
-      diffFileList.includes(filename) ||
+      diffFileListCache.includes(filename) ||
       untrackedFileList.includes(filename);
 
     return shouldBeProcessed ? [text] : [];
