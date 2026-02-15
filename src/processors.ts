@@ -11,11 +11,17 @@ import {
 import type { Range } from "./Range";
 
 if (process.env.CI !== undefined) {
-  const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
-  if (branch !== undefined) {
-    const branchWithoutOrigin = branch.replace(/^origin\//, "");
+  const providedCommit = process.env.ESLINT_PLUGIN_DIFF_COMMIT;
+  const guessedBranch =
+    providedCommit === undefined ? guessBranch() : undefined;
+
+  if (guessedBranch !== undefined) {
+    const branchWithoutOrigin = guessedBranch.replace(/^origin\//, "");
     fetchFromOrigin(branchWithoutOrigin);
-    // Don't modify ESLINT_PLUGIN_DIFF_COMMIT - use it as provided
+
+    // Make the guessed branch available to git diff calls without
+    // changing explicitly provided values.
+    process.env.ESLINT_PLUGIN_DIFF_COMMIT = guessedBranch;
   }
 }
 
