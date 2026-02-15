@@ -73,6 +73,22 @@ Only lint the changes you've staged for an upcoming commit.
 }
 ```
 
+#### Flat config (ESLint 9+)
+
+```js
+const diff = require("eslint-plugin-diff");
+
+module.exports = [...diff.configs["flat/diff"]];
+```
+
+For CI-only behavior:
+
+```js
+const diff = require("eslint-plugin-diff");
+
+module.exports = [...diff.configs["flat/ci"]];
+```
+
 ## CI Setup
 
 To lint all the changes of a pull-request, you only have to set

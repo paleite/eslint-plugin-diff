@@ -3,50 +3,6 @@
 exports[`plugin should match expected export 1`] = `
 {
   "ci": {
-    "overrides": [
-      {
-        "files": [
-          "*",
-        ],
-        "processor": "diff/ci",
-      },
-    ],
-    "plugins": [
-      "diff",
-    ],
-  },
-  "diff": {
-    "overrides": [
-      {
-        "files": [
-          "*",
-        ],
-        "processor": "diff/diff",
-      },
-    ],
-    "plugins": [
-      "diff",
-    ],
-  },
-  "staged": {
-    "overrides": [
-      {
-        "files": [
-          "*",
-        ],
-        "processor": "diff/staged",
-      },
-    ],
-    "plugins": [
-      "diff",
-    ],
-  },
-}
-`;
-
-exports[`plugin should match expected export 2`] = `
-{
-  "ci": {
     "postprocess": [Function],
     "preprocess": [Function],
     "supportsAutofix": true,
