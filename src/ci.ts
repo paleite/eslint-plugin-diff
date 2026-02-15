@@ -88,7 +88,7 @@ const guessProviders = () =>
 
       return [...acc, { name, branch }];
     },
-    []
+    [],
   );
 
 const guessBranch = (): string | undefined => {
@@ -102,8 +102,8 @@ const guessBranch = (): string | undefined => {
       `Too many CI providers found (${guessedProviders
         .map(({ name }) => name)
         .join(
-          ", "
-        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_DIFF_COMMIT="main"`
+          ", ",
+        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_DIFF_COMMIT="main"`,
     );
   }
 

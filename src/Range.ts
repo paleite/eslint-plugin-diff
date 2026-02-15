@@ -4,11 +4,11 @@ class Range {
 
   constructor(
     inclusiveLowerBound: Readonly<number>,
-    exclusiveUpperBound: Readonly<number>
+    exclusiveUpperBound: Readonly<number>,
   ) {
     if (inclusiveLowerBound >= exclusiveUpperBound) {
       throw TypeError(
-        `inclusiveLowerBound must be strictly less than exclusiveUpperBound: ${inclusiveLowerBound} >= ${exclusiveUpperBound}`
+        `inclusiveLowerBound must be strictly less than exclusiveUpperBound: ${inclusiveLowerBound} >= ${exclusiveUpperBound}`,
       );
     }
 

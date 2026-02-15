@@ -20,7 +20,7 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
     resolve(filePath),
   ].reduce<string[]>(
     (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
+    [],
   );
 
   return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
@@ -40,7 +40,7 @@ const getDiffFileList = (staged: boolean): string[] => {
     "--",
   ].reduce<string[]>(
     (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    []
+    [],
   );
 
   return child_process
@@ -80,7 +80,7 @@ const fetchFromOrigin = (branch: string) => {
 let untrackedFileListCache: string[] | undefined;
 const getUntrackedFileList = (
   staged: boolean,
-  shouldRefresh = false
+  shouldRefresh = false,
 ): string[] => {
   if (staged) {
     return [];

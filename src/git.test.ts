@@ -39,9 +39,9 @@ describe("getRangesForDiff", () => {
 
   it("should work for hunks which include only-removal-ranges", () => {
     expect(() =>
-      getRangesForDiff("@@ invalid hunk header @@")
+      getRangesForDiff("@@ invalid hunk header @@"),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Couldn't match regex with line '@@ invalid hunk header @@'"`
+      `"Couldn't match regex with line '@@ invalid hunk header @@'"`,
     );
   });
 });
@@ -130,14 +130,14 @@ describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
+      Buffer.from(diffFileList),
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
     const fileListA = getDiffFileList(false);
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
-      ["file1", "file2", "file3"].map((p) => path.resolve(p))
+      ["file1", "file2", "file3"].map((p) => path.resolve(p)),
     );
   });
 });
@@ -146,14 +146,14 @@ describe("getUntrackedFileList", () => {
   it("should get the list of untracked files", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
+      Buffer.from(diffFileList),
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
     const fileListA = getUntrackedFileList(false);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
 
     mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList)
+      Buffer.from(diffFileList),
     );
     const staged = false;
     const fileListB = getUntrackedFileList(staged);
@@ -162,7 +162,7 @@ describe("getUntrackedFileList", () => {
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
 
     expect(fileListA).toEqual(
-      ["file1", "file2", "file3"].map((p) => path.resolve(p))
+      ["file1", "file2", "file3"].map((p) => path.resolve(p)),
     );
     expect(fileListA).toEqual(fileListB);
   });

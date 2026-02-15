@@ -27,12 +27,12 @@ const req = https.request(options, (res) => {
         .filter(({ login }) => !login.includes("[bot]"))
         .map(
           (contributor) =>
-            `- ![${contributor.login}](${contributor.avatar_url}&s=50) [${contributor.login}](${contributor.html_url})`
+            `- ![${contributor.login}](${contributor.avatar_url}&s=50) [${contributor.login}](${contributor.html_url})`,
         );
 
       fs.writeFileSync(
         "CONTRIBUTORS.md",
-        ["# Contributors", contributorsList.join("\n")].join("\n\n")
+        ["# Contributors", contributorsList.join("\n")].join("\n\n"),
       );
     } catch (e) {
       console.error(e.message);

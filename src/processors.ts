@@ -74,7 +74,7 @@ const getPostProcessor =
   (staged: boolean) =>
   (
     messages: Linter.LintMessage[][],
-    filename: string
+    filename: string,
   ): Linter.LintMessage[] => {
     if (messages.length === 0) {
       // No need to filter, just return
@@ -100,7 +100,7 @@ const getPostProcessor =
         }
 
         const isLineWithinSomeRange = rangesForDiff.some(
-          isLineWithinRange(line)
+          isLineWithinRange(line),
         );
 
         return isLineWithinSomeRange;

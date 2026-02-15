@@ -50,7 +50,7 @@ describe("processors", () => {
 
     const noMessages: Linter.LintMessage[][] = [];
     expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
-      noMessages
+      noMessages,
     );
   });
 
@@ -64,7 +64,7 @@ describe("processors", () => {
     ];
 
     expect(
-      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename)
+      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename),
     ).toEqual(untrackedFilesMessages);
   });
 
@@ -89,7 +89,7 @@ describe("processors", () => {
 
     expect(diffProcessors.postprocess(messages, filename)).toHaveLength(2);
     expect(
-      diffProcessors.postprocess(messagesWithFatal, filename)
+      diffProcessors.postprocess(messagesWithFatal, filename),
     ).toHaveLength(3);
   });
 
@@ -102,12 +102,12 @@ describe("processors", () => {
     const fileWithDirtyIndex = "file-with-dirty-index.js";
     const [errorMessage] = stagedProcessors.postprocess(
       messages,
-      fileWithDirtyIndex
+      fileWithDirtyIndex,
     );
 
     expect(errorMessage?.fatal).toBe(true);
     expect(errorMessage?.message).toMatchInlineSnapshot(
-      `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`
+      `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`,
     );
   });
 });
@@ -131,7 +131,7 @@ describe("fatal error-message", () => {
     const [result] = getUnstagedChangesError("mock filename.ts");
     expect(result.fatal).toBe(true);
     expect(result.message).toMatchInlineSnapshot(
-      '"mock filename.ts has unstaged changes. Please stage or remove the changes."'
+      '"mock filename.ts has unstaged changes. Please stage or remove the changes."',
     );
   });
 });
