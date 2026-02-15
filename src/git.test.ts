@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import path from "path";
 import {
+  fetchFromOrigin,
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
@@ -123,6 +124,21 @@ describe("hasCleanIndex", () => {
     mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
     expect(hasCleanIndex("")).toEqual(true);
     expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
+  });
+});
+
+describe("fetchFromOrigin", () => {
+  it("fetches from origin for the provided branch", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
+
+    fetchFromOrigin("main");
+
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalledWith(
+      "git",
+      ["fetch", "--quiet", "origin", "main"],
+      expect.anything(),
+    );
   });
 });
 

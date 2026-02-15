@@ -35,6 +35,20 @@ describe("processors", () => {
     ]);
   });
 
+  it("preprocess refreshes untracked files when filename is unknown", async () => {
+    const sourceCode = "/** Some source code */";
+    const unknownFilename = "unknown-file.ts";
+    gitMocked.getUntrackedFileList
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce([]);
+
+    const { diff: diffProcessors } = await import("./processors");
+
+    expect(diffProcessors.preprocess(sourceCode, unknownFilename)).toEqual([]);
+    expect(gitMocked.getUntrackedFileList).toHaveBeenCalledWith(false, true);
+  });
+
   it("diff postprocess", async () => {
     gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
 
