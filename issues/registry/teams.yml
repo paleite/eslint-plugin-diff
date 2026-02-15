@@ -1,0 +1,4 @@
+teams:
+  - id: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    key: EPD
+    name: eslint-plugin-diff

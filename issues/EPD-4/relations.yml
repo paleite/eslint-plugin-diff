@@ -1,0 +1,16 @@
+relations:
+  - relationId: d615668c-12b2-4b9b-843f-c8b124ffddf3
+    type: blocked-by
+    relatedIssueId: aa6f7766-2316-425a-b913-2ad773299de2
+  - relationId: 50e8647d-330a-483e-a78c-333676c4914c
+    type: blocked-by
+    relatedIssueId: 5782a148-f282-4b64-8a74-c2b9a1541d90
+  - relationId: c034bb64-b956-401b-8e29-c3f83e8db8e6
+    type: blocked-by
+    relatedIssueId: 303d76f8-c2bf-4d64-8d9b-4c7168364d9f
+  - relationId: 3f4b2832-ee0f-4b0a-aaf1-111ff4a25619
+    type: blocked-by
+    relatedIssueId: 255ce433-41fd-41d6-9433-104545d4861a
+  - relationId: e9e89ccf-7e8e-410b-97ae-2cdbede0dfe3
+    type: blocked-by
+    relatedIssueId: 2e31deb2-11a8-4a4b-bf95-7fa1b3513591

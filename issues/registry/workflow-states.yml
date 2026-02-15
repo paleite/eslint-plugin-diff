@@ -1,0 +1,31 @@
+states:
+  - id: d5b06eb7-a2db-427b-88c7-01fb29abe4d6
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: Backlog
+    type: backlog
+    position: 1
+  - id: bf92633c-e2eb-4fdb-a81c-1392220810cb
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: Todo
+    type: unstarted
+    position: 2
+  - id: 1d0aeaf9-4a14-4fc9-8ac5-d7a1088a1d14
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: In Progress
+    type: started
+    position: 3
+  - id: 567bb0af-8316-40db-8a09-5ed9138f0d29
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: Done
+    type: completed
+    position: 4
+  - id: fa8caa9a-305f-4d93-8fc8-07b194d24dec
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: Canceled
+    type: canceled
+    position: 5
+  - id: 4309c53e-9063-494d-8000-871fe4ff0e9e
+    teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
+    name: Duplicate
+    type: canceled
+    position: 6

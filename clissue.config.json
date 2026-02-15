@@ -1,0 +1,14 @@
+{
+  "maximumProviderRetries": 2,
+  "confidenceThreshold": 0.75,
+  "dataDir": ".clissue",
+  "registriesDir": "issues/registry",
+  "issuesDir": "issues",
+  "proposalQualityProfile": "detailed",
+  "proposalTemplateMarkdown": "## Background\n\n[PLACEHOLDER FOR AGENTS: ADD BACKGROUND INFORMATION HERE]\n\n## Problem\n\n[PLACEHOLDER FOR AGENTS: STATE THE PROBLEM CLEARLY]\n\n## Scope\n\n[PLACEHOLDER FOR AGENTS: DEFINE IN-SCOPE CHANGES]\n\n## Non-goals\n\n[PLACEHOLDER FOR AGENTS: LIST OUT-OF-SCOPE ITEMS]\n\n## Plan\n\n[PLACEHOLDER FOR AGENTS: OUTLINE THE IMPLEMENTATION STEPS]\n\n## Acceptance criteria\n- [ ] [PLACEHOLDER FOR AGENTS: ADD PASS/FAIL CONDITIONS]\n\n## Definition of done\n- [ ] [PLACEHOLDER FOR AGENTS: ADD QUALITY CHECKLIST ITEMS]\n\n## Verification\n\n[PLACEHOLDER FOR AGENTS: DESCRIBE HOW TO VERIFY]\n\n## Risks / Rollback\n\n[PLACEHOLDER FOR AGENTS: NOTE RISKS AND ROLLBACK PLAN]\n\n## Code pointers\n",
+  "minimumProposal": {
+    "minimumDescriptionCharacters": 600,
+    "minimumAcceptanceCriteriaCount": 3,
+    "minimumDefinitionOfDoneCount": 3
+  }
+}

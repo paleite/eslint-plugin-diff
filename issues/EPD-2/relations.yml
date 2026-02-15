@@ -1,0 +1,4 @@
+relations:
+  - relationId: 2fc4abd0-0b25-4bf9-8fd6-9231b73f8fb9
+    type: related
+    relatedIssueId: 59626b1b-402d-45c3-8b40-180b884d0400
