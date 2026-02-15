@@ -2,3 +2,6 @@ relations:
   - relationId: 65f1ce81-f6f2-4af1-9edc-fe3b6d41ef89
     type: related
     relatedIssueId: 59626b1b-402d-45c3-8b40-180b884d0400
+  - relationId: a8bedc5a-ab4d-42ad-b048-4627fecc5145
+    type: blocked-by
+    relatedIssueId: 303d76f8-c2bf-4d64-8d9b-4c7168364d9f
