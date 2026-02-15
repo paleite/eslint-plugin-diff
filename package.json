@@ -37,7 +37,7 @@
     "release": "np --no-publish",
     "test": "jest --coverage",
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "prepare": "husky"
+    "prepare": "husky && (git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config blame.ignoreRevsFile .git-blame-ignore-revs || true)"
   },
   "resolutions": {
     "cosmiconfig": "^8.1.3"
