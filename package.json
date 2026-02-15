@@ -17,7 +17,7 @@
     "url": "git+https://github.com/paleite/eslint-plugin-diff.git"
   },
   "license": "MIT",
-  "author": "Patrick Eriksson <paleite@users.noreply.github.com> (https://github.com/paleite)",
+  "author": "Patrick Aleite <paleite@users.noreply.github.com> (https://github.com/paleite)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
