@@ -62,15 +62,9 @@ importers:
       eslint-plugin-promise:
         specifier: ^6.1.1
         version: 6.6.0(eslint@8.57.1)
-      husky:
-        specifier: ^8.0.3
-        version: 8.0.3
       jest:
         specifier: ^29.3.1
         version: 29.7.0(@types/node@18.19.130)
-      lint-staged:
-        specifier: ^13.1.0
-        version: 13.3.0
       np:
         specifier: ^7.7.0
         version: 7.7.0(typescript@5.9.3)
@@ -3247,15 +3241,6 @@ packages:
       }
     engines: { node: ">=14.18.0" }
 
-  husky@8.0.3:
-    resolution:
-      {
-        integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==,
-        tarball: https://registry.npmjs.org/husky/-/husky-8.0.3.tgz,
-      }
-    engines: { node: ">=14" }
-    hasBin: true
-
   iconv-lite@0.4.24:
     resolution:
       {
@@ -4279,15 +4264,6 @@ packages:
         integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==,
         tarball: https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz,
       }
-
-  lint-staged@13.3.0:
-    resolution:
-      {
-        integrity: sha512-mPRtrYnipYYv1FEE134ufbWpeggNTo+O/UPzngoaKzbzHAthvR55am+8GfHTnqNRQVRRrYQLGW9ZyUoD7DsBHQ==,
-        tarball: https://registry.npmjs.org/lint-staged/-/lint-staged-13.3.0.tgz,
-      }
-    engines: { node: ^16.14.0 || >=18.0.0 }
-    hasBin: true
 
   listr-input@0.2.1:
     resolution:
@@ -8556,8 +8532,6 @@ snapshots:
 
   human-signals@4.3.1: {}
 
-  husky@8.0.3: {}
-
   iconv-lite@0.4.24:
     dependencies:
       safer-buffer: 2.1.2
@@ -9237,22 +9211,6 @@ snapshots:
   lilconfig@2.1.0: {}
 
   lines-and-columns@1.2.4: {}
-
-  lint-staged@13.3.0:
-    dependencies:
-      chalk: 5.3.0
-      commander: 11.0.0
-      debug: 4.3.4
-      execa: 7.2.0
-      lilconfig: 2.1.0
-      listr2: 6.6.1
-      micromatch: 4.0.5
-      pidtree: 0.6.0
-      string-argv: 0.3.2
-      yaml: 2.3.1
-    transitivePeerDependencies:
-      - enquirer
-      - supports-color
 
   listr-input@0.2.1:
     dependencies:
