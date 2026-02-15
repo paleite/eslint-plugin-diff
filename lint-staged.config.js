@@ -1,3 +1,3 @@
 module.exports = {
-  "*.ts": [() => "yarn run typecheck"],
+  "*.ts": [() => "pnpm run typecheck"],
 };
