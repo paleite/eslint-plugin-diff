@@ -106,6 +106,16 @@ export ESLINT_PLUGIN_DIFF_COMMIT="origin/$BITBUCKET_PR_DESTINATION_BRANCH";
 npx --no-install eslint --ext .js,.ts,.tsx .
 ```
 
+## Maintainer Release Flow
+
+- Run `pnpm run release` locally to create the version/tag/release metadata.
+- Push the created git tag (for example `v2.0.4`).
+- Publishing is performed by GitHub Actions on tag pushes via `npm publish --provenance --access public`.
+
+### One-time setup
+
+Configure npm trusted publishing for this repository/workflow so GitHub Actions can publish without a long-lived npm token.
+
 ## Note
 
 - You can use any valid commit syntax for `ESLINT_PLUGIN_DIFF_COMMIT`. See [git's official documentation on the syntax](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-emgitdiffemltoptionsgtltcommitgt--ltpathgt82308203)
