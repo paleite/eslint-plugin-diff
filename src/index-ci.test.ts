@@ -11,8 +11,8 @@ mockedChildProcess.execFileSync.mockReturnValue(
 import "./index";
 
 describe("CI", () => {
-  it("should diff against origin", () => {
+  it("should use branch as provided", () => {
     expect(process.env.CI).toBeDefined();
-    expect(process.env.ESLINT_PLUGIN_DIFF_COMMIT).toEqual("origin/some-branch");
+    expect(process.env.ESLINT_PLUGIN_DIFF_COMMIT).toEqual("some-branch");
   });
 });

@@ -14,9 +14,8 @@ if (process.env.CI !== undefined) {
   const branch = process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? guessBranch();
   if (branch !== undefined) {
     const branchWithoutOrigin = branch.replace(/^origin\//, "");
-    const branchWithOrigin = `origin/${branchWithoutOrigin}`;
     fetchFromOrigin(branchWithoutOrigin);
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = branchWithOrigin;
+    // Don't modify ESLINT_PLUGIN_DIFF_COMMIT - use it as provided
   }
 }
 
@@ -112,10 +111,12 @@ const getPostProcessor =
   };
 
 type ProcessorType = "diff" | "staged" | "ci";
+type DiffProcessor = Linter.Processor &
+  Required<
+    Pick<Linter.Processor, "preprocess" | "postprocess" | "supportsAutofix">
+  >;
 
-const getProcessors = (
-  processorType: ProcessorType
-): Required<Linter.Processor> => {
+const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
   const diffFileList = getDiffFileList(staged);
 
