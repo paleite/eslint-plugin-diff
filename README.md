@@ -34,7 +34,6 @@ Get the plugin and extend your ESLint config.
 
 ```sh
 npm install --save-dev eslint eslint-plugin-diff
-yarn add -D eslint eslint-plugin-diff
 pnpm add -D eslint eslint-plugin-diff
 ```
 

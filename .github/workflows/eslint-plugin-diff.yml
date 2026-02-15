@@ -13,15 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
-          cache: "yarn"
+          node-version: 20
+          cache: "pnpm"
       - name: Install modules
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Link the plugin
         run: |
-          yarn link
-          yarn link "eslint-plugin-diff"
+          pnpm link --global
+          pnpm link --global "eslint-plugin-diff"
       - name: Run ESLint on your changes only
-        run: yarn run lint
+        run: pnpm run lint
