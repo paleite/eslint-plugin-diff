@@ -1,5 +1,5 @@
 jest.mock("./git", () => ({
-  ...jest.requireActual<typeof import("./git")>("./git"),
+  ...jest.requireActual<typeof git>("./git"),
   fetchFromOrigin: jest.fn(),
   getDiffFileList: jest.fn().mockReturnValue([]),
   getDiffForFile: jest.fn().mockReturnValue(""),
@@ -7,7 +7,7 @@ jest.mock("./git", () => ({
   hasCleanIndex: jest.fn().mockReturnValue(true),
 }));
 
-import * as git from "./git";
+import type * as git from "./git";
 
 const OLD_ENV = process.env;
 
