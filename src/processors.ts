@@ -33,33 +33,37 @@ if (process.env.CI !== undefined) {
  * them from being processed in the first place, as a performance optimization.
  * This is increasingly useful the more files there are in the repository.
  */
-const getPreProcessor =
-  (diffFileList: string[], staged: boolean) =>
-  (text: string, filename: string) => {
-    let diffFileListCache = diffFileList;
-    if (
-      process.env.VSCODE_PID !== undefined &&
-      !diffFileListCache.includes(filename)
-    ) {
+const getPreProcessor = (diffFileList: string[], staged: boolean) => {
+  let diffFileListCache = diffFileList;
+  let diffFileSetCache = new Set(diffFileListCache);
+
+  return (text: string, filename: string) => {
+    const isInDiffFileList = diffFileSetCache.has(filename);
+
+    if (process.env.VSCODE_PID !== undefined && !isInDiffFileList) {
       // Editors can invoke ESLint before our initial diff snapshot includes the
       // latest edit. Refresh once to avoid "second edit" diagnostics.
       diffFileListCache = getDiffFileList(staged);
+      diffFileSetCache = new Set(diffFileListCache);
     }
 
     let untrackedFileList = getUntrackedFileList(staged);
+    let untrackedFileSet = new Set(untrackedFileList);
     const shouldRefresh =
-      !diffFileListCache.includes(filename) &&
-      !untrackedFileList.includes(filename);
+      !diffFileSetCache.has(filename) && !untrackedFileSet.has(filename);
     if (shouldRefresh) {
       untrackedFileList = getUntrackedFileList(staged, true);
+      untrackedFileSet = new Set(untrackedFileList);
     }
+
     const shouldBeProcessed =
       process.env.VSCODE_PID !== undefined ||
-      diffFileListCache.includes(filename) ||
-      untrackedFileList.includes(filename);
+      diffFileSetCache.has(filename) ||
+      untrackedFileSet.has(filename);
 
     return shouldBeProcessed ? [text] : [];
   };
+};
 
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
@@ -95,8 +99,8 @@ const getPostProcessor =
       // No need to filter, just return
       return [];
     }
-    const untrackedFileList = getUntrackedFileList(staged);
-    if (untrackedFileList.includes(filename)) {
+    const untrackedFileSet = new Set(getUntrackedFileList(staged));
+    if (untrackedFileSet.has(filename)) {
       // We don't need to filter the messages of untracked files because they
       // would all be kept anyway, so we return them as-is.
       return messages.flat();

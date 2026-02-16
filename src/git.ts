@@ -5,9 +5,11 @@ import { Range } from "./Range";
 
 const COMMAND = "git";
 const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
+const onlyStrings = (args: Array<string | false>): string[] =>
+  args.filter((arg): arg is string => typeof arg === "string");
 
 const getDiffForFile = (filePath: string, staged: boolean): string => {
-  const args = [
+  const args = onlyStrings([
     "diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
@@ -19,16 +21,13 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
     resolve(filePath),
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    [],
-  );
+  ]);
 
   return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
 
 const getDiffFileList = (staged: boolean): string[] => {
-  const args = [
+  const args = onlyStrings([
     "diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
@@ -39,10 +38,7 @@ const getDiffFileList = (staged: boolean): string[] => {
     staged && "--staged",
     process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
     "--",
-  ].reduce<string[]>(
-    (acc, cur) => (typeof cur === "string" ? [...acc, cur] : acc),
-    [],
-  );
+  ]);
 
   return child_process
     .execFileSync(COMMAND, args, OPTIONS)
@@ -153,7 +149,8 @@ const getRangesForDiff = (diff: string): Range[] =>
       return ranges;
     }
 
-    return [...ranges, range];
+    ranges.push(range);
+    return ranges;
   }, []);
 
 export {
