@@ -141,10 +141,10 @@ const buildDataset = ({ diff, files }: Scenario) => {
 
   const hotWindow = Math.min(1000, files);
   for (let index = 0; index < hotWindow; index += 2) {
-    filenames[index] = diffFileList[index % diffFileList.length];
+    filenames[index] = diffFileList[index % diffFileList.length]!;
   }
   for (let index = 1; index < hotWindow; index += 2) {
-    filenames[index] = untrackedFileList[index % untrackedFileList.length];
+    filenames[index] = untrackedFileList[index % untrackedFileList.length]!;
   }
 
   return { diffFileList, untrackedFileList, filenames };
