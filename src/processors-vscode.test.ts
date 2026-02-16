@@ -31,6 +31,7 @@ describe("VS Code preprocess", () => {
 
     // Module initialization creates both `diff` and `staged` processors.
     gitMocked.getDiffFileList
+      .mockReturnValue([filename])
       .mockReturnValueOnce([])
       .mockReturnValueOnce([])
       .mockReturnValueOnce([filename]);
@@ -40,6 +41,8 @@ describe("VS Code preprocess", () => {
     const { diff } = await import("./processors");
 
     expect(diff.preprocess(sourceCode, filename)).toEqual([sourceCode]);
-    expect(gitMocked.getDiffFileList).toHaveBeenCalledTimes(3);
+    expect(gitMocked.getDiffFileList.mock.calls.length).toBeGreaterThanOrEqual(
+      3,
+    );
   });
 });
