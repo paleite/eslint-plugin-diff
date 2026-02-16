@@ -61,7 +61,7 @@ const hasCleanIndex = (filePath: string): boolean => {
 
   try {
     child_process.execFileSync(COMMAND, args, OPTIONS);
-  } catch (err: unknown) {
+  } catch {
     return false;
   }
 

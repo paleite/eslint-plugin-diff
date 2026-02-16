@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
+    "bench:preprocess-membership": "node scripts/benchmark-preprocessor-membership.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
     "format": "prettier --write .",
     "lint": "eslint --cache --ext .js,.ts --fix .",

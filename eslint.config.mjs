@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "node_modules/**",
     "coverage/**",
+    "test-d/**",
   ]),
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
