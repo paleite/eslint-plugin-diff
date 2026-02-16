@@ -7,13 +7,27 @@ import {
   stagedConfig,
 } from "./processors";
 
+type FlatConfig = {
+  plugins: { diff: unknown };
+  processor: string;
+};
+
+type PluginConfigs = {
+  ci: typeof ciConfig;
+  diff: typeof diffConfig;
+  staged: typeof stagedConfig;
+  [key: string]: typeof ciConfig | FlatConfig[];
+};
+
 const processors = { ci, diff, staged };
+const configs: PluginConfigs = {
+  ci: ciConfig,
+  diff: diffConfig,
+  staged: stagedConfig,
+};
+
 const plugin = {
-  configs: {
-    ci: ciConfig,
-    diff: diffConfig,
-    staged: stagedConfig,
-  },
+  configs,
   processors,
 };
 
@@ -27,8 +41,6 @@ plugin.configs["flat/ci"] =
   process.env.CI === undefined
     ? []
     : [{ plugins: { diff: plugin }, processor: "diff/ci" }];
-
-const { configs } = plugin;
 
 module.exports = plugin;
 
