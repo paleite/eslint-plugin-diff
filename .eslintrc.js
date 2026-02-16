@@ -17,6 +17,12 @@ module.exports = {
   },
   overrides: [
     {
+      files: ["**/*.test.ts", "**/*.test-d.ts"],
+      rules: {
+        "@typescript-eslint/consistent-type-imports": "off",
+      },
+    },
+    {
       files: [".*.js", "*.js"],
 
       rules: {
