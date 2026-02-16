@@ -63,9 +63,6 @@ const getPreProcessor =
 const isLineWithinRange = (line: number) => (range: Range) =>
   range.isWithinRange(line);
 
-/**
- * @internal
- */
 const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
   // When we only want to diff staged files, but the file is partially
   // staged, the ranges of the staged diff might not match the ranges of the
@@ -144,7 +141,14 @@ const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   };
 };
 
-const ci = process.env.CI !== undefined ? getProcessors("ci") : {};
+const getNoOpProcessor = (): DiffProcessor => ({
+  preprocess: (text: string) => [text],
+  postprocess: (messages: Linter.LintMessage[][]) => messages.flat(),
+  supportsAutofix: true,
+});
+
+const ci =
+  process.env.CI !== undefined ? getProcessors("ci") : getNoOpProcessor();
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
 
@@ -158,18 +162,15 @@ const diffConfig: Linter.BaseConfig = {
   ],
 };
 
-const ciConfig: Linter.BaseConfig =
-  process.env.CI === undefined
-    ? {}
-    : {
-        plugins: ["diff"],
-        overrides: [
-          {
-            files: ["*"],
-            processor: "diff/ci",
-          },
-        ],
-      };
+const ciConfig: Linter.BaseConfig = {
+  plugins: ["diff"],
+  overrides: [
+    {
+      files: ["*"],
+      processor: "diff/ci",
+    },
+  ],
+};
 
 const stagedConfig: Linter.BaseConfig = {
   plugins: ["diff"],

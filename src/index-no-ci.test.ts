@@ -11,7 +11,7 @@ afterAll(() => {
 });
 
 describe("plugin without CI", () => {
-  it("exposes an empty flat/ci config", () => {
+  it("exposes a flat/ci config", () => {
     jest.doMock("./processors", () => ({
       ci: {},
       ciConfig: {},
@@ -24,7 +24,9 @@ describe("plugin without CI", () => {
     jest.isolateModules(() => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { configs } = require("./index");
-      expect(configs["flat/ci"]).toEqual([]);
+      expect(configs["flat/ci"]).toEqual([
+        { plugins: { diff: expect.any(Object) }, processor: "diff/ci" },
+      ]);
     });
   });
 });

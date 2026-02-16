@@ -5,6 +5,16 @@ module.exports = {
   root: true,
   extends: ["@paleite"],
   parserOptions: { project: typescriptProjects, tsconfigRootDir: __dirname },
+  rules: {
+    "import/no-unused-modules": [
+      "error",
+      {
+        missingExports: false,
+        unusedExports: true,
+        ignoreExports: ["src/index.ts"],
+      },
+    ],
+  },
   overrides: [
     {
       files: [".*.js", "*.js"],

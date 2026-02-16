@@ -11,7 +11,7 @@ afterAll(() => {
 });
 
 describe("processors without CI", () => {
-  it("exports empty CI processor and config", async () => {
+  it("exports a no-op CI processor and CI config", async () => {
     jest.doMock("./git", () => ({
       ...jest.requireActual<typeof import("./git")>("./git"),
       getDiffFileList: jest.fn(() => []),
@@ -22,8 +22,26 @@ describe("processors without CI", () => {
 
     const { ci, ciConfig } = await import("./processors");
 
-    expect(ci).toEqual({});
-    expect(ciConfig).toEqual({});
+    const sourceCode = "/** Some source code */";
+    const filename = "file.ts";
+    const messages = [
+      [
+        {
+          ruleId: "mock",
+          severity: 1,
+          message: "mock msg",
+          line: 1,
+          column: 1,
+        },
+      ],
+    ];
+
+    expect(ci.preprocess(sourceCode, filename)).toEqual([sourceCode]);
+    expect(ci.postprocess(messages, filename)).toEqual(messages.flat());
+    expect(ciConfig).toEqual({
+      plugins: ["diff"],
+      overrides: [{ files: ["*"], processor: "diff/ci" }],
+    });
   });
 });
 

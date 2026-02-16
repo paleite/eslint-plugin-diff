@@ -7,7 +7,7 @@ mockedChildProcess.execFileSync.mockReturnValue(
   Buffer.from("line1\nline2\nline3"),
 );
 
-import { configs, processors } from "./index";
+import plugin, { configs, processors } from "./index";
 
 describe("plugin", () => {
   it("should match expected export", () => {
@@ -32,5 +32,10 @@ describe("plugin", () => {
     expect(flatDiff[0]?.plugins.diff).toBeDefined();
 
     expect(processors).toMatchSnapshot();
+  });
+
+  it("should provide default export", () => {
+    expect(plugin.configs).toBe(configs);
+    expect(plugin.processors).toBe(processors);
   });
 });

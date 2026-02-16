@@ -7,7 +7,7 @@ import {
   stagedConfig,
 } from "./processors";
 
-type FlatConfig = {
+type FlatConfigEntry = {
   plugins: { diff: unknown };
   processor: string;
 };
@@ -16,32 +16,65 @@ type PluginConfigs = {
   ci: typeof ciConfig;
   diff: typeof diffConfig;
   staged: typeof stagedConfig;
-  [key: string]: typeof ciConfig | FlatConfig[];
+  "flat/ci": FlatConfigEntry[];
+  "flat/diff": FlatConfigEntry[];
+  "flat/staged": FlatConfigEntry[];
 };
 
-const processors = { ci, diff, staged };
-const configs: PluginConfigs = {
-  ci: ciConfig,
-  diff: diffConfig,
-  staged: stagedConfig,
+type ProcessorName = "diff/ci" | "diff/diff" | "diff/staged";
+
+const processors = { ci, diff, staged } as const;
+type Processors = typeof processors;
+
+type DiffPlugin = {
+  configs: PluginConfigs;
+  processors: Processors;
 };
 
-const plugin = {
+function createFlatConfigForProcessor(
+  plugin: DiffPlugin,
+  processorName: ProcessorName,
+): FlatConfigEntry[] {
+  return [{ plugins: { diff: plugin }, processor: processorName }];
+}
+
+const plugin: DiffPlugin = (() => {
+  const pluginDraft: DiffPlugin = {
+    processors,
+    configs: {
+      ci: ciConfig,
+      diff: diffConfig,
+      staged: stagedConfig,
+      "flat/ci": [],
+      "flat/diff": [],
+      "flat/staged": [],
+    },
+  };
+
+  pluginDraft.configs["flat/diff"] = createFlatConfigForProcessor(
+    pluginDraft,
+    "diff/diff",
+  );
+  pluginDraft.configs["flat/staged"] = createFlatConfigForProcessor(
+    pluginDraft,
+    "diff/staged",
+  );
+  pluginDraft.configs["flat/ci"] = createFlatConfigForProcessor(
+    pluginDraft,
+    "diff/ci",
+  );
+
+  return pluginDraft;
+})();
+
+const { configs } = plugin;
+
+module.exports = Object.assign(plugin, {
+  default: plugin,
   configs,
   processors,
-};
+});
 
-plugin.configs["flat/diff"] = [
-  { plugins: { diff: plugin }, processor: "diff/diff" },
-];
-plugin.configs["flat/staged"] = [
-  { plugins: { diff: plugin }, processor: "diff/staged" },
-];
-plugin.configs["flat/ci"] =
-  process.env.CI === undefined
-    ? []
-    : [{ plugins: { diff: plugin }, processor: "diff/ci" }];
-
-module.exports = plugin;
-
+export default plugin;
 export { configs, processors };
+export type { PluginConfigs };
