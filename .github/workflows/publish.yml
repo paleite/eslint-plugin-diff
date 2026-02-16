@@ -33,4 +33,10 @@ jobs:
       - name: Lint types
         run: pnpm run lint:types
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="latest"
+          if [[ "$VERSION" == *-* ]]; then
+            TAG="next"
+          fi
+          npm publish --provenance --access public --tag "$TAG"
