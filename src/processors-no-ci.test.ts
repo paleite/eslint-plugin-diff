@@ -1,3 +1,5 @@
+import type { Linter } from "eslint";
+
 const OLD_ENV = process.env;
 
 beforeEach(() => {
@@ -24,7 +26,7 @@ describe("processors without CI", () => {
 
     const sourceCode = "/** Some source code */";
     const filename = "file.ts";
-    const messages = [
+    const messages: Linter.LintMessage[][] = [
       [
         {
           ruleId: "mock",
