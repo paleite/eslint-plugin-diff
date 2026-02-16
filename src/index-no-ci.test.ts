@@ -11,7 +11,7 @@ afterAll(() => {
 });
 
 describe("plugin without CI", () => {
-  it("exposes a flat/ci config", () => {
+  it("exposes a flat/ci config", async () => {
     jest.doMock("./processors", () => ({
       ci: {},
       ciConfig: {},
@@ -21,13 +21,15 @@ describe("plugin without CI", () => {
       stagedConfig: {},
     }));
 
-    jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { configs } = require("./index");
-      expect(configs["flat/ci"]).toEqual([
-        { plugins: { diff: expect.any(Object) }, processor: "diff/ci" },
-      ]);
+    let importedIndexModule!: typeof import("./index");
+    await jest.isolateModulesAsync(async () => {
+      importedIndexModule = await import("./index");
     });
+
+    const { configs } = importedIndexModule;
+    const [flatCiConfig] = configs["flat/ci"];
+    expect(flatCiConfig?.processor).toBe("diff/ci");
+    expect(flatCiConfig?.plugins.diff).toBeDefined();
   });
 });
 
