@@ -28,3 +28,5 @@ describe("plugin without CI", () => {
     });
   });
 });
+
+export {};

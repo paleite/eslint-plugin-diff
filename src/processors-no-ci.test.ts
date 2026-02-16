@@ -26,3 +26,5 @@ describe("processors without CI", () => {
     expect(ciConfig).toEqual({});
   });
 });
+
+export {};
