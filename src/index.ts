@@ -23,8 +23,13 @@ type PluginConfigs = {
 
 type ProcessorName = "diff/ci" | "diff/diff" | "diff/staged";
 
-const processors = { ci, diff, staged } as const;
-type Processors = typeof processors;
+type Processors = {
+  readonly ci: typeof ci;
+  readonly diff: typeof diff;
+  readonly staged: typeof staged;
+};
+
+const processors: Processors = { ci, diff, staged };
 
 type DiffPlugin = {
   configs: PluginConfigs;

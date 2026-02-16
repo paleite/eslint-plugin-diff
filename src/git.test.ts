@@ -1,5 +1,11 @@
 import * as child_process from "child_process";
 import path from "path";
+
+import {
+  diffFileList,
+  hunks,
+  includingOnlyRemovals,
+} from "./__fixtures__/diff";
 import {
   fetchFromOrigin,
   getDiffFileList,
@@ -8,11 +14,6 @@ import {
   getUntrackedFileList,
   hasCleanIndex,
 } from "./git";
-import {
-  diffFileList,
-  hunks,
-  includingOnlyRemovals,
-} from "./__fixtures__/diff";
 
 jest.mock("child_process");
 

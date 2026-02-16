@@ -1,4 +1,5 @@
 import type { Linter } from "eslint";
+
 import { guessBranch } from "./ci";
 import {
   fetchFromOrigin,
@@ -187,7 +188,7 @@ export {
   ciConfig,
   diff,
   diffConfig,
+  getUnstagedChangesError,
   staged,
   stagedConfig,
-  getUnstagedChangesError,
 };

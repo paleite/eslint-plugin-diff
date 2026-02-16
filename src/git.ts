@@ -1,5 +1,6 @@
 import * as child_process from "child_process";
 import { resolve } from "path";
+
 import { Range } from "./Range";
 
 const COMMAND = "git";

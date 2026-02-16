@@ -50,8 +50,8 @@ const diffFileList = "file1\nfile2\nfile3\n";
 
 export {
   diff,
-  staged,
+  diffFileList,
   hunks,
   includingOnlyRemovals,
-  diffFileList,
+  staged,
 };

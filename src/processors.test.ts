@@ -7,12 +7,13 @@ jest.mock("./git", () => ({
 }));
 
 import type { Linter } from "eslint";
-import * as git from "./git";
+
 import {
   diff as fixtureDiff,
   staged as fixtureStaged,
 } from "./__fixtures__/diff";
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
+import * as git from "./git";
 
 const [messages, filename] = postprocessArguments;
 const untrackedFilename = "an-untracked-file.js";

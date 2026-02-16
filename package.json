@@ -40,6 +40,8 @@
     "prepare": "husky && (git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config blame.ignoreRevsFile .git-blame-ignore-revs || true)"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
     "@paleite/eslint-config": "^1.0.9",
     "@paleite/eslint-config-base": "^1.0.9",
     "@paleite/eslint-config-typescript": "^1.0.9",
@@ -49,13 +51,17 @@
     "@types/eslint": "^8.4.10",
     "@types/jest": "^30.0.0",
     "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.48.2",
-    "@typescript-eslint/parser": "^5.48.2",
-    "eslint": "^8.32.0",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "eslint": "^9",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.3.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "np": "^7.7.0",
@@ -64,6 +70,7 @@
     "ts-jest": "^29.4.6",
     "tsd": "^0.25.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
     "uuid": "^9.0.0"
   },
   "peerDependencies": {
