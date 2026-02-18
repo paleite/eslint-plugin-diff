@@ -51,7 +51,7 @@ describe("getRangesForDiff", () => {
 describe("getDiffForFile", () => {
   it("should get the staged diff of a file", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
 
     const diffFromFile = getDiffForFile("./mockfile.js", true);
 
@@ -71,7 +71,7 @@ describe("getDiffForFile", () => {
 
   it("should work when using staged = false", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "1234567";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
 
     const diffFromFile = getDiffForFile("./mockfile.js", false);
 
@@ -91,7 +91,7 @@ describe("getDiffForFile", () => {
 
   it("should use HEAD when no commit was defined", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = undefined;
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = undefined;
 
     const diffFromFile = getDiffForFile("./mockfile.js", false);
 

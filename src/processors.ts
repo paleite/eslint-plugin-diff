@@ -11,8 +11,8 @@ import {
 } from "./git";
 import type { Range } from "./Range";
 
-if (process.env.CI !== undefined) {
-  const providedCommit = process.env.ESLINT_PLUGIN_DIFF_COMMIT;
+if (process.env["CI"] !== undefined) {
+  const providedCommit = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
   const guessedBranch =
     providedCommit === undefined ? guessBranch() : undefined;
 
@@ -22,7 +22,7 @@ if (process.env.CI !== undefined) {
 
     // Make the guessed branch available to git diff calls without
     // changing explicitly provided values.
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = guessedBranch;
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = guessedBranch;
   }
 }
 
@@ -40,7 +40,7 @@ const getPreProcessor = (diffFileList: string[], staged: boolean) => {
   return (text: string, filename: string) => {
     const isInDiffFileList = diffFileSetCache.has(filename);
 
-    if (process.env.VSCODE_PID !== undefined && !isInDiffFileList) {
+    if (process.env["VSCODE_PID"] !== undefined && !isInDiffFileList) {
       // Editors can invoke ESLint before our initial diff snapshot includes the
       // latest edit. Refresh once to avoid "second edit" diagnostics.
       diffFileListCache = getDiffFileList(staged);
@@ -57,7 +57,7 @@ const getPreProcessor = (diffFileList: string[], staged: boolean) => {
     }
 
     const shouldBeProcessed =
-      process.env.VSCODE_PID !== undefined ||
+      process.env["VSCODE_PID"] !== undefined ||
       diffFileSetCache.has(filename) ||
       untrackedFileSet.has(filename);
 
@@ -153,7 +153,7 @@ const getNoOpProcessor = (): DiffProcessor => ({
 });
 
 const ci =
-  process.env.CI !== undefined ? getProcessors("ci") : getNoOpProcessor();
+  process.env["CI"] !== undefined ? getProcessors("ci") : getNoOpProcessor();
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
 

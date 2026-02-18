@@ -12,7 +12,7 @@ const PROVIDERS = {
     name: "AppVeyor",
     isSupported: true,
     diffBranch:
-      (process.env.APPVEYOR_PULL_REQUEST_NUMBER ?? "") !== ""
+      (process.env["APPVEYOR_PULL_REQUEST_NUMBER"] ?? "") !== ""
         ? "APPVEYOR_REPO_BRANCH"
         : undefined,
   },
@@ -50,7 +50,7 @@ const PROVIDERS = {
     name: "GitLab",
     isSupported: true,
     diffBranch:
-      (process.env.CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME ?? "") !== ""
+      (process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] ?? "") !== ""
         ? "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"
         : "CI_MERGE_REQUEST_TARGET_BRANCH_NAME",
   },
@@ -58,7 +58,7 @@ const PROVIDERS = {
     name: "Travis",
     isSupported: true,
     diffBranch:
-      (process.env.TRAVIS_PULL_REQUEST ?? "") !== "false"
+      (process.env["TRAVIS_PULL_REQUEST"] ?? "") !== "false"
         ? "TRAVIS_BRANCH"
         : undefined,
   },
@@ -92,7 +92,7 @@ const guessProviders = () =>
   );
 
 const guessBranch = (): string | undefined => {
-  if ((process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "").length > 0) {
+  if ((process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "").length > 0) {
     throw Error("ESLINT_PLUGIN_DIFF_COMMIT already set");
   }
 

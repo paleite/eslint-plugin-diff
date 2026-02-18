@@ -14,7 +14,7 @@ beforeEach(() => {
   jest.resetModules();
   jest.clearAllMocks();
   process.env = { ...OLD_ENV };
-  delete process.env.VSCODE_PID;
+  delete process.env["VSCODE_PID"];
 });
 
 afterAll(() => {
@@ -37,7 +37,7 @@ describe("VS Code preprocess", () => {
       .mockReturnValueOnce([filename]);
     gitMocked.getUntrackedFileList.mockReturnValue([]);
 
-    process.env.VSCODE_PID = "1234";
+    process.env["VSCODE_PID"] = "1234";
     const { diff } = await import("./processors");
 
     expect(diff.preprocess(sourceCode, filename)).toEqual([sourceCode]);

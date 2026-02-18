@@ -18,7 +18,7 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
     "--relative",
     staged && "--staged",
     "--unified=0",
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "HEAD",
     "--",
     resolve(filePath),
   ]);
@@ -36,7 +36,7 @@ const getDiffFileList = (staged: boolean): string[] => {
     "--no-ext-diff",
     "--relative",
     staged && "--staged",
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT ?? "HEAD",
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "HEAD",
     "--",
   ]);
 

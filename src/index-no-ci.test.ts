@@ -3,7 +3,7 @@ const OLD_ENV = process.env;
 beforeEach(() => {
   jest.resetModules();
   process.env = { ...OLD_ENV };
-  delete process.env.CI;
+  delete process.env["CI"];
 });
 
 afterAll(() => {

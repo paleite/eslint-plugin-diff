@@ -16,8 +16,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env = { ...OLD_ENV };
 
-  delete process.env.ESLINT_PLUGIN_DIFF_COMMIT;
-  delete process.env.GITHUB_BASE_REF;
+  delete process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
+  delete process.env["GITHUB_BASE_REF"];
 });
 
 afterAll(() => {
@@ -26,8 +26,8 @@ afterAll(() => {
 
 describe("CI initialization", () => {
   it("uses guessed branch and fetches from origin when commit is not provided", async () => {
-    process.env.CI = "true";
-    process.env.GITHUB_BASE_REF = "main";
+    process.env["CI"] = "true";
+    process.env["GITHUB_BASE_REF"] = "main";
 
     await import("./processors");
 
@@ -35,13 +35,13 @@ describe("CI initialization", () => {
       await import("./git"),
     );
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
-    expect(process.env.ESLINT_PLUGIN_DIFF_COMMIT).toBe("main");
+    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("main");
   });
 
   it("preserves provided commit and skips origin fetch", async () => {
-    process.env.CI = "true";
-    process.env.GITHUB_BASE_REF = "main";
-    process.env.ESLINT_PLUGIN_DIFF_COMMIT = "abc123";
+    process.env["CI"] = "true";
+    process.env["GITHUB_BASE_REF"] = "main";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "abc123";
 
     await import("./processors");
 
@@ -49,6 +49,6 @@ describe("CI initialization", () => {
       await import("./git"),
     );
     expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
-    expect(process.env.ESLINT_PLUGIN_DIFF_COMMIT).toBe("abc123");
+    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("abc123");
   });
 });
