@@ -1,49 +1,36 @@
 # eslint-plugin-diff
 
-![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white) [![codecov](https://codecov.io/gh/paleite/eslint-plugin-diff/branch/main/graph/badge.svg?token=W0LPKHZCF5)](https://codecov.io/gh/paleite/eslint-plugin-diff)
+![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)
+[![codecov](https://codecov.io/gh/paleite/eslint-plugin-diff/branch/main/graph/badge.svg?token=W0LPKHZCF5)](https://codecov.io/gh/paleite/eslint-plugin-diff)
 
-You've got changes, we've got checks. Run ESLint on your modified lines only.
+Lint what changed, not the entire codebase. `eslint-plugin-diff` keeps feedback focused by filtering ESLint output to changed lines.
 
-## What's the big deal?
+## Why this matters
 
-Imagine a world where your developers receive feedback that's laser-focused on the changes they've made. Traditional setups can't offer this. But with our plugin, you can run ESLint on your changed lines only. This means all warnings and errors are **directly relevant to you**, saving you from drowning in a sea of linter errors.
+- Focused feedback: keep lint output tied to changed code.
+- Safer lint upgrades: avoid being blocked by legacy violations in untouched files.
+- Better developer flow: reduce noise while enforcing existing lint rules.
 
-### 💰 Protect your budget
-
-Updating your linter or its dependencies can trigger a flood of new linter warnings and errors. Fixing them all can skyrocket your project costs. But with our plugin, you can run ESLint on only the changed lines of your code. This means new errors won't pop up in code that other developers have already reviewed and approved.
-
-### 🚀 Boost your team's velocity
-
-A healthy, high-quality code-base is the fuel for high velocity. But too many errors in your linter's output can slow you down. Our plugin ensures your linter runs on only the changed lines of your code. This keeps your developers from feeling overwhelmed, your code-base healthy, and your team productive.
-
-### 🧠 Keep your developers focused
-
-Developers are constantly bombarded with errors and notifications. If a linter has too much output, it can be hard to tell if their changes caused an issue or if it's just old code. With our plugin, all the linter output your developers see will be related to their changes, making it easier to focus on the task at hand.
-
-### How does it work?
-
-When creating pull-requests, this plugin enables you to run ESLint on only the changed lines. This sharpens the focus of your code review and reduces the time spent on it, while still maintaining a high-quality code base.
-
-As a bonus, introducing new ESLint rules (or updating 3rd party configs) in a large codebase becomes a breeze, because you avoid getting blocked by new ESLint issues in already-approved code.
-
-## Installation
-
-Get the plugin and extend your ESLint config.
+## Quick start
 
 ### Install
 
 ```sh
 npm install --save-dev eslint eslint-plugin-diff
-pnpm add -D eslint eslint-plugin-diff
 ```
 
-### Extend config
+### Flat config (ESLint 9+)
 
-Extend your ESLint config with one of our configs.
+```js
+import diff from "eslint-plugin-diff";
 
-#### `"plugin:diff/diff"` (recommended)
+export default [
+  // ...your existing config
+  ...diff.configs["flat/diff"],
+];
+```
 
-Only lint changes
+### Legacy config (`.eslintrc.*`)
 
 ```json
 {
@@ -51,113 +38,109 @@ Only lint changes
 }
 ```
 
-#### `"plugin:diff/ci"`
+## What it does and how it works
 
-In a CI-environment, only lint changes. Locally, skip the plugin (i.e. lint everything).
+This plugin does not provide lint rules. It provides ESLint processors and preset configs.
 
-> NOTE: This requires the environment variable `CI` to be defined, which most CI-providers set automatically.
+Behavior:
 
-```json
-{
-  "extends": ["plugin:diff/ci"]
-}
-```
+1. It computes changed files from `git diff --name-only`.
+2. It skips unchanged files in processor `preprocess` (performance optimization).
+3. It filters lint messages in `postprocess` to changed line ranges from diff hunks.
+4. Untracked files are treated as changed, so their messages are not filtered out.
 
-#### `"plugin:diff/staged"`
+## Modes
 
-Only lint the changes you've staged for an upcoming commit.
+| Mode     | Legacy config        | Flat config              | Typical use                              |
+| -------- | -------------------- | ------------------------ | ---------------------------------------- |
+| `diff`   | `plugin:diff/diff`   | `configs["flat/diff"]`   | Local dev against working tree changes   |
+| `ci`     | `plugin:diff/ci`     | `configs["flat/ci"]`     | PR CI diff-only in CI, full lint locally |
+| `staged` | `plugin:diff/staged` | `configs["flat/staged"]` | Pre-commit staged-only workflows         |
 
-```json
-{
-  "extends": ["plugin:diff/staged"]
-}
-```
+Important `staged` caveat: if a file has unstaged changes, the plugin emits a fatal message:
+`<file> has unstaged changes. Please stage or remove the changes.`
 
-#### Flat config (ESLint 9+)
+## Environment variables and CI autodetection
 
-```js
-const diff = require("eslint-plugin-diff");
+### `ESLINT_PLUGIN_DIFF_COMMIT`
 
-module.exports = [...diff.configs["flat/diff"]];
-```
-
-For CI-only behavior:
-
-```js
-const diff = require("eslint-plugin-diff");
-
-module.exports = [...diff.configs["flat/ci"]];
-```
-
-## CI Setup
-
-To lint all the changes of a pull-request, you only have to set
-`ESLINT_PLUGIN_DIFF_COMMIT` before running ESLint.
-
-### For GitHub Actions
-
-```yml
-name: Run ESLint on your changes only
-on:
-  pull_request:
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install modules
-        run: npm install
-      - name: Fetch the base branch, so we can use `git diff`
-        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
-      - name: Run ESLint on your changes only
-        env:
-          ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.ref }}
-        run: npx --no-install eslint --ext .js,.jsx,.ts,.tsx .
-```
-
-### For BitBucket Pipelines
+Sets diff base commit-ish. Default: `HEAD`.
 
 ```sh
-export ESLINT_PLUGIN_DIFF_COMMIT="origin/$BITBUCKET_PR_DESTINATION_BRANCH";
-npx --no-install eslint --ext .js,.ts,.tsx .
+ESLINT_PLUGIN_DIFF_COMMIT="origin/main" npx eslint --max-warnings=0 .
 ```
 
-### For GitLab CI
+### `CI`
 
-When running in merge request pipelines, set `ESLINT_PLUGIN_DIFF_COMMIT` from
-the merge request target branch:
+`ci` mode behavior:
+
+- `CI` set: active diff filtering.
+- `CI` not set: no-op processor (lint everything).
+
+If `CI` is set and `ESLINT_PLUGIN_DIFF_COMMIT` is not set, the plugin attempts provider-based target branch detection and fetches from `origin` before diffing.
+
+### `VSCODE_PID`
+
+When set, the plugin can refresh the initial diff snapshot once to avoid delayed diagnostics in editor workflows.
+
+## Recipes
+
+### Local diff vs default base (`HEAD`)
 
 ```sh
-export ESLINT_PLUGIN_DIFF_COMMIT="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-$CI_MERGE_REQUEST_TARGET_BRANCH_NAME}";
-npx --no-install eslint --ext .js,.ts,.tsx .
+npx eslint --max-warnings=0 .
 ```
 
-## Compatibility Notes
+### Local diff vs main
 
-- `eslint-plugin-diff` uses ESLint processors. ESLint only allows one processor
-  per file, so processor-based integrations (for example some `eslint-plugin-vue`
-  setups) may conflict. In those cases, scope `eslint-plugin-diff` to file
-  patterns where no competing processor is required.
-- `"plugin:diff/staged"` only filters diagnostics to staged line ranges. It does
-  not override your existing ESLint rules/configuration, but it can look like
-  config differences when files are partially staged. If this is confusing in a
-  team workflow, prefer `"plugin:diff/diff"` in CI and run full lint locally.
-- If you need a temporary bypass, remove the plugin config for that run (or set
-  `ESLINT_PLUGIN_DIFF_COMMIT` explicitly for deterministic results).
+```sh
+ESLINT_PLUGIN_DIFF_COMMIT="origin/main" npx eslint --max-warnings=0 .
+```
 
-## Maintainer Release Flow
+### Pre-commit staged-only
 
-- Run `pnpm run release` locally to create the version/tag/release metadata.
-- Push the created git tag (for example `v2.0.4`).
-- Publishing is performed by GitHub Actions on tag pushes via `npm publish --provenance --access public`.
+Use `plugin:diff/staged` or `configs["flat/staged"]`.
 
-### One-time setup
+### PR CI with autodetect (`ci` mode)
 
-Configure npm trusted publishing for this repository/workflow so GitHub Actions can publish without a long-lived npm token.
+Use `plugin:diff/ci` or `configs["flat/ci"]` and run ESLint normally in CI.
 
-## Note
+### PR CI with explicit base
 
-- You can use any valid commit syntax for `ESLINT_PLUGIN_DIFF_COMMIT`. See [git's official documentation on the syntax](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-emgitdiffemltoptionsgtltcommitgt--ltpathgt82308203)
-- You can choose to lint all changes (using `"plugin:diff/diff"`) or staged changes only (using `"plugin:diff/staged"`).
-- We recommend using `"plugin:diff/diff"`, which is equivalent to running `git diff HEAD`.
-- `"plugin:diff/staged"` is equivalent to running `git diff HEAD --staged`
+```sh
+git fetch --quiet origin main
+ESLINT_PLUGIN_DIFF_COMMIT="main" npx eslint --max-warnings=0 .
+```
+
+## Compatibility and trade-offs
+
+- ESLint allows one processor per file. If another integration requires a processor for the same files, scope one of them by file patterns.
+- Diff-only linting is a signal-over-completeness strategy. It can miss issues outside changed lines. Many teams run full lint in scheduled jobs or on protected branches.
+
+## Troubleshooting
+
+### “Too many CI providers found (...)”
+
+Set `ESLINT_PLUGIN_DIFF_COMMIT` explicitly.
+
+### “`<file> has unstaged changes. Please stage or remove the changes.`”
+
+This comes from `staged` mode with partially staged files.
+
+### Editor diagnostics appear late
+
+`VSCODE_PID` enables a one-time diff refresh path intended to reduce this.
+
+## FAQ
+
+### Does this replace ESLint rules?
+
+No. Your normal rules stay the same. This plugin changes which files/lines can surface diagnostics.
+
+### Does `ci` mode always filter diffs?
+
+No. Outside CI it is intentionally a no-op so local linting stays complete.
+
+## License
+
+MIT. See `LICENSE.md`.
