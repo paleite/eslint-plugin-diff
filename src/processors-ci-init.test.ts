@@ -8,6 +8,10 @@ jest.mock("./git", () => ({
 }));
 
 import type * as git from "./git";
+const importGit = async (): Promise<typeof import("./git.js")> =>
+  import("./git.js");
+const importProcessors = async (): Promise<typeof import("./processors.js")> =>
+  import("./processors.js");
 
 const OLD_ENV = process.env;
 
@@ -29,10 +33,10 @@ describe("CI initialization", () => {
     process.env["CI"] = "true";
     process.env["GITHUB_BASE_REF"] = "main";
 
-    await import("./processors");
+    await importProcessors();
 
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
-      await import("./git"),
+      await importGit(),
     );
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("main");
@@ -43,10 +47,10 @@ describe("CI initialization", () => {
     process.env["GITHUB_BASE_REF"] = "main";
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "abc123";
 
-    await import("./processors");
+    await importProcessors();
 
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
-      await import("./git"),
+      await importGit(),
     );
     expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("abc123");

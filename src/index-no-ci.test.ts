@@ -1,4 +1,6 @@
 const OLD_ENV = process.env;
+const importIndex = async (): Promise<typeof import("./index.js")> =>
+  import("./index.js");
 
 beforeEach(() => {
   jest.resetModules();
@@ -21,9 +23,9 @@ describe("plugin without CI", () => {
       stagedConfig: {},
     }));
 
-    let importedIndexModule!: typeof import("./index");
+    let importedIndexModule!: typeof import("./index.js");
     await jest.isolateModulesAsync(async () => {
-      importedIndexModule = await import("./index");
+      importedIndexModule = await importIndex();
     });
 
     const { configs } = importedIndexModule;

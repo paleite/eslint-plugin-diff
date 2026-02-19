@@ -7,6 +7,10 @@ jest.mock("./git", () => ({
 }));
 
 import type * as git from "./git";
+const importGit = async (): Promise<typeof import("./git.js")> =>
+  import("./git.js");
+const importProcessors = async (): Promise<typeof import("./processors.js")> =>
+  import("./processors.js");
 
 const OLD_ENV = process.env;
 
@@ -26,7 +30,7 @@ describe("VS Code preprocess", () => {
     const filename = "/tmp/first-edit.ts";
     const sourceCode = "/** Some source code */";
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
-      await import("./git"),
+      await importGit(),
     );
 
     // Module initialization creates both `diff` and `staged` processors.
@@ -38,7 +42,7 @@ describe("VS Code preprocess", () => {
     gitMocked.getUntrackedFileList.mockReturnValue([]);
 
     process.env["VSCODE_PID"] = "1234";
-    const { diff } = await import("./processors");
+    const { diff } = await importProcessors();
 
     expect(diff.preprocess(sourceCode, filename)).toEqual([sourceCode]);
     expect(gitMocked.getDiffFileList.mock.calls.length).toBeGreaterThanOrEqual(

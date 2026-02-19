@@ -14,6 +14,8 @@ import {
 } from "./__fixtures__/diff";
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
 import * as git from "./git";
+const importProcessors = async (): Promise<typeof import("./processors.js")> =>
+  import("./processors.js");
 
 const [messages, filename] = postprocessArguments;
 const untrackedFilename = "an-untracked-file.js";
@@ -29,7 +31,7 @@ describe("processors", () => {
     const validFilename = filename;
     const sourceCode = "/** Some source code */";
 
-    const { diff: diffProcessors } = await import("./processors");
+    const { diff: diffProcessors } = await importProcessors();
 
     expect(diffProcessors.preprocess(sourceCode, validFilename)).toEqual([
       sourceCode,
@@ -44,7 +46,7 @@ describe("processors", () => {
       .mockReturnValueOnce([])
       .mockReturnValueOnce([]);
 
-    const { diff: diffProcessors } = await import("./processors");
+    const { diff: diffProcessors } = await importProcessors();
 
     expect(diffProcessors.preprocess(sourceCode, unknownFilename)).toEqual([]);
     expect(gitMocked.getUntrackedFileList).toHaveBeenCalledWith(false, true);
@@ -53,7 +55,7 @@ describe("processors", () => {
   it("diff postprocess", async () => {
     gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
 
-    const { diff: diffProcessors } = await import("./processors");
+    const { diff: diffProcessors } = await importProcessors();
 
     expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
   });
@@ -61,7 +63,7 @@ describe("processors", () => {
   it("diff postprocess with no messages", async () => {
     gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
 
-    const { diff: diffProcessors } = await import("./processors");
+    const { diff: diffProcessors } = await importProcessors();
 
     const noMessages: Linter.LintMessage[][] = [];
     expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
@@ -72,7 +74,7 @@ describe("processors", () => {
   it("diff postprocess for untracked files with messages", async () => {
     gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
 
-    const { staged: stagedProcessors } = await import("./processors");
+    const { staged: stagedProcessors } = await importProcessors();
 
     const untrackedFilesMessages: Linter.LintMessage[] = [
       { ruleId: "mock", severity: 1, message: "mock msg", line: 1, column: 1 },
@@ -87,7 +89,7 @@ describe("processors", () => {
     gitMocked.hasCleanIndex.mockReturnValueOnce(true);
     gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
 
-    const { staged: stagedProcessors } = await import("./processors");
+    const { staged: stagedProcessors } = await importProcessors();
 
     expect(stagedProcessors.postprocess(messages, filename)).toMatchSnapshot();
   });
@@ -100,7 +102,7 @@ describe("processors", () => {
       ...restMessageArray,
     ];
 
-    const { diff: diffProcessors } = await import("./processors");
+    const { diff: diffProcessors } = await importProcessors();
 
     expect(diffProcessors.postprocess(messages, filename)).toHaveLength(2);
     expect(
@@ -112,7 +114,7 @@ describe("processors", () => {
     gitMocked.hasCleanIndex.mockReturnValueOnce(false);
     gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
 
-    const { staged: stagedProcessors } = await import("./processors");
+    const { staged: stagedProcessors } = await importProcessors();
 
     const fileWithDirtyIndex = "file-with-dirty-index.js";
     const [errorMessage] = stagedProcessors.postprocess(
@@ -129,19 +131,19 @@ describe("processors", () => {
 
 describe("configs", () => {
   it("diff", async () => {
-    const { diffConfig } = await import("./processors");
+    const { diffConfig } = await importProcessors();
     expect(diffConfig).toMatchSnapshot();
   });
 
   it("staged", async () => {
-    const { stagedConfig } = await import("./processors");
+    const { stagedConfig } = await importProcessors();
     expect(stagedConfig).toMatchSnapshot();
   });
 });
 
 describe("fatal error-message", () => {
   it("getUnstagedChangesError", async () => {
-    const { getUnstagedChangesError } = await import("./processors");
+    const { getUnstagedChangesError } = await importProcessors();
 
     const [result] = getUnstagedChangesError("mock filename.ts");
     expect(result.fatal).toBe(true);

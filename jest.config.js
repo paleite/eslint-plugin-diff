@@ -4,6 +4,9 @@ const { base } = require("@paleite/jest-config");
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
   ...base,
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
   coveragePathIgnorePatterns: [".test-d.ts", "/__fixtures__/"],
   coverageThreshold: {
     global: {

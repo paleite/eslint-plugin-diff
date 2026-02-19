@@ -1,4 +1,6 @@
 import type { Linter } from "eslint";
+const importProcessors = async (): Promise<typeof import("./processors.js")> =>
+  import("./processors.js");
 
 const OLD_ENV = process.env;
 
@@ -15,14 +17,14 @@ afterAll(() => {
 describe("processors without CI", () => {
   it("exports a no-op CI processor and CI config", async () => {
     jest.doMock("./git", () => ({
-      ...jest.requireActual<typeof import("./git")>("./git"),
+      ...jest.requireActual<typeof import("./git.js")>("./git"),
       getDiffFileList: jest.fn(() => []),
       getUntrackedFileList: jest.fn(() => []),
       getDiffForFile: jest.fn(() => ""),
       hasCleanIndex: jest.fn(() => true),
     }));
 
-    const { ci, ciConfig } = await import("./processors");
+    const { ci, ciConfig } = await importProcessors();
 
     const sourceCode = "/** Some source code */";
     const filename = "file.ts";
