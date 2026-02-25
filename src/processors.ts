@@ -11,18 +11,30 @@ import {
 } from "./git";
 import type { Range } from "./Range";
 
+const getOriginTrackingRefForGuessedBranch = (
+  guessedBranch: string,
+): string => {
+  const branchWithoutRemote = guessedBranch
+    .replace(/^refs\/heads\//, "")
+    .replace(/^refs\/remotes\/origin\//, "")
+    .replace(/^origin\//, "");
+
+  return `origin/${branchWithoutRemote}`;
+};
+
 if (process.env["CI"] !== undefined) {
   const providedCommit = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
   const guessedBranch =
     providedCommit === undefined ? guessBranch() : undefined;
 
   if (guessedBranch !== undefined) {
-    const branchWithoutOrigin = guessedBranch.replace(/^origin\//, "");
+    const branchForDiff = getOriginTrackingRefForGuessedBranch(guessedBranch);
+    const branchWithoutOrigin = branchForDiff.replace(/^origin\//, "");
     fetchFromOrigin(branchWithoutOrigin);
 
     // Make the guessed branch available to git diff calls without
     // changing explicitly provided values.
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = guessedBranch;
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = branchForDiff;
   }
 }
 

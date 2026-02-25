@@ -21,7 +21,18 @@ beforeEach(() => {
   process.env = { ...OLD_ENV };
 
   delete process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
+  delete process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"];
+  delete process.env["bamboo_repository_pr_targetBranch"];
+  delete process.env["BITBUCKET_PR_DESTINATION_BRANCH"];
+  delete process.env["BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"];
+  delete process.env["DRONE_TARGET_BRANCH"];
   delete process.env["GITHUB_BASE_REF"];
+  delete process.env["APPVEYOR_PULL_REQUEST_NUMBER"];
+  delete process.env["APPVEYOR_REPO_BRANCH"];
+  delete process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"];
+  delete process.env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"];
+  delete process.env["TRAVIS_PULL_REQUEST"];
+  delete process.env["TRAVIS_BRANCH"];
 });
 
 afterAll(() => {
@@ -39,7 +50,20 @@ describe("CI initialization", () => {
       await importGit(),
     );
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
-    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("main");
+    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("origin/main");
+  });
+
+  it("normalizes refs/heads/* guessed branches to origin/*", async () => {
+    process.env["CI"] = "true";
+    process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"] = "refs/heads/main";
+
+    await importProcessors();
+
+    const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
+      await importGit(),
+    );
+    expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
+    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("origin/main");
   });
 
   it("preserves provided commit and skips origin fetch", async () => {
