@@ -6,9 +6,10 @@ import {
   staged,
   stagedConfig,
 } from "./processors";
+import type { ESLint } from "eslint";
 
 type FlatConfigEntry = {
-  plugins: { diff: unknown };
+  plugins: { diff: ESLint.Plugin };
   processor: string;
 };
 

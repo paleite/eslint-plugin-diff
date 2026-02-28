@@ -1,5 +1,6 @@
 process.env["CI"] = "true";
 import * as child_process from "child_process";
+import type { ESLint } from "eslint";
 
 jest.mock("child_process");
 const mockedChildProcess = jest.mocked(child_process, { shallow: true });
@@ -13,7 +14,7 @@ describe("plugin", () => {
   it("should match expected export", () => {
     const flatDiff = configs["flat/diff"] as {
       processor: string;
-      plugins: { diff: unknown };
+      plugins: { diff: ESLint.Plugin };
     }[];
     const flatCi = configs["flat/ci"] as { processor: string }[];
     const flatStaged = configs["flat/staged"] as { processor: string }[];
