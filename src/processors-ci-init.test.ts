@@ -54,6 +54,9 @@ describe("CI initialization", () => {
 
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("origin/main");
+
+    ci.postprocess([], "file.ts");
+    expect(gitMocked.fetchFromOrigin).toHaveBeenCalledTimes(1);
   });
 
   it("normalizes refs/heads/* guessed branches to origin/*", async () => {

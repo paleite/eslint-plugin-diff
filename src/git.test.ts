@@ -157,6 +157,23 @@ describe("getDiffFileList", () => {
       ["file1", "file2", "file3"].map((p) => path.resolve(p)),
     );
   });
+
+  it("includes --staged when staged is true", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync.mockReturnValueOnce(
+      Buffer.from(diffFileList),
+    );
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
+
+    getDiffFileList(true);
+
+    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
+    const [command, args = []] = lastCall ?? [""];
+
+    expect(command).toBe("git");
+    expect(args).toContain("--staged");
+    expect(args).toContain("1234567");
+  });
 });
 
 describe("getUntrackedFileList", () => {
