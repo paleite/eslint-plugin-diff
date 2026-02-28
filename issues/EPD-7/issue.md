@@ -2,18 +2,18 @@
 identifier: EPD-7
 title: Improve diff processor performance on large repos/files
 teamKey: EPD
-stateName: Todo
+stateName: Done
 labelNames:
   - bug
 id: 9f75b67a-58f2-4ff0-a42c-d8f3033ccfa7
 teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
-stateId: bf92633c-e2eb-4fdb-a81c-1392220810cb
+stateId: 567bb0af-8316-40db-8a09-5ed9138f0d29
 labelIds:
   - 842d9d04-4acf-4dc5-9243-59a9d9cf042e
 priority: 2
 priorityName: High
 createdAt: 2026-02-16T15:50:35.931Z
-updatedAt: 2026-02-16T15:51:20.726Z
+updatedAt: 2026-02-28T16:24:07.453Z
 ---
 
 ## Problem

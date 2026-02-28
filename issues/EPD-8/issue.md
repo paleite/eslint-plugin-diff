@@ -2,18 +2,18 @@
 identifier: EPD-8
 title: Defer git side effects until processor execution (flat config safe import)
 teamKey: EPD
-stateName: Todo
+stateName: Done
 labelNames:
   - bug
 id: ccdf481e-d550-49a4-b0ce-544de996507d
 teamId: c2b86822-351a-41ab-b4db-652fc5a7a27c
-stateId: bf92633c-e2eb-4fdb-a81c-1392220810cb
+stateId: 567bb0af-8316-40db-8a09-5ed9138f0d29
 labelIds:
   - 842d9d04-4acf-4dc5-9243-59a9d9cf042e
 priority: 2
 priorityName: High
 createdAt: 2026-02-28T15:03:03.000Z
-updatedAt: 2026-02-28T15:03:03.000Z
+updatedAt: 2026-02-28T16:24:07.582Z
 ---
 
 ## Problem
