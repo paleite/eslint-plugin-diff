@@ -33,20 +33,18 @@ describe("VS Code preprocess", () => {
       await importGit(),
     );
 
-    // Module initialization creates both `diff` and `staged` processors.
+    // Processor import does not initialize snapshots; initialization is lazy.
     gitMocked.getDiffFileList
       .mockReturnValue([filename])
-      .mockReturnValueOnce([])
       .mockReturnValueOnce([])
       .mockReturnValueOnce([filename]);
     gitMocked.getUntrackedFileList.mockReturnValue([]);
 
     process.env["VSCODE_PID"] = "1234";
     const { diff } = await importProcessors();
+    expect(gitMocked.getDiffFileList).not.toHaveBeenCalled();
 
     expect(diff.preprocess(sourceCode, filename)).toEqual([sourceCode]);
-    expect(gitMocked.getDiffFileList.mock.calls.length).toBeGreaterThanOrEqual(
-      3,
-    );
+    expect(gitMocked.getDiffFileList.mock.calls.length).toBe(2);
   });
 });

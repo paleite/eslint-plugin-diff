@@ -40,15 +40,18 @@ afterAll(() => {
 });
 
 describe("CI initialization", () => {
-  it("uses guessed branch and fetches from origin when commit is not provided", async () => {
+  it("does not fetch on import and fetches on first processor invocation", async () => {
     process.env["CI"] = "true";
     process.env["GITHUB_BASE_REF"] = "main";
-
-    await importProcessors();
 
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
       await importGit(),
     );
+    const { ci } = await importProcessors();
+
+    expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
+    ci.preprocess("/** Some source code */", "file.ts");
+
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("origin/main");
   });
@@ -57,11 +60,12 @@ describe("CI initialization", () => {
     process.env["CI"] = "true";
     process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"] = "refs/heads/main";
 
-    await importProcessors();
-
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
       await importGit(),
     );
+    const { ci } = await importProcessors();
+    ci.preprocess("/** Some source code */", "file.ts");
+
     expect(gitMocked.fetchFromOrigin).toHaveBeenCalledWith("main");
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("origin/main");
   });
@@ -71,11 +75,12 @@ describe("CI initialization", () => {
     process.env["GITHUB_BASE_REF"] = "main";
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "abc123";
 
-    await importProcessors();
-
     const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
       await importGit(),
     );
+    const { ci } = await importProcessors();
+    ci.preprocess("/** Some source code */", "file.ts");
+
     expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("abc123");
   });

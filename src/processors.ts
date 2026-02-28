@@ -22,21 +22,31 @@ const getOriginTrackingRefForGuessedBranch = (
   return `origin/${branchWithoutRemote}`;
 };
 
-if (process.env["CI"] !== undefined) {
-  const providedCommit = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
-  const guessedBranch =
-    providedCommit === undefined ? guessBranch() : undefined;
+const createCiInitializer = (): (() => void) => {
+  let initialized = false;
 
-  if (guessedBranch !== undefined) {
-    const branchForDiff = getOriginTrackingRefForGuessedBranch(guessedBranch);
-    const branchWithoutOrigin = branchForDiff.replace(/^origin\//, "");
-    fetchFromOrigin(branchWithoutOrigin);
+  return () => {
+    if (initialized || process.env["CI"] === undefined) {
+      return;
+    }
 
-    // Make the guessed branch available to git diff calls without
-    // changing explicitly provided values.
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = branchForDiff;
-  }
-}
+    initialized = true;
+
+    const providedCommit = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
+    const guessedBranch =
+      providedCommit === undefined ? guessBranch() : undefined;
+
+    if (guessedBranch !== undefined) {
+      const branchForDiff = getOriginTrackingRefForGuessedBranch(guessedBranch);
+      const branchWithoutOrigin = branchForDiff.replace(/^origin\//, "");
+      fetchFromOrigin(branchWithoutOrigin);
+
+      // Make the guessed branch available to git diff calls without
+      // changing explicitly provided values.
+      process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = branchForDiff;
+    }
+  };
+};
 
 /**
  * Exclude unchanged files from being processed
@@ -45,18 +55,36 @@ if (process.env["CI"] !== undefined) {
  * them from being processed in the first place, as a performance optimization.
  * This is increasingly useful the more files there are in the repository.
  */
-const getPreProcessor = (diffFileList: string[], staged: boolean) => {
-  let diffFileListCache = diffFileList;
-  let diffFileSetCache = new Set(diffFileListCache);
+const getPreProcessor = (
+  staged: boolean,
+  initialize?: () => void,
+): DiffProcessor["preprocess"] => {
+  let diffFileListCache: string[] = [];
+  let diffFileSetCache = new Set<string>();
+  let hasInitializedDiffFileList = false;
+
+  const refreshDiffFileList = () => {
+    initialize?.();
+    diffFileListCache = getDiffFileList(staged);
+    diffFileSetCache = new Set(diffFileListCache);
+    hasInitializedDiffFileList = true;
+  };
+
+  const ensureInitializedDiffFileList = () => {
+    if (!hasInitializedDiffFileList) {
+      refreshDiffFileList();
+    }
+  };
 
   return (text: string, filename: string) => {
+    ensureInitializedDiffFileList();
+
     const isInDiffFileList = diffFileSetCache.has(filename);
 
     if (process.env["VSCODE_PID"] !== undefined && !isInDiffFileList) {
       // Editors can invoke ESLint before our initial diff snapshot includes the
       // latest edit. Refresh once to avoid "second edit" diagnostics.
-      diffFileListCache = getDiffFileList(staged);
-      diffFileSetCache = new Set(diffFileListCache);
+      refreshDiffFileList();
     }
 
     let untrackedFileList = getUntrackedFileList(staged);
@@ -102,11 +130,13 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (staged: boolean) =>
+  (staged: boolean, initialize?: () => void) =>
   (
     messages: Linter.LintMessage[][],
     filename: string,
   ): Linter.LintMessage[] => {
+    initialize?.();
+
     if (messages.length === 0) {
       // No need to filter, just return
       return [];
@@ -149,11 +179,11 @@ type DiffProcessor = Linter.Processor &
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
-  const diffFileList = getDiffFileList(staged);
+  const initialize = processorType === "ci" ? createCiInitializer() : undefined;
 
   return {
-    preprocess: getPreProcessor(diffFileList, staged),
-    postprocess: getPostProcessor(staged),
+    preprocess: getPreProcessor(staged, initialize),
+    postprocess: getPostProcessor(staged, initialize),
     supportsAutofix: true,
   };
 };
