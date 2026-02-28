@@ -1,3 +1,5 @@
+import type { ESLint, Linter } from "eslint";
+
 import {
   ci,
   ciConfig,
@@ -7,7 +9,6 @@ import {
   staged,
   stagedConfig,
 } from "./processors";
-import type { ESLint, Linter } from "eslint";
 
 type FlatConfigEntry = {
   plugins: { diff: ESLint.Plugin };

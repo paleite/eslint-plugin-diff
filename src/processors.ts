@@ -197,13 +197,16 @@ const getNoOpProcessor = (): DiffProcessor => ({
 
 const getProcessorCallbacks = (
   processor: Linter.Processor,
-): Pick<DiffProcessor, "preprocess" | "postprocess" | "supportsAutofix"> => ({
-  preprocess: processor.preprocess ?? ((text: string) => [text]),
-  postprocess:
-    processor.postprocess ??
-    ((messages: Linter.LintMessage[][]) => messages.flat()),
-  supportsAutofix: processor.supportsAutofix ?? true,
-});
+): Pick<DiffProcessor, "preprocess" | "postprocess" | "supportsAutofix"> => {
+  return {
+    preprocess: (text: string, filename: string) =>
+      processor.preprocess?.call(processor, text, filename) ?? [text],
+    postprocess: (messages: Linter.LintMessage[][], filename: string) =>
+      processor.postprocess?.call(processor, messages, filename) ??
+      messages.flat(),
+    supportsAutofix: processor.supportsAutofix ?? true,
+  };
+};
 
 const composeProcessor = (
   processor: Linter.Processor,

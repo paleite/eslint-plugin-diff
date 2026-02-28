@@ -1,6 +1,5 @@
 const OLD_ENV = process.env;
-const importIndex = async (): Promise<typeof import("./index.js")> =>
-  import("./index.js");
+const importIndex = async () => import("./index.js");
 
 beforeEach(() => {
   jest.resetModules();
@@ -17,13 +16,14 @@ describe("plugin without CI", () => {
     jest.doMock("./processors", () => ({
       ci: {},
       ciConfig: {},
+      composeProcessor: jest.fn(),
       diff: {},
       diffConfig: {},
       staged: {},
       stagedConfig: {},
     }));
 
-    let importedIndexModule!: typeof import("./index.js");
+    let importedIndexModule!: Awaited<ReturnType<typeof importIndex>>;
     await jest.isolateModulesAsync(async () => {
       importedIndexModule = await importIndex();
     });

@@ -129,8 +129,9 @@ describe("processors", () => {
   });
 
   it("composeProcessor skips base preprocess when diff excludes file", async () => {
+    const basePreprocess = jest.fn((text: string) => [text]);
     const baseProcessor: Linter.Processor = {
-      preprocess: jest.fn((text: string) => [text]),
+      preprocess: basePreprocess,
       postprocess: (processorMessages: Linter.LintMessage[][]) =>
         processorMessages.flat(),
       supportsAutofix: true,
@@ -145,7 +146,7 @@ describe("processors", () => {
     const composed = composeProcessor(baseProcessor, "diff");
 
     expect(composed.preprocess("text", unknownFilename)).toEqual([]);
-    expect(baseProcessor.preprocess).not.toHaveBeenCalled();
+    expect(basePreprocess).not.toHaveBeenCalled();
   });
 
   it("composeProcessor runs base postprocess before diff filtering", async () => {
