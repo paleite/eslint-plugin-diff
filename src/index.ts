@@ -1,12 +1,13 @@
 import {
   ci,
   ciConfig,
+  composeProcessor,
   diff,
   diffConfig,
   staged,
   stagedConfig,
 } from "./processors";
-import type { ESLint } from "eslint";
+import type { ESLint, Linter } from "eslint";
 
 type FlatConfigEntry = {
   plugins: { diff: ESLint.Plugin };
@@ -23,6 +24,7 @@ type PluginConfigs = {
 };
 
 type ProcessorName = "diff/ci" | "diff/diff" | "diff/staged";
+type ProcessorMode = "ci" | "diff" | "staged";
 
 type Processors = {
   readonly ci: typeof ci;
@@ -35,6 +37,10 @@ const processors: Processors = { ci, diff, staged };
 type DiffPlugin = {
   configs: PluginConfigs;
   processors: Processors;
+  composeProcessor: (
+    processor: Linter.Processor,
+    mode?: ProcessorMode,
+  ) => Linter.Processor;
 };
 
 function createFlatConfigForProcessor(
@@ -47,6 +53,7 @@ function createFlatConfigForProcessor(
 const plugin: DiffPlugin = (() => {
   const pluginDraft: DiffPlugin = {
     processors,
+    composeProcessor,
     configs: {
       ci: ciConfig,
       diff: diffConfig,

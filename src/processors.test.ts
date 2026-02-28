@@ -127,6 +127,47 @@ describe("processors", () => {
       `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`,
     );
   });
+
+  it("composeProcessor skips base preprocess when diff excludes file", async () => {
+    const baseProcessor: Linter.Processor = {
+      preprocess: jest.fn((text: string) => [text]),
+      postprocess: (processorMessages: Linter.LintMessage[][]) =>
+        processorMessages.flat(),
+      supportsAutofix: true,
+    };
+    const unknownFilename = "unknown-file.ts";
+    gitMocked.getUntrackedFileList
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce([]);
+
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor(baseProcessor, "diff");
+
+    expect(composed.preprocess("text", unknownFilename)).toEqual([]);
+    expect(baseProcessor.preprocess).not.toHaveBeenCalled();
+  });
+
+  it("composeProcessor runs base postprocess before diff filtering", async () => {
+    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
+    const basePostprocess = jest.fn(
+      (processorMessages: Linter.LintMessage[][]) =>
+        processorMessages
+          .flat()
+          .map((message) => ({ ...message, line: message.line + 10 })),
+    );
+    const baseProcessor: Linter.Processor = {
+      preprocess: (text: string) => [text],
+      postprocess: basePostprocess,
+      supportsAutofix: true,
+    };
+
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor(baseProcessor, "diff");
+
+    expect(composed.postprocess(messages, filename)).toEqual([]);
+    expect(basePostprocess).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("configs", () => {

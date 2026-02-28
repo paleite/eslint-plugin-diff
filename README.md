@@ -112,9 +112,35 @@ git fetch --quiet origin main
 ESLINT_PLUGIN_DIFF_COMMIT="main" npx eslint --max-warnings=0 .
 ```
 
+### Compose with another processor (for example Vue)
+
+When a file type needs another processor, compose it with `diff` instead of
+overriding one processor with another.
+
+```js
+import diffPlugin from "eslint-plugin-diff";
+import vuePlugin from "eslint-plugin-vue";
+
+const vueProcessor = vuePlugin.processors.vue ?? vuePlugin.processors[".vue"];
+
+export default [
+  ...vuePlugin.configs["flat/recommended"],
+  ...diffPlugin.configs["flat/diff"].map((config) => ({
+    ...config,
+    ignores: ["**/*.vue"],
+  })),
+  {
+    files: ["**/*.vue"],
+    processor: diffPlugin.composeProcessor(vueProcessor, "diff"),
+  },
+];
+```
+
 ## Compatibility and trade-offs
 
-- ESLint allows one processor per file. If another integration requires a processor for the same files, scope one of them by file patterns.
+- ESLint allows one processor per file. If another integration requires a
+  processor for the same files, compose processors (see recipe above) or scope
+  one of them by file patterns.
 - Diff-only linting is a signal-over-completeness strategy. It can miss issues outside changed lines. Many teams run full lint in scheduled jobs or on protected branches.
 
 ## Troubleshooting

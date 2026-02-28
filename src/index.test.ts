@@ -38,5 +38,6 @@ describe("plugin", () => {
   it("should provide default export", () => {
     expect(plugin.configs).toBe(configs);
     expect(plugin.processors).toBe(processors);
+    expect(typeof plugin.composeProcessor).toBe("function");
   });
 });

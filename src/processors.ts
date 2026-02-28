@@ -176,6 +176,7 @@ type DiffProcessor = Linter.Processor &
   Required<
     Pick<Linter.Processor, "preprocess" | "postprocess" | "supportsAutofix">
   >;
+type ProcessorMode = ProcessorType;
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
@@ -193,6 +194,47 @@ const getNoOpProcessor = (): DiffProcessor => ({
   postprocess: (messages: Linter.LintMessage[][]) => messages.flat(),
   supportsAutofix: true,
 });
+
+const getProcessorCallbacks = (
+  processor: Linter.Processor,
+): Pick<DiffProcessor, "preprocess" | "postprocess" | "supportsAutofix"> => ({
+  preprocess: processor.preprocess ?? ((text: string) => [text]),
+  postprocess:
+    processor.postprocess ??
+    ((messages: Linter.LintMessage[][]) => messages.flat()),
+  supportsAutofix: processor.supportsAutofix ?? true,
+});
+
+const composeProcessor = (
+  processor: Linter.Processor,
+  mode: ProcessorMode = "diff",
+): DiffProcessor => {
+  const diffProcessor = getProcessors(mode);
+  const baseProcessor = getProcessorCallbacks(processor);
+
+  return {
+    preprocess: (text: string, filename: string) => {
+      const diffTexts = diffProcessor.preprocess(text, filename);
+      if (diffTexts.length === 0) {
+        return [];
+      }
+
+      const firstDiffText = diffTexts[0];
+      const normalizedText =
+        typeof firstDiffText === "string"
+          ? firstDiffText
+          : (firstDiffText?.text ?? text);
+
+      return baseProcessor.preprocess(normalizedText, filename);
+    },
+    postprocess: (messages: Linter.LintMessage[][], filename: string) => {
+      const baseMessages = baseProcessor.postprocess(messages, filename);
+      return diffProcessor.postprocess([baseMessages], filename);
+    },
+    supportsAutofix:
+      diffProcessor.supportsAutofix && baseProcessor.supportsAutofix,
+  };
+};
 
 const ci =
   process.env["CI"] !== undefined ? getProcessors("ci") : getNoOpProcessor();
@@ -232,6 +274,7 @@ const stagedConfig: Linter.BaseConfig = {
 export {
   ci,
   ciConfig,
+  composeProcessor,
   diff,
   diffConfig,
   getUnstagedChangesError,
