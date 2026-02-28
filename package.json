@@ -35,7 +35,7 @@
     "prepack": "pnpm run clean && pnpm run build",
     "lint:package": "pnpm run prepack && pnpm dlx publint --strict --pack pnpm",
     "lint:types": "pnpm run prepack && pnpm dlx @arethetypeswrong/cli --pack .",
-    "release": "np --no-publish",
+    "release": "pnpm run lint:types && np --no-publish",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "prepare": "husky && (git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config blame.ignoreRevsFile .git-blame-ignore-revs || true)"
