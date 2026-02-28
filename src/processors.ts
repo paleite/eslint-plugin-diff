@@ -222,11 +222,7 @@ const composeProcessor = (
         return [];
       }
 
-      const firstDiffText = diffTexts[0];
-      const normalizedText =
-        typeof firstDiffText === "string"
-          ? firstDiffText
-          : (firstDiffText?.text ?? text);
+      const normalizedText = diffTexts[0] as string;
 
       return baseProcessor.preprocess(normalizedText, filename);
     },

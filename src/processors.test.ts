@@ -169,6 +169,18 @@ describe("processors", () => {
     expect(composed.postprocess(messages, filename)).toEqual([]);
     expect(basePostprocess).toHaveBeenCalledTimes(1);
   });
+
+  it("composeProcessor falls back to identity callbacks when omitted", async () => {
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor({}, "diff");
+    const composedWithDefaultMode = composeProcessor({});
+
+    expect(composed.preprocess("text", filename)).toEqual(["text"]);
+    expect(composedWithDefaultMode.preprocess("text", filename)).toEqual([
+      "text",
+    ]);
+    expect(composed.postprocess(messages, filename)).toHaveLength(2);
+  });
 });
 
 describe("configs", () => {
