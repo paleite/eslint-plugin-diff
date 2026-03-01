@@ -1,6 +1,6 @@
 # eslint-plugin-diff
 
-![](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)
+[![npm](https://img.shields.io/npm/dt/eslint-plugin-diff?style=flat-square&logo=npm&logoColor=white)](https://www.npmjs.com/package/eslint-plugin-diff)
 [![codecov](https://codecov.io/gh/paleite/eslint-plugin-diff/branch/main/graph/badge.svg?token=W0LPKHZCF5)](https://codecov.io/gh/paleite/eslint-plugin-diff)
 
 Lint what changed, not the entire codebase. `eslint-plugin-diff` keeps feedback focused by filtering ESLint output to changed lines.

@@ -12,9 +12,9 @@ const PROVIDERS = {
     name: "AppVeyor",
     isSupported: true,
     diffBranch:
-      (process.env["APPVEYOR_PULL_REQUEST_NUMBER"] ?? "") !== ""
-        ? "APPVEYOR_REPO_BRANCH"
-        : undefined,
+      (process.env["APPVEYOR_PULL_REQUEST_NUMBER"] ?? "") === ""
+        ? undefined
+        : "APPVEYOR_REPO_BRANCH",
   },
   AzurePipelines: {
     name: "AzurePipelines",
@@ -50,17 +50,17 @@ const PROVIDERS = {
     name: "GitLab",
     isSupported: true,
     diffBranch:
-      (process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] ?? "") !== ""
-        ? "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"
-        : "CI_MERGE_REQUEST_TARGET_BRANCH_NAME",
+      (process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] ?? "") === ""
+        ? "CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        : "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME",
   },
   Travis: {
     name: "Travis",
     isSupported: true,
     diffBranch:
-      (process.env["TRAVIS_PULL_REQUEST"] ?? "") !== "false"
-        ? "TRAVIS_BRANCH"
-        : undefined,
+      (process.env["TRAVIS_PULL_REQUEST"] ?? "") === "false"
+        ? undefined
+        : "TRAVIS_BRANCH",
   },
   AwsCodeBuild: { name: "AwsCodeBuild", isSupported: false },
   Circle: { name: "Circle", isSupported: false },
@@ -93,12 +93,12 @@ const guessProviders = () =>
 
 const guessBranch = (): string | undefined => {
   if ((process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "").length > 0) {
-    throw Error("ESLINT_PLUGIN_DIFF_COMMIT already set");
+    throw new Error("ESLINT_PLUGIN_DIFF_COMMIT already set");
   }
 
   const guessedProviders = guessProviders();
   if (guessedProviders.length > 1) {
-    throw Error(
+    throw new Error(
       `Too many CI providers found (${guessedProviders
         .map(({ name }) => name)
         .join(

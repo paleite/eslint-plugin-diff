@@ -141,10 +141,18 @@ const buildDataset = ({ diff, files }: Scenario) => {
 
   const hotWindow = Math.min(1000, files);
   for (let index = 0; index < hotWindow; index += 2) {
-    filenames[index] = diffFileList[index % diffFileList.length]!;
+    const val = diffFileList[index % diffFileList.length];
+    if (val === undefined) {
+      throw new Error("Unexpected undefined value");
+    }
+    filenames[index] = val;
   }
   for (let index = 1; index < hotWindow; index += 2) {
-    filenames[index] = untrackedFileList[index % untrackedFileList.length]!;
+    const val = untrackedFileList[index % untrackedFileList.length];
+    if (val === undefined) {
+      throw new Error("Unexpected undefined value");
+    }
+    filenames[index] = val;
   }
 
   return { diffFileList, untrackedFileList, filenames };

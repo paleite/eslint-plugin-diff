@@ -176,7 +176,6 @@ type DiffProcessor = Linter.Processor &
   Required<
     Pick<Linter.Processor, "preprocess" | "postprocess" | "supportsAutofix">
   >;
-type ProcessorMode = ProcessorType;
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
@@ -200,17 +199,16 @@ const getProcessorCallbacks = (
 ): Pick<DiffProcessor, "preprocess" | "postprocess" | "supportsAutofix"> => {
   return {
     preprocess: (text: string, filename: string) =>
-      processor.preprocess?.call(processor, text, filename) ?? [text],
+      processor.preprocess?.(text, filename) ?? [text],
     postprocess: (messages: Linter.LintMessage[][], filename: string) =>
-      processor.postprocess?.call(processor, messages, filename) ??
-      messages.flat(),
+      processor.postprocess?.(messages, filename) ?? messages.flat(),
     supportsAutofix: processor.supportsAutofix ?? true,
   };
 };
 
 const composeProcessor = (
   processor: Linter.Processor,
-  mode: ProcessorMode = "diff",
+  mode: ProcessorType = "diff",
 ): DiffProcessor => {
   const diffProcessor = getProcessors(mode);
   const baseProcessor = getProcessorCallbacks(processor);
@@ -240,7 +238,7 @@ const composeProcessor = (
 };
 
 const ci =
-  process.env["CI"] !== undefined ? getProcessors("ci") : getNoOpProcessor();
+  process.env["CI"] === undefined ? getNoOpProcessor() : getProcessors("ci");
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
 

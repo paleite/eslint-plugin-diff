@@ -1,5 +1,5 @@
-import * as child_process from "child_process";
-import { resolve } from "path";
+import * as child_process from "node:child_process";
+import { resolve } from "node:path";
 
 import { Range } from "./Range";
 
@@ -113,26 +113,24 @@ const getRangeForChangedLines = (line: string) => {
    */
   const rangeRE =
     /^@@ .* \+(?<start>\d+)(?<linesCountDelimiter>,(?<linesCount>\d+))? @@/u;
-  const range = rangeRE.exec(line);
-  if (range === null) {
-    throw Error(`Couldn't match regex with line '${line}'`);
+  const match = rangeRE.exec(line);
+  if (match?.groups === undefined) {
+    throw new Error(`Couldn't match regex with line '${line}'`);
   }
 
-  const groups = {
-    // Fallback value to ensure hasAddedLines resolves to false
-    start: "0",
-    linesCountDelimiter: ",0",
-    linesCount: "0",
-    ...range.groups,
-  };
+  const {
+    start: startStr,
+    linesCountDelimiter,
+    linesCount: linesCountStr,
+  } = match.groups;
 
   const linesCount: number =
-    groups.linesCountDelimiter && groups.linesCount
-      ? parseInt(groups.linesCount)
+    linesCountDelimiter && linesCountStr !== undefined
+      ? Number.parseInt(linesCountStr)
       : 1;
 
   const hasAddedLines = linesCount !== 0;
-  const start: number = parseInt(groups.start);
+  const start: number = Number.parseInt(`${startStr}`);
   const end = start + linesCount;
 
   return hasAddedLines ? new Range(start, end) : null;
