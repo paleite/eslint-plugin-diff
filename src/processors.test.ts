@@ -181,6 +181,23 @@ describe("processors", () => {
     ]);
     expect(composed.postprocess(messages, filename)).toHaveLength(2);
   });
+
+  it("composeProcessor short-circuits postprocess when messages are empty", async () => {
+    const basePostprocess = jest.fn(() => {
+      throw new Error("base postprocess should not be called");
+    });
+    const baseProcessor: Linter.Processor = {
+      preprocess: (text: string) => [text],
+      postprocess: basePostprocess,
+      supportsAutofix: true,
+    };
+
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor(baseProcessor, "diff");
+
+    expect(composed.postprocess([], filename)).toEqual([]);
+    expect(basePostprocess).not.toHaveBeenCalled();
+  });
 });
 
 describe("configs", () => {

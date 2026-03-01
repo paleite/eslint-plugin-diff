@@ -227,6 +227,10 @@ const composeProcessor = (
       return baseProcessor.preprocess(normalizedText, filename);
     },
     postprocess: (messages: Linter.LintMessage[][], filename: string) => {
+      if (messages.length === 0) {
+        return [];
+      }
+
       const baseMessages = baseProcessor.postprocess(messages, filename);
       return diffProcessor.postprocess([baseMessages], filename);
     },
