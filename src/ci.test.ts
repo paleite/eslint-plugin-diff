@@ -136,5 +136,3 @@ describe("complex supported providers", () => {
     expect(guessBranch()).toBe(undefined);
   });
 });
-
-export {};

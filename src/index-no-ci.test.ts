@@ -34,5 +34,3 @@ describe("plugin without CI", () => {
     expect(flatCiConfig?.plugins.diff).toBeDefined();
   });
 });
-
-export {};

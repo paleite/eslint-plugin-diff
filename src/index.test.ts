@@ -1,5 +1,6 @@
 process.env["CI"] = "true";
-import * as child_process from "child_process";
+import * as child_process from "node:child_process";
+
 import type { ESLint } from "eslint";
 
 jest.mock("child_process");
@@ -19,7 +20,7 @@ describe("plugin", () => {
     const flatCi = configs["flat/ci"] as { processor: string }[];
     const flatStaged = configs["flat/staged"] as { processor: string }[];
 
-    expect(Object.keys(configs).sort()).toEqual([
+    expect(Object.keys(configs).sort((a, b) => a.localeCompare(b))).toEqual([
       "ci",
       "diff",
       "flat/ci",
