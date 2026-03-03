@@ -214,6 +214,7 @@ const composeProcessor = (
   const baseProcessor = getProcessorCallbacks(processor);
 
   return {
+    ...processor,
     preprocess: (text: string, filename: string) => {
       const diffTexts = diffProcessor.preprocess(text, filename);
       if (diffTexts.length === 0) {

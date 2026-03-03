@@ -198,6 +198,21 @@ describe("processors", () => {
     expect(composed.postprocess([], filename)).toEqual([]);
     expect(basePostprocess).not.toHaveBeenCalled();
   });
+
+  it("composeProcessor preserves processor metadata fields", async () => {
+    const baseProcessor: Linter.Processor = {
+      preprocess: (text: string) => [text],
+      postprocess: (processorMessages: Linter.LintMessage[][]) =>
+        processorMessages.flat(),
+      supportsAutofix: true,
+      meta: { name: "vue-processor", version: "1.0.0" },
+    };
+
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor(baseProcessor, "diff");
+
+    expect(composed.meta).toEqual(baseProcessor.meta);
+  });
 });
 
 describe("configs", () => {
