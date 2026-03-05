@@ -3,22 +3,26 @@ import { resolve } from "node:path";
 
 import { Range } from "./Range";
 
+export type DiffType = "working" | "staged" | "committed";
+
 const COMMAND = "git";
 const OPTIONS = { maxBuffer: 1024 * 1024 * 100 };
 const onlyStrings = (args: Array<string | false>): string[] =>
   args.filter((arg): arg is string => typeof arg === "string");
 
-const getDiffForFile = (filePath: string, staged: boolean): string => {
+const getDiffForFile = (filePath: string, diffType: DiffType): string => {
   const args = onlyStrings([
-    "diff",
+    diffType === "committed" ? "diff-tree" : "diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    diffType === "staged" && "--staged",
+    diffType === "committed" && "-r",
     "--unified=0",
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "HEAD",
+    diffType === "committed" && "HEAD",
     "--",
     resolve(filePath),
   ]);
@@ -26,17 +30,19 @@ const getDiffForFile = (filePath: string, staged: boolean): string => {
   return child_process.execFileSync(COMMAND, args, OPTIONS).toString();
 };
 
-const getDiffFileList = (staged: boolean): string[] => {
+const getDiffFileList = (diffType: DiffType): string[] => {
   const args = onlyStrings([
-    "diff",
+    diffType === "committed" ? "diff-tree" : "diff",
     "--diff-algorithm=histogram",
     "--diff-filter=ACM",
     "--find-renames=100%",
     "--name-only",
     "--no-ext-diff",
     "--relative",
-    staged && "--staged",
+    diffType === "staged" && "--staged",
+    diffType === "committed" && "-r",
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "HEAD",
+    diffType === "committed" && "HEAD",
     "--",
   ]);
 
@@ -56,6 +62,25 @@ const hasCleanIndex = (filePath: string): boolean => {
     "--quiet",
     "--relative",
     "--unified=0",
+    "--",
+    resolve(filePath),
+  ];
+
+  try {
+    child_process.execFileSync(COMMAND, args, OPTIONS);
+  } catch {
+    return false;
+  }
+
+  return true;
+};
+
+const hasCleanTree = (filePath: string): boolean => {
+  const args = [
+    "diff-index",
+    "--no-ext-diff",
+    "--quiet",
+    "HEAD",
     "--",
     resolve(filePath),
   ];
@@ -141,6 +166,16 @@ const getRangesForDiff = (diff: string): Range[] =>
     return ranges;
   }, []);
 
+const readFileFromGit = (filePath: string): string => {
+  const getBlobArgs = ["ls-tree", "--object-only", "HEAD", resolve(filePath)];
+  const blob = child_process
+    .execFileSync(COMMAND, getBlobArgs, OPTIONS)
+    .toString()
+    .trim();
+  const catFileArgs = ["cat-file", "blob", blob];
+  return child_process.execFileSync(COMMAND, catFileArgs, OPTIONS).toString();
+};
+
 export {
   fetchFromOrigin,
   getDiffFileList,
@@ -148,4 +183,6 @@ export {
   getRangesForDiff,
   getTrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 };

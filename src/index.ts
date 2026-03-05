@@ -3,6 +3,8 @@ import type { ESLint, Linter } from "eslint";
 import {
   ci,
   ciConfig,
+  committed,
+  committedConfig,
   composeProcessor,
   diff,
   diffConfig,
@@ -17,23 +19,26 @@ type FlatConfigEntry = {
 
 type PluginConfigs = {
   ci: typeof ciConfig;
+  committed: typeof committedConfig;
   diff: typeof diffConfig;
   staged: typeof stagedConfig;
   "flat/ci": FlatConfigEntry[];
+  "flat/committed": FlatConfigEntry[];
   "flat/diff": FlatConfigEntry[];
   "flat/staged": FlatConfigEntry[];
 };
 
-type ProcessorName = "diff/ci" | "diff/diff" | "diff/staged";
-type ProcessorMode = "ci" | "diff" | "staged";
+type ProcessorName = "diff/ci" | "diff/committed" | "diff/diff" | "diff/staged";
+type ProcessorMode = "ci" | "committed" | "diff" | "staged";
 
 type Processors = {
   readonly ci: typeof ci;
+  readonly committed: typeof committed;
   readonly diff: typeof diff;
   readonly staged: typeof staged;
 };
 
-const processors: Processors = { ci, diff, staged };
+const processors: Processors = { ci, committed, diff, staged };
 
 type DiffPlugin = {
   configs: PluginConfigs;
@@ -57,9 +62,11 @@ const plugin: DiffPlugin = (() => {
     composeProcessor,
     configs: {
       ci: ciConfig,
+      committed: committedConfig,
       diff: diffConfig,
       staged: stagedConfig,
       "flat/ci": [],
+      "flat/committed": [],
       "flat/diff": [],
       "flat/staged": [],
     },
@@ -76,6 +83,10 @@ const plugin: DiffPlugin = (() => {
   pluginDraft.configs["flat/ci"] = createFlatConfigForProcessor(
     pluginDraft,
     "diff/ci",
+  );
+  pluginDraft.configs["flat/committed"] = createFlatConfigForProcessor(
+    pluginDraft,
+    "diff/committed",
   );
 
   return pluginDraft;

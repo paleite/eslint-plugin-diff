@@ -18,18 +18,22 @@ describe("plugin", () => {
       plugins: { diff: ESLint.Plugin };
     }[];
     const flatCi = configs["flat/ci"] as { processor: string }[];
+    const flatCommitted = configs["flat/committed"] as { processor: string }[];
     const flatStaged = configs["flat/staged"] as { processor: string }[];
 
     expect(Object.keys(configs).sort((a, b) => a.localeCompare(b))).toEqual([
       "ci",
+      "committed",
       "diff",
       "flat/ci",
+      "flat/committed",
       "flat/diff",
       "flat/staged",
       "staged",
     ]);
     expect(flatDiff[0]?.processor).toBe("diff/diff");
     expect(flatCi[0]?.processor).toBe("diff/ci");
+    expect(flatCommitted[0]?.processor).toBe("diff/committed");
     expect(flatStaged[0]?.processor).toBe("diff/staged");
     expect(flatDiff[0]?.plugins.diff).toBeDefined();
 

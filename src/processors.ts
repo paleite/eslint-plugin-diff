@@ -1,6 +1,7 @@
 import type { Linter } from "eslint";
 
 import { guessBranch } from "./ci";
+import type { DiffType } from "./git";
 import {
   fetchFromOrigin,
   getDiffFileList,
@@ -8,6 +9,8 @@ import {
   getRangesForDiff,
   getTrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 } from "./git";
 import type { Range } from "./Range";
 
@@ -57,7 +60,7 @@ const createCiInitializer = (): (() => void) => {
  */
 const getPreProcessor = (
   trackedFileSet: Set<string>,
-  staged: boolean,
+  diffType: DiffType,
   initialize?: () => void,
 ): DiffProcessor["preprocess"] => {
   let diffFileListCache: string[] = [];
@@ -66,7 +69,7 @@ const getPreProcessor = (
 
   const refreshDiffFileList = () => {
     initialize?.();
-    diffFileListCache = getDiffFileList(staged);
+    diffFileListCache = getDiffFileList(diffType);
     diffFileSetCache = new Set(diffFileListCache);
     hasInitializedDiffFileList = true;
   };
@@ -94,6 +97,14 @@ const getPreProcessor = (
       process.env["VSCODE_PID"] !== undefined ||
       diffFileSetCache.has(filename) ||
       !trackedFileSet.has(filename);
+
+    if (
+      diffType === "committed" &&
+      shouldBeProcessed &&
+      !hasCleanTree(filename)
+    ) {
+      return [readFileFromGit(filename)];
+    }
 
     return shouldBeProcessed ? [text] : [];
   };
@@ -126,7 +137,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 const getPostProcessor =
   (
     trackedFileSet: Set<string>,
-    staged: boolean,
+    diffType: DiffType,
     includeFixes: boolean,
     initialize?: () => void,
   ) =>
@@ -146,11 +157,11 @@ const getPostProcessor =
       return messages.flat();
     }
 
-    if (staged && !hasCleanIndex(filename)) {
+    if (diffType === "staged" && !hasCleanIndex(filename)) {
       return getUnstagedChangesError(filename);
     }
 
-    const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
+    const rangesForDiff = getRangesForDiff(getDiffForFile(filename, diffType));
 
     return messages.flatMap((message) => {
       const filteredMessage = message.filter(({ fatal, line, fix }) => {
@@ -173,28 +184,31 @@ const getPostProcessor =
     });
   };
 
-type ProcessorType = "diff" | "staged" | "ci";
+type ProcessorType = "diff" | "staged" | "committed" | "ci";
 type DiffProcessor = Linter.Processor &
   Required<
     Pick<Linter.Processor, "preprocess" | "postprocess" | "supportsAutofix">
   >;
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
-  const staged = processorType === "staged";
+  const diffType: DiffType =
+    processorType === "staged" || processorType === "committed"
+      ? processorType
+      : "working";
   const includeFixes =
     process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
   const initialize = processorType === "ci" ? createCiInitializer() : undefined;
   const trackedFileSet = new Set(getTrackedFileList());
 
   return {
-    preprocess: getPreProcessor(trackedFileSet, staged, initialize),
+    preprocess: getPreProcessor(trackedFileSet, diffType, initialize),
     postprocess: getPostProcessor(
       trackedFileSet,
-      staged,
+      diffType,
       includeFixes,
       initialize,
     ),
-    supportsAutofix: true,
+    supportsAutofix: processorType !== "committed",
   };
 };
 
@@ -252,6 +266,7 @@ const ci =
   process.env["CI"] === undefined ? getNoOpProcessor() : getProcessors("ci");
 const diff = getProcessors("diff");
 const staged = getProcessors("staged");
+const committed = getProcessors("committed");
 
 const diffConfig: Linter.BaseConfig = {
   plugins: ["diff"],
@@ -283,6 +298,16 @@ const stagedConfig: Linter.BaseConfig = {
   ],
 };
 
+const committedConfig: Linter.BaseConfig = {
+  plugins: ["diff"],
+  overrides: [
+    {
+      files: ["*"],
+      processor: "diff/committed",
+    },
+  ],
+};
+
 export {
   ci,
   ciConfig,
@@ -290,6 +315,8 @@ export {
   diff,
   diffConfig,
   getUnstagedChangesError,
+  committed,
+  committedConfig,
   staged,
   stagedConfig,
 };

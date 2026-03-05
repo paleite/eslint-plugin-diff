@@ -4,6 +4,8 @@ jest.mock("./git", () => ({
   getDiffFileList: jest.fn(),
   getDiffForFile: jest.fn(),
   hasCleanIndex: jest.fn(),
+  hasCleanTree: jest.fn(),
+  readFileFromGit: jest.fn(),
 }));
 
 import type { Linter } from "eslint";
@@ -41,6 +43,20 @@ describe("processors", () => {
     expect(diffProcessors.preprocess(sourceCode, validFilename)).toEqual([
       sourceCode,
     ]);
+  });
+
+  it("committed preprocess reads content from git when working tree is dirty", async () => {
+    const sourceCode = "/** Working tree content */";
+    gitMocked.hasCleanTree.mockReturnValueOnce(false);
+    gitMocked.readFileFromGit.mockReturnValueOnce("/** HEAD content */");
+
+    const { committed: committedProcessor } = await importProcessors();
+
+    expect(committedProcessor.preprocess(sourceCode, filename)).toEqual([
+      "/** HEAD content */",
+    ]);
+    expect(gitMocked.hasCleanTree).toHaveBeenCalledWith(filename);
+    expect(gitMocked.readFileFromGit).toHaveBeenCalledWith(filename);
   });
 
   it("preprocess does not repeatedly refresh unknown files", async () => {
@@ -101,6 +117,12 @@ describe("processors", () => {
     const { staged: stagedProcessors } = await importProcessors();
 
     expect(stagedProcessors.postprocess(messages, filename)).toMatchSnapshot();
+  });
+
+  it("committed processor disables autofix", async () => {
+    const { committed: committedProcessor } = await importProcessors();
+
+    expect(committedProcessor.supportsAutofix).toBe(false);
   });
 
   it("should report fatal errors", async () => {
@@ -245,6 +267,11 @@ describe("configs", () => {
   it("staged", async () => {
     const { stagedConfig } = await importProcessors();
     expect(stagedConfig).toMatchSnapshot();
+  });
+
+  it("committed", async () => {
+    const { committedConfig } = await importProcessors();
+    expect(committedConfig).toMatchSnapshot();
   });
 });
 

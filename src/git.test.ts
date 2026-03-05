@@ -13,6 +13,8 @@ import {
   getRangesForDiff,
   getTrackedFileList,
   hasCleanIndex,
+  hasCleanTree,
+  readFileFromGit,
 } from "./git";
 
 jest.mock("child_process");
@@ -53,7 +55,7 @@ describe("getDiffForFile", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js", true);
+    const diffFromFile = getDiffForFile("./mockfile.js", "staged");
 
     const expectedCommand = "git";
     const expectedArgs =
@@ -73,7 +75,7 @@ describe("getDiffForFile", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
 
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
+    const diffFromFile = getDiffForFile("./mockfile.js", "working");
 
     const expectedCommand = "git";
     const expectedArgs =
@@ -93,7 +95,7 @@ describe("getDiffForFile", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = undefined;
 
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
+    const diffFromFile = getDiffForFile("./mockfile.js", "working");
 
     const expectedCommand = "git";
     const expectedArgs =
@@ -107,6 +109,21 @@ describe("getDiffForFile", () => {
     expect(args.join(" ")).toEqual(expectedArgs);
     expect(diffFromFile).toContain("diff --git");
     expect(diffFromFile).toContain("@@");
+  });
+  it("should get the committed diff of a file", () => {
+    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "origin/main";
+
+    getDiffForFile("./mockfile.js", "committed");
+
+    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
+    const [command, argsIncludingFile = []] = lastCall ?? [""];
+    const args = argsIncludingFile.slice(0, -2);
+
+    expect(command).toBe("git");
+    expect(args.join(" ")).toEqual(
+      "diff-tree --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative -r --unified=0 origin/main HEAD",
+    );
   });
 });
 
@@ -143,6 +160,24 @@ describe("fetchFromOrigin", () => {
   });
 });
 
+describe("hasCleanTree", () => {
+  it("returns false instead of throwing", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync.mockImplementationOnce(() => {
+      throw new Error("mocked error");
+    });
+    expect(hasCleanTree("")).toEqual(false);
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
+  });
+
+  it("returns true otherwise", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
+    expect(hasCleanTree("")).toEqual(true);
+    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
+  });
+});
+
 describe("getDiffFileList", () => {
   it("should get the list of staged files", () => {
     jest.mock("child_process").resetAllMocks();
@@ -150,7 +185,7 @@ describe("getDiffFileList", () => {
       Buffer.from(diffFileList),
     );
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList(false);
+    const fileListA = getDiffFileList("working");
 
     expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
     expect(fileListA).toEqual(
@@ -165,7 +200,7 @@ describe("getDiffFileList", () => {
     );
     process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
 
-    getDiffFileList(true);
+    getDiffFileList("staged");
 
     const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
     const [command, args = []] = lastCall ?? [""];
@@ -175,11 +210,29 @@ describe("getDiffFileList", () => {
     expect(args).toContain("1234567");
   });
 
+  it("includes head range when diffType is committed", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync.mockReturnValueOnce(
+      Buffer.from(diffFileList),
+    );
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "origin/main";
+
+    getDiffFileList("committed");
+
+    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
+    const [command, args = []] = lastCall ?? [""];
+
+    expect(command).toBe("git");
+    expect(args).toContain("diff-tree");
+    expect(args).toContain("-r");
+    expect(args).toEqual(expect.arrayContaining(["origin/main", "HEAD"]));
+  });
+
   it("returns an empty list when git diff has no output", () => {
     jest.mock("child_process").resetAllMocks();
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(""));
 
-    expect(getDiffFileList(false)).toEqual([]);
+    expect(getDiffFileList("working")).toEqual([]);
   });
 });
 
@@ -203,5 +256,30 @@ describe("getTrackedFileList", () => {
     mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(""));
 
     expect(getTrackedFileList()).toEqual([]);
+  });
+});
+
+describe("readFileFromGit", () => {
+  it("reads file content from HEAD blob", () => {
+    jest.mock("child_process").resetAllMocks();
+    mockedChildProcess.execFileSync
+      .mockReturnValueOnce(Buffer.from("blob-id\n"))
+      .mockReturnValueOnce(Buffer.from("const fromGit = true;\n"));
+
+    const result = readFileFromGit("./mockfile.js");
+
+    expect(result).toBe("const fromGit = true;\n");
+    expect(mockedChildProcess.execFileSync).toHaveBeenNthCalledWith(
+      1,
+      "git",
+      ["ls-tree", "--object-only", "HEAD", path.resolve("./mockfile.js")],
+      expect.anything(),
+    );
+    expect(mockedChildProcess.execFileSync).toHaveBeenNthCalledWith(
+      2,
+      "git",
+      ["cat-file", "blob", "blob-id"],
+      expect.anything(),
+    );
   });
 });

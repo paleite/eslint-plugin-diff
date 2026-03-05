@@ -7,6 +7,11 @@ exports[`plugin should match expected export 1`] = `
     "preprocess": [Function],
     "supportsAutofix": true,
   },
+  "committed": {
+    "postprocess": [Function],
+    "preprocess": [Function],
+    "supportsAutofix": false,
+  },
   "diff": {
     "postprocess": [Function],
     "preprocess": [Function],

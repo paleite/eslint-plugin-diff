@@ -1,5 +1,21 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`configs committed 1`] = `
+{
+  "overrides": [
+    {
+      "files": [
+        "*",
+      ],
+      "processor": "diff/committed",
+    },
+  ],
+  "plugins": [
+    "diff",
+  ],
+}
+`;
+
 exports[`configs diff 1`] = `
 {
   "overrides": [

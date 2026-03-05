@@ -51,11 +51,12 @@ Behavior:
 
 ## Modes
 
-| Mode     | Legacy config        | Flat config              | Typical use                              |
-| -------- | -------------------- | ------------------------ | ---------------------------------------- |
-| `diff`   | `plugin:diff/diff`   | `configs["flat/diff"]`   | Local dev against working tree changes   |
-| `ci`     | `plugin:diff/ci`     | `configs["flat/ci"]`     | PR CI diff-only in CI, full lint locally |
-| `staged` | `plugin:diff/staged` | `configs["flat/staged"]` | Pre-commit staged-only workflows         |
+| Mode        | Legacy config           | Flat config                 | Typical use                                |
+| ----------- | ----------------------- | --------------------------- | ------------------------------------------ |
+| `diff`      | `plugin:diff/diff`      | `configs["flat/diff"]`      | Local dev against working tree changes     |
+| `ci`        | `plugin:diff/ci`        | `configs["flat/ci"]`        | PR CI diff-only in CI, full lint locally   |
+| `committed` | `plugin:diff/committed` | `configs["flat/committed"]` | Pre-push linting against committed changes |
+| `staged`    | `plugin:diff/staged`    | `configs["flat/staged"]`    | Pre-commit staged-only workflows           |
 
 Important `staged` caveat: if a file has unstaged changes, the plugin emits a fatal message:
 `<file> has unstaged changes. Please stage or remove the changes.`
@@ -110,6 +111,14 @@ ESLINT_PLUGIN_DIFF_COMMIT="origin/main" npx eslint --max-warnings=0 .
 ### Pre-commit staged-only
 
 Use `plugin:diff/staged` or `configs["flat/staged"]`.
+
+### Pre-push committed-only
+
+Use `plugin:diff/committed` or `configs["flat/committed"]`.
+
+```sh
+ESLINT_PLUGIN_DIFF_COMMIT="origin/main" npx eslint --max-warnings=0 .
+```
 
 ### PR CI with autodetect (`ci` mode)
 
