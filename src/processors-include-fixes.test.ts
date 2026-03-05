@@ -6,9 +6,9 @@ jest.mock("./git", () => ({
   hasCleanIndex: jest.fn(),
 }));
 
-import type * as git from "./git";
 import { staged as fixtureStaged } from "./__fixtures__/diff";
 import { postprocessArguments } from "./__fixtures__/postprocessArguments";
+import type * as git from "./git";
 
 const importGit = async (): Promise<typeof import("./git.js")> =>
   import("./git.js");

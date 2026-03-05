@@ -181,7 +181,8 @@ type DiffProcessor = Linter.Processor &
 
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
-  const includeFixes = process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
+  const includeFixes =
+    process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
   const initialize = processorType === "ci" ? createCiInitializer() : undefined;
   const trackedFileSet = new Set(getTrackedFileList());
 

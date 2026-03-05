@@ -89,6 +89,10 @@ When set to `true`, the plugin keeps lint messages with available fixes even
 when those messages are outside changed diff hunks. This can make `eslint --fix`
 apply file-wide changes in modified files.
 
+```sh
+ESLINT_PLUGIN_DIFF_INCLUDE_FIXES=true npx eslint --fix .
+```
+
 ## Recipes
 
 ### Local diff vs default base (`HEAD`)
