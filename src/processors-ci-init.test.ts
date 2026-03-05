@@ -3,7 +3,7 @@ jest.mock("./git", () => ({
   fetchFromOrigin: jest.fn(),
   getDiffFileList: jest.fn().mockReturnValue([]),
   getDiffForFile: jest.fn().mockReturnValue(""),
-  getUntrackedFileList: jest.fn().mockReturnValue([]),
+  getTrackedFileList: jest.fn().mockReturnValue([]),
   hasCleanIndex: jest.fn().mockReturnValue(true),
 }));
 
@@ -86,5 +86,22 @@ describe("CI initialization", () => {
 
     expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
     expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe("abc123");
+  });
+
+  it("preserves namespace-qualified refs and skips origin fetch", async () => {
+    process.env["CI"] = "true";
+    process.env["GITHUB_BASE_REF"] = "main";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "refs/remotes/origin/main";
+
+    const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(
+      await importGit(),
+    );
+    const { ci } = await importProcessors();
+    ci.preprocess("/** Some source code */", "file.ts");
+
+    expect(gitMocked.fetchFromOrigin).not.toHaveBeenCalled();
+    expect(process.env["ESLINT_PLUGIN_DIFF_COMMIT"]).toBe(
+      "refs/remotes/origin/main",
+    );
   });
 });

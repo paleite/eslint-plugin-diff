@@ -6,7 +6,7 @@ import {
   getDiffFileList,
   getDiffForFile,
   getRangesForDiff,
-  getUntrackedFileList,
+  getTrackedFileList,
   hasCleanIndex,
 } from "./git";
 import type { Range } from "./Range";
@@ -56,6 +56,7 @@ const createCiInitializer = (): (() => void) => {
  * This is increasingly useful the more files there are in the repository.
  */
 const getPreProcessor = (
+  trackedFileSet: Set<string>,
   staged: boolean,
   initialize?: () => void,
 ): DiffProcessor["preprocess"] => {
@@ -84,22 +85,15 @@ const getPreProcessor = (
     if (process.env["VSCODE_PID"] !== undefined && !isInDiffFileList) {
       // Editors can invoke ESLint before our initial diff snapshot includes the
       // latest edit. Refresh once to avoid "second edit" diagnostics.
+      // TODO: This can refresh repeatedly for files still outside the diff set.
+      // Either enforce a one-time refresh or update the comment/docs.
       refreshDiffFileList();
-    }
-
-    let untrackedFileList = getUntrackedFileList(staged);
-    let untrackedFileSet = new Set(untrackedFileList);
-    const shouldRefresh =
-      !diffFileSetCache.has(filename) && !untrackedFileSet.has(filename);
-    if (shouldRefresh) {
-      untrackedFileList = getUntrackedFileList(staged, true);
-      untrackedFileSet = new Set(untrackedFileList);
     }
 
     const shouldBeProcessed =
       process.env["VSCODE_PID"] !== undefined ||
       diffFileSetCache.has(filename) ||
-      untrackedFileSet.has(filename);
+      !trackedFileSet.has(filename);
 
     return shouldBeProcessed ? [text] : [];
   };
@@ -130,7 +124,7 @@ const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
 };
 
 const getPostProcessor =
-  (staged: boolean, initialize?: () => void) =>
+  (trackedFileSet: Set<string>, staged: boolean, initialize?: () => void) =>
   (
     messages: Linter.LintMessage[][],
     filename: string,
@@ -141,8 +135,7 @@ const getPostProcessor =
       // No need to filter, just return
       return [];
     }
-    const untrackedFileSet = new Set(getUntrackedFileList(staged));
-    if (untrackedFileSet.has(filename)) {
+    if (!trackedFileSet.has(filename)) {
       // We don't need to filter the messages of untracked files because they
       // would all be kept anyway, so we return them as-is.
       return messages.flat();
@@ -180,10 +173,11 @@ type DiffProcessor = Linter.Processor &
 const getProcessors = (processorType: ProcessorType): DiffProcessor => {
   const staged = processorType === "staged";
   const initialize = processorType === "ci" ? createCiInitializer() : undefined;
+  const trackedFileSet = new Set(getTrackedFileList());
 
   return {
-    preprocess: getPreProcessor(staged, initialize),
-    postprocess: getPostProcessor(staged, initialize),
+    preprocess: getPreProcessor(trackedFileSet, staged, initialize),
+    postprocess: getPostProcessor(trackedFileSet, staged, initialize),
     supportsAutofix: true,
   };
 };

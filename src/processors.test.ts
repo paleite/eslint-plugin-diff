@@ -1,6 +1,6 @@
 jest.mock("./git", () => ({
   ...jest.requireActual<typeof git>("./git"),
-  getUntrackedFileList: jest.fn(),
+  getTrackedFileList: jest.fn(),
   getDiffFileList: jest.fn(),
   getDiffForFile: jest.fn(),
   hasCleanIndex: jest.fn(),
@@ -19,10 +19,15 @@ const importProcessors = async (): Promise<typeof import("./processors.js")> =>
 
 const [messages, filename] = postprocessArguments;
 const untrackedFilename = "an-untracked-file.js";
+const trackedUnchangedFilename = "tracked-unchanged-file.js";
 
 const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
 gitMocked.getDiffFileList.mockReturnValue([filename]);
-gitMocked.getUntrackedFileList.mockReturnValue([untrackedFilename]);
+gitMocked.getTrackedFileList.mockReturnValue([
+  filename,
+  "file-with-dirty-index.js",
+  trackedUnchangedFilename,
+]);
 
 describe("processors", () => {
   it("preprocess (diff and staged)", async () => {
@@ -38,18 +43,22 @@ describe("processors", () => {
     ]);
   });
 
-  it("preprocess refreshes untracked files when filename is unknown", async () => {
+  it("preprocess does not repeatedly refresh unknown files", async () => {
     const sourceCode = "/** Some source code */";
-    const unknownFilename = "unknown-file.ts";
-    gitMocked.getUntrackedFileList
-      .mockReturnValueOnce([])
-      .mockReturnValueOnce([])
-      .mockReturnValueOnce([]);
+    const unchangedTrackedFilename = trackedUnchangedFilename;
 
     const { diff: diffProcessors } = await importProcessors();
+    const trackedCallsBefore = gitMocked.getTrackedFileList.mock.calls.length;
 
-    expect(diffProcessors.preprocess(sourceCode, unknownFilename)).toEqual([]);
-    expect(gitMocked.getUntrackedFileList).toHaveBeenCalledWith(false, true);
+    expect(
+      diffProcessors.preprocess(sourceCode, unchangedTrackedFilename),
+    ).toEqual([]);
+    expect(
+      diffProcessors.preprocess(sourceCode, unchangedTrackedFilename),
+    ).toEqual([]);
+    expect(gitMocked.getTrackedFileList.mock.calls.length).toBe(
+      trackedCallsBefore,
+    );
   });
 
   it("diff postprocess", async () => {
@@ -128,7 +137,7 @@ describe("processors", () => {
     );
   });
 
-  it("composeProcessor skips base preprocess when diff excludes file", async () => {
+  it("composeProcessor runs base preprocess for unknown files", async () => {
     const basePreprocess = jest.fn((text: string) => [text]);
     const baseProcessor: Linter.Processor = {
       preprocess: basePreprocess,
@@ -137,15 +146,27 @@ describe("processors", () => {
       supportsAutofix: true,
     };
     const unknownFilename = "unknown-file.ts";
-    gitMocked.getUntrackedFileList
-      .mockReturnValueOnce([])
-      .mockReturnValueOnce([])
-      .mockReturnValueOnce([]);
 
     const { composeProcessor } = await importProcessors();
     const composed = composeProcessor(baseProcessor, "diff");
 
-    expect(composed.preprocess("text", unknownFilename)).toEqual([]);
+    expect(composed.preprocess("text", unknownFilename)).toEqual(["text"]);
+    expect(basePreprocess).toHaveBeenCalledTimes(1);
+  });
+
+  it("composeProcessor skips base preprocess for unchanged tracked files", async () => {
+    const basePreprocess = jest.fn((text: string) => [text]);
+    const baseProcessor: Linter.Processor = {
+      preprocess: basePreprocess,
+      postprocess: (processorMessages: Linter.LintMessage[][]) =>
+        processorMessages.flat(),
+      supportsAutofix: true,
+    };
+
+    const { composeProcessor } = await importProcessors();
+    const composed = composeProcessor(baseProcessor, "diff");
+
+    expect(composed.preprocess("text", trackedUnchangedFilename)).toEqual([]);
     expect(basePreprocess).not.toHaveBeenCalled();
   });
 
