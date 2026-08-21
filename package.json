@@ -41,44 +41,41 @@
     "prepare": "husky && (git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config blame.ignoreRevsFile .git-blame-ignore-revs || true)"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
-    "@paleite/eslint-config": "^2.0.1",
-    "@paleite/eslint-config-base": "^2.0.1",
-    "@paleite/eslint-config-typescript": "^2.0.1",
+    "@eslint/js": "^10.0.1",
     "@paleite/jest-config": "^2.0.0",
     "@paleite/prettier-config": "^2.0.0",
     "@paleite/tsconfig-node-lts": "^2.0.0",
     "@paleite/tsconfig-strictest": "^2.0.0",
-    "@types/eslint": "^9.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24",
-    "@typescript-eslint/eslint-plugin": "^8.56.0",
-    "@typescript-eslint/parser": "^8.56.0",
-    "eslint": "^9",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
+    "eslint-plugin-vue": "^10.10.0",
     "globals": "^17.3.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "np": "^7.7.0",
-    "prettier": "^3.8.1",
+    "prettier": "^3.9.6",
     "pretty-quick": "^4.2.2",
     "ts-jest": "^29.4.6",
     "tsd": "^0.25.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0",
-    "uuid": "^14.0.0"
+    "typescript-eslint": "^8.67.0",
+    "uuid": "^14.0.0",
+    "vue-eslint-parser": "^10.4.1"
   },
   "peerDependencies": {
-    "eslint": ">=6.7.0"
+    "eslint": ">=10.0.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
-  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }

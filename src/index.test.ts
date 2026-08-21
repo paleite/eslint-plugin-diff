@@ -1,44 +1,14 @@
-process.env["CI"] = "true";
-import * as child_process from "node:child_process";
+import plugin, { composeProcessor, createProcessor } from "./index";
 
-import type { ESLint } from "eslint";
-
-jest.mock("child_process");
-const mockedChildProcess = jest.mocked(child_process, { shallow: true });
-mockedChildProcess.execFileSync.mockReturnValue(
-  Buffer.from("line1\nline2\nline3"),
-);
-
-import plugin, { configs, processors } from "./index";
-
-describe("plugin", () => {
-  it("should match expected export", () => {
-    const flatDiff = configs["flat/diff"] as {
-      processor: string;
-      plugins: { diff: ESLint.Plugin };
-    }[];
-    const flatCi = configs["flat/ci"] as { processor: string }[];
-    const flatStaged = configs["flat/staged"] as { processor: string }[];
-
-    expect(Object.keys(configs).sort((a, b) => a.localeCompare(b))).toEqual([
-      "ci",
-      "diff",
-      "flat/ci",
-      "flat/diff",
-      "flat/staged",
-      "staged",
+describe("v3 public API", () => {
+  it("exports only processor factories at runtime", () => {
+    expect(Object.keys(plugin).sort()).toEqual([
+      "composeProcessor",
+      "createProcessor",
     ]);
-    expect(flatDiff[0]?.processor).toBe("diff/diff");
-    expect(flatCi[0]?.processor).toBe("diff/ci");
-    expect(flatStaged[0]?.processor).toBe("diff/staged");
-    expect(flatDiff[0]?.plugins.diff).toBeDefined();
-
-    expect(processors).toMatchSnapshot();
-  });
-
-  it("should provide default export", () => {
-    expect(plugin.configs).toBe(configs);
-    expect(plugin.processors).toBe(processors);
-    expect(typeof plugin.composeProcessor).toBe("function");
+    expect(plugin.createProcessor).toBe(createProcessor);
+    expect(plugin.composeProcessor).toBe(composeProcessor);
+    expect("configs" in plugin).toBe(false);
+    expect("processors" in plugin).toBe(false);
   });
 });

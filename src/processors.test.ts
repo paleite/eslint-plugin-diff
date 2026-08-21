@@ -1,261 +1,442 @@
-jest.mock("./git", () => ({
-  ...jest.requireActual<typeof git>("./git"),
-  getTrackedFileList: jest.fn(),
-  getDiffFileList: jest.fn(),
-  getDiffForFile: jest.fn(),
-  hasCleanIndex: jest.fn(),
+import type * as GitModule from "./git.js";
+
+jest.mock("./git", () => {
+  const actualGit = jest.requireActual("./git") as unknown as typeof GitModule;
+  return {
+    ...actualGit,
+    canonicalizeFilename: jest.fn((filename: string) => filename),
+    getChangedLineRanges: jest.fn(),
+    getDiffSnapshot: jest.fn(),
+    getUnstagedState: jest.fn(),
+    resolveCiBase: jest.fn(),
+    resolveExactBase: jest.fn((commitish: string) => commitish),
+  };
+});
+
+jest.mock("./ci", () => ({
+  resolveCiContext: jest.fn(),
 }));
 
 import type { Linter } from "eslint";
 
-import {
-  diff as fixtureDiff,
-  staged as fixtureStaged,
-} from "./__fixtures__/diff";
-import { postprocessArguments } from "./__fixtures__/postprocessArguments";
+import * as ci from "./ci";
 import * as git from "./git";
-const importProcessors = async (): Promise<typeof import("./processors.js")> =>
-  import("./processors.js");
+import {
+  composeProcessor,
+  createProcessor,
+  getUnstagedChangesError,
+  normalizeProcessorOptions,
+  shouldKeepMessage,
+} from "./processors";
+import { Range } from "./Range";
 
-const [messages, filename] = postprocessArguments;
-const untrackedFilename = "an-untracked-file.js";
-const trackedUnchangedFilename = "tracked-unchanged-file.js";
-
-const gitMocked: jest.MockedObjectDeep<typeof git> = jest.mocked(git);
-gitMocked.getDiffFileList.mockReturnValue([filename]);
-gitMocked.getTrackedFileList.mockReturnValue([
+const mockedGit = jest.mocked(git);
+const mockedCi = jest.mocked(ci);
+const filename = "/repo/file.ts";
+const changedFile: git.ChangedFile = {
+  status: "modified",
   filename,
-  "file-with-dirty-index.js",
-  trackedUnchangedFilename,
-]);
+  relativePath: "file.ts",
+  allLinesChanged: false,
+};
+const snapshot: git.DiffSnapshot = {
+  repositoryRoot: "/repo",
+  comparison: { kind: "working-tree", baseCommit: "HEAD" },
+  files: new Map([[filename, changedFile]]),
+};
 
-describe("processors", () => {
-  it("preprocess (diff and staged)", async () => {
-    // The preprocessor does not depend on `staged` being true or false, so it's
-    // sufficient to only test one of them.
-    const validFilename = filename;
-    const sourceCode = "/** Some source code */";
+const message = (
+  overrides: Partial<Linter.LintMessage> = {},
+): Linter.LintMessage => ({
+  ruleId: "example/rule",
+  severity: 2,
+  message: "example",
+  line: 3,
+  column: 1,
+  ...overrides,
+});
 
-    const { diff: diffProcessors } = await importProcessors();
+const OLD_ENV = process.env;
 
-    expect(diffProcessors.preprocess(sourceCode, validFilename)).toEqual([
-      sourceCode,
+beforeEach(() => {
+  jest.clearAllMocks();
+  process.env = { ...OLD_ENV };
+  delete process.env["CI"];
+  delete process.env["VSCODE_PID"];
+  delete process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
+  delete process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"];
+  mockedGit.getDiffSnapshot.mockReturnValue(snapshot);
+  mockedGit.getChangedLineRanges.mockReturnValue([new Range(3, 4)]);
+  mockedGit.getUnstagedState.mockReturnValue("clean");
+});
+
+afterAll(() => {
+  process.env = OLD_ENV;
+});
+
+describe("processor options", () => {
+  it("requires an options object and explicit valid mode", () => {
+    expect(() => normalizeProcessorOptions(null as never)).toThrow(TypeError);
+    expect(() => normalizeProcessorOptions(undefined as never)).toThrow(
+      TypeError,
+    );
+    expect(() =>
+      normalizeProcessorOptions({ mode: "invalid" } as never),
+    ).toThrow(/mode/u);
+  });
+
+  it("rejects a non-array outside-line rule configuration", () => {
+    expect(() =>
+      normalizeProcessorOptions({
+        mode: "diff",
+        rulesReportedOutsideChangedLines: "example/rule" as never,
+      }),
+    ).toThrow(/array/u);
+  });
+
+  it("rejects non-string outside-line rule IDs", () => {
+    expect(() =>
+      normalizeProcessorOptions({
+        mode: "diff",
+        rulesReportedOutsideChangedLines: [123 as never],
+      }),
+    ).toThrow(/non-empty strings/u);
+  });
+
+  it("validates outside-line rule IDs and de-duplicates them", () => {
+    expect(() =>
+      normalizeProcessorOptions({
+        mode: "diff",
+        rulesReportedOutsideChangedLines: [""],
+      }),
+    ).toThrow(/non-empty/u);
+    expect(
+      normalizeProcessorOptions({
+        mode: "diff",
+        rulesReportedOutsideChangedLines: ["a/rule", "a/rule"],
+      }).rulesReportedOutsideChangedLines.size,
+    ).toBe(1);
+  });
+
+  it("defaults outside-line rules to empty", () => {
+    expect(
+      normalizeProcessorOptions({ mode: "diff" })
+        .rulesReportedOutsideChangedLines.size,
+    ).toBe(0);
+  });
+});
+
+describe("createProcessor", () => {
+  it("does no Git work during construction", () => {
+    createProcessor({ mode: "diff" });
+    expect(mockedGit.resolveExactBase).not.toHaveBeenCalled();
+    expect(mockedGit.getDiffSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("initializes lazily and skips unchanged files", () => {
+    const processor = createProcessor({ mode: "diff" });
+    expect(processor.preprocess("text", filename)).toEqual(["text"]);
+    expect(mockedGit.resolveExactBase).toHaveBeenCalledWith("HEAD", false);
+    expect(mockedGit.getDiffSnapshot).toHaveBeenCalledTimes(1);
+    expect(processor.preprocess("text", "/repo/unchanged.ts")).toEqual([]);
+    expect(mockedGit.getDiffSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses explicit local bases for diff and staged modes", () => {
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "base-ref";
+    mockedGit.resolveExactBase.mockReturnValue("resolved-base");
+
+    createProcessor({ mode: "diff" }).preprocess("text", filename);
+    expect(mockedGit.resolveExactBase).toHaveBeenLastCalledWith(
+      "base-ref",
+      false,
+    );
+    expect(mockedGit.getDiffSnapshot).toHaveBeenLastCalledWith(
+      { kind: "working-tree", baseCommit: "resolved-base" },
+      { includeUntracked: true },
+    );
+
+    createProcessor({ mode: "staged" }).preprocess("text", filename);
+    expect(mockedGit.resolveExactBase).toHaveBeenLastCalledWith(
+      "base-ref",
+      false,
+    );
+    expect(mockedGit.getDiffSnapshot).toHaveBeenLastCalledWith(
+      { kind: "index", baseCommit: "resolved-base" },
+      { includeUntracked: false },
+    );
+  });
+
+  it("refreshes repository classification on every editor preprocess", () => {
+    process.env["VSCODE_PID"] = "123";
+    const processor = createProcessor({ mode: "diff" });
+    processor.preprocess("text", filename);
+    processor.preprocess("text", filename);
+    expect(mockedGit.getDiffSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps CI as full lint outside CI without running Git", () => {
+    const processor = createProcessor({ mode: "ci" });
+    expect(processor.preprocess("text", filename)).toEqual(["text"]);
+    expect(processor.postprocess([[message()]], filename)).toEqual([message()]);
+    expect(mockedGit.getDiffSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("keeps non-PR CI as full lint", () => {
+    process.env["CI"] = "true";
+    mockedCi.resolveCiContext.mockReturnValue(undefined);
+    const processor = createProcessor({ mode: "ci" });
+    expect(processor.preprocess("text", filename)).toEqual(["text"]);
+    expect(mockedGit.getDiffSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("uses an explicit CI comparison point exactly", () => {
+    process.env["CI"] = "true";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "abc123";
+    mockedGit.resolveExactBase.mockReturnValue("resolved-sha");
+    const processor = createProcessor({ mode: "ci" });
+    processor.preprocess("text", filename);
+    expect(mockedGit.resolveExactBase).toHaveBeenCalledWith("abc123", true);
+    expect(mockedGit.resolveCiBase).not.toHaveBeenCalled();
+    expect(mockedGit.getDiffSnapshot).toHaveBeenCalledWith(
+      { kind: "commit", baseCommit: "resolved-sha", headCommit: "HEAD" },
+      { includeUntracked: true },
+    );
+  });
+
+  it("treats an empty explicit CI comparison point as absent", () => {
+    process.env["CI"] = "true";
+    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "";
+    const context = { provider: "github" as const, baseRef: "main" };
+    mockedCi.resolveCiContext.mockReturnValue(context);
+    mockedGit.resolveCiBase.mockReturnValue("merge-base");
+    const processor = createProcessor({ mode: "ci" });
+    processor.preprocess("text", filename);
+    expect(mockedGit.resolveCiBase).toHaveBeenCalledWith(context);
+    expect(mockedGit.resolveExactBase).not.toHaveBeenCalledWith("", true);
+  });
+
+  it("uses provider merge-base resolution when CI autodetects a PR", () => {
+    process.env["CI"] = "true";
+    const context = { provider: "github" as const, baseRef: "main" };
+    mockedCi.resolveCiContext.mockReturnValue(context);
+    mockedGit.resolveCiBase.mockReturnValue("merge-base");
+    const processor = createProcessor({ mode: "ci" });
+    processor.preprocess("text", filename);
+    expect(mockedGit.resolveCiBase).toHaveBeenCalledWith(context);
+  });
+
+  it("staged mode excludes untracked files and reports partial staging", () => {
+    mockedGit.resolveExactBase.mockReturnValue("resolved-sha");
+    const stagedSnapshot: git.DiffSnapshot = {
+      ...snapshot,
+      comparison: { kind: "index", baseCommit: "HEAD" },
+    };
+    mockedGit.getDiffSnapshot.mockReturnValue(stagedSnapshot);
+    mockedGit.getUnstagedState.mockReturnValue("dirty");
+    const processor = createProcessor({ mode: "staged" });
+    processor.preprocess("text", filename);
+    expect(mockedGit.getDiffSnapshot).toHaveBeenCalledWith(
+      { kind: "index", baseCommit: "resolved-sha" },
+      { includeUntracked: false },
+    );
+    expect(processor.postprocess([[message()]], filename)).toEqual([
+      getUnstagedChangesError(filename),
     ]);
   });
 
-  it("preprocess does not repeatedly refresh unknown files", async () => {
-    const sourceCode = "/** Some source code */";
-    const unchangedTrackedFilename = trackedUnchangedFilename;
-
-    const { diff: diffProcessors } = await importProcessors();
-    const trackedCallsBefore = gitMocked.getTrackedFileList.mock.calls.length;
-
-    expect(
-      diffProcessors.preprocess(sourceCode, unchangedTrackedFilename),
-    ).toEqual([]);
-    expect(
-      diffProcessors.preprocess(sourceCode, unchangedTrackedFilename),
-    ).toEqual([]);
-    expect(gitMocked.getTrackedFileList.mock.calls.length).toBe(
-      trackedCallsBefore,
-    );
-  });
-
-  it("diff postprocess", async () => {
-    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
-
-    const { diff: diffProcessors } = await importProcessors();
-
-    expect(diffProcessors.postprocess(messages, filename)).toMatchSnapshot();
-  });
-
-  it("diff postprocess with no messages", async () => {
-    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
-
-    const { diff: diffProcessors } = await importProcessors();
-
-    const noMessages: Linter.LintMessage[][] = [];
-    expect(diffProcessors.postprocess(noMessages, filename)).toEqual(
-      noMessages,
-    );
-  });
-
-  it("diff postprocess for untracked files with messages", async () => {
-    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
-
-    const { staged: stagedProcessors } = await importProcessors();
-
-    const untrackedFilesMessages: Linter.LintMessage[] = [
-      { ruleId: "mock", severity: 1, message: "mock msg", line: 1, column: 1 },
-    ];
-
-    expect(
-      stagedProcessors.postprocess([untrackedFilesMessages], untrackedFilename),
-    ).toEqual(untrackedFilesMessages);
-  });
-
-  it("staged postprocess", async () => {
-    gitMocked.hasCleanIndex.mockReturnValueOnce(true);
-    gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
-
-    const { staged: stagedProcessors } = await importProcessors();
-
-    expect(stagedProcessors.postprocess(messages, filename)).toMatchSnapshot();
-  });
-
-  it("should report fatal errors", async () => {
-    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
-    const [[firstMessage, ...restMessage], ...restMessageArray] = messages;
-    const messagesWithFatal: Linter.LintMessage[][] = [
-      [{ ...firstMessage, fatal: true }, ...restMessage],
-      ...restMessageArray,
-    ];
-
-    const { diff: diffProcessors } = await importProcessors();
-
-    expect(diffProcessors.postprocess(messages, filename)).toHaveLength(2);
-    expect(
-      diffProcessors.postprocess(messagesWithFatal, filename),
-    ).toHaveLength(3);
-  });
-
-  it("should report fatal errors for staged postprocess with unclean index", async () => {
-    gitMocked.hasCleanIndex.mockReturnValueOnce(false);
-    gitMocked.getDiffForFile.mockReturnValueOnce(fixtureStaged);
-
-    const { staged: stagedProcessors } = await importProcessors();
-
-    const fileWithDirtyIndex = "file-with-dirty-index.js";
-    const [errorMessage] = stagedProcessors.postprocess(
-      messages,
-      fileWithDirtyIndex,
-    );
-
-    expect(errorMessage?.fatal).toBe(true);
-    expect(errorMessage?.message).toMatchInlineSnapshot(
-      `"file-with-dirty-index.js has unstaged changes. Please stage or remove the changes."`,
-    );
-  });
-
-  it("composeProcessor runs base preprocess for unknown files", async () => {
-    const basePreprocess = jest.fn((text: string) => [text]);
-    const baseProcessor: Linter.Processor = {
-      preprocess: basePreprocess,
-      postprocess: (processorMessages: Linter.LintMessage[][]) =>
-        processorMessages.flat(),
-      supportsAutofix: true,
+  it("filters staged messages normally when the working tree matches the index", () => {
+    const stagedSnapshot: git.DiffSnapshot = {
+      ...snapshot,
+      comparison: { kind: "index", baseCommit: "HEAD" },
     };
-    const unknownFilename = "unknown-file.ts";
-
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor(baseProcessor, "diff");
-
-    expect(composed.preprocess("text", unknownFilename)).toEqual(["text"]);
-    expect(basePreprocess).toHaveBeenCalledTimes(1);
+    mockedGit.getDiffSnapshot.mockReturnValue(stagedSnapshot);
+    mockedGit.getUnstagedState.mockReturnValue("clean");
+    const processor = createProcessor({ mode: "staged" });
+    processor.preprocess("text", filename);
+    expect(processor.postprocess([[message()]], filename)).toEqual([message()]);
   });
 
-  it("composeProcessor skips base preprocess for unchanged tracked files", async () => {
-    const basePreprocess = jest.fn((text: string) => [text]);
-    const baseProcessor: Linter.Processor = {
-      preprocess: basePreprocess,
-      postprocess: (processorMessages: Linter.LintMessage[][]) =>
-        processorMessages.flat(),
-      supportsAutofix: true,
+  it("reuses changed ranges across multiple ordinary diagnostics", () => {
+    const processor = createProcessor({ mode: "diff" });
+    processor.preprocess("text", filename);
+    const first = message({ line: 3 });
+    const second = message({ line: 3, message: "second" });
+    expect(processor.postprocess([[first, second]], filename)).toEqual([
+      first,
+      second,
+    ]);
+    expect(mockedGit.getChangedLineRanges).toHaveBeenCalledTimes(1);
+  });
+
+  it("bypasses range lookup for fatal and whole-file diagnostics", () => {
+    const wholeFile: git.ChangedFile = {
+      ...changedFile,
+      status: "added",
+      allLinesChanged: true,
     };
-
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor(baseProcessor, "diff");
-
-    expect(composed.preprocess("text", trackedUnchangedFilename)).toEqual([]);
-    expect(basePreprocess).not.toHaveBeenCalled();
+    mockedGit.getDiffSnapshot.mockReturnValue({
+      ...snapshot,
+      files: new Map([[filename, wholeFile]]),
+    });
+    const processor = createProcessor({ mode: "diff" });
+    processor.preprocess("text", filename);
+    const fatal = message({ fatal: true, ruleId: null, line: 0 });
+    const ordinary = message({ line: 50 });
+    expect(processor.postprocess([[fatal, ordinary]], filename)).toEqual([
+      fatal,
+      ordinary,
+    ]);
+    expect(mockedGit.getChangedLineRanges).not.toHaveBeenCalled();
   });
 
-  it("composeProcessor runs base postprocess before diff filtering", async () => {
-    gitMocked.getDiffForFile.mockReturnValue(fixtureDiff);
-    const basePostprocess = jest.fn(
-      (processorMessages: Linter.LintMessage[][]) =>
-        processorMessages
-          .flat()
-          .map((message) => ({ ...message, line: message.line + 10 })),
+  it("keeps fixable messages outside changed lines only when env override is enabled", () => {
+    process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] = "true";
+    mockedGit.getChangedLineRanges.mockReturnValue([]);
+    const processor = createProcessor({ mode: "diff" });
+    processor.preprocess("text", filename);
+    const fixable = message({
+      line: 20,
+      fix: { range: [0, 1], text: "x" },
+    });
+    expect(processor.postprocess([[fixable]], filename)).toEqual([fixable]);
+  });
+});
+
+describe("message scope", () => {
+  it("keeps a multiline diagnostic whose span intersects a changed line", () => {
+    expect(
+      shouldKeepMessage(
+        message({ line: 6, endLine: 12 }),
+        changedFile,
+        [new Range(8, 9)],
+        new Set(),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it("filters a diagnostic whose reported span does not intersect", () => {
+    expect(
+      shouldKeepMessage(
+        message({ line: 6, endLine: 7 }),
+        changedFile,
+        [new Range(8, 9)],
+        new Set(),
+        false,
+      ),
+    ).toBe(false);
+  });
+
+  it("does not treat a null ruleId as an outside-line rule", () => {
+    expect(
+      shouldKeepMessage(
+        message({ ruleId: null, line: 50 }),
+        changedFile,
+        [],
+        new Set(["example/rule"]),
+        false,
+      ),
+    ).toBe(false);
+  });
+
+  it("does not keep a non-fixable message merely because fix inclusion is enabled", () => {
+    expect(
+      shouldKeepMessage(
+        message({ line: 50 }),
+        changedFile,
+        [],
+        new Set(),
+        true,
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps configured rules anywhere in a changed file", () => {
+    expect(
+      shouldKeepMessage(
+        message({ line: 50 }),
+        changedFile,
+        [],
+        new Set(["example/rule"]),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps all diagnostics for added and untracked whole-file changes", () => {
+    expect(
+      shouldKeepMessage(
+        message({ line: 50 }),
+        { ...changedFile, status: "added", allLinesChanged: true },
+        [],
+        new Set(),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it("always keeps fatal diagnostics", () => {
+    expect(
+      shouldKeepMessage(
+        message({ fatal: true, ruleId: null, line: 0 }),
+        changedFile,
+        [],
+        new Set(),
+        false,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("composeProcessor", () => {
+  it("treats omitted base supportsAutofix as false", () => {
+    expect(composeProcessor({}, { mode: "diff" }).supportsAutofix).toBe(false);
+  });
+
+  it("uses identity base callbacks when they are omitted", () => {
+    const composed = composeProcessor(
+      { supportsAutofix: true },
+      { mode: "diff" },
     );
-    const baseProcessor: Linter.Processor = {
-      preprocess: (text: string) => [text],
-      postprocess: basePostprocess,
+    expect(composed.preprocess("text", filename)).toEqual(["text"]);
+    expect(composed.postprocess([[message()]], filename)).toEqual([message()]);
+  });
+
+  it("preserves true supportsAutofix and metadata", () => {
+    const base: Linter.Processor = {
       supportsAutofix: true,
+      meta: { name: "base", version: "1.0.0" },
     };
+    const composed = composeProcessor(base, { mode: "diff" });
+    expect(composed.supportsAutofix).toBe(true);
+    expect(composed.meta).toEqual(base.meta);
+  });
 
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor(baseProcessor, "diff");
-
-    expect(composed.postprocess(messages, filename)).toEqual([]);
+  it("calls base postprocess even when ESLint child messages are empty", () => {
+    const synthetic = message();
+    const basePostprocess = jest.fn(() => [synthetic]);
+    const composed = composeProcessor(
+      {
+        preprocess: (text) => [text],
+        postprocess: basePostprocess,
+        supportsAutofix: true,
+      },
+      { mode: "diff" },
+    );
+    composed.preprocess("text", filename);
+    expect(composed.postprocess([], filename)).toEqual([synthetic]);
     expect(basePostprocess).toHaveBeenCalledTimes(1);
   });
 
-  it("composeProcessor falls back to identity callbacks when omitted", async () => {
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor({}, "diff");
-    const composedWithDefaultMode = composeProcessor({});
-
-    expect(composed.preprocess("text", filename)).toEqual(["text"]);
-    expect(composedWithDefaultMode.preprocess("text", filename)).toEqual([
-      "text",
-    ]);
-    expect(composed.postprocess(messages, filename)).toHaveLength(2);
-  });
-
-  it("composeProcessor short-circuits postprocess when messages are empty", async () => {
-    const basePostprocess = jest.fn(() => {
-      throw new Error("base postprocess should not be called");
-    });
-    const baseProcessor: Linter.Processor = {
-      preprocess: (text: string) => [text],
-      postprocess: basePostprocess,
-      supportsAutofix: true,
-    };
-
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor(baseProcessor, "diff");
-
-    expect(composed.postprocess([], filename)).toEqual([]);
-    expect(basePostprocess).not.toHaveBeenCalled();
-  });
-
-  it("composeProcessor preserves processor metadata fields", async () => {
-    const baseProcessor: Linter.Processor = {
-      preprocess: (text: string) => [text],
-      postprocess: (processorMessages: Linter.LintMessage[][]) =>
-        processorMessages.flat(),
-      supportsAutofix: true,
-      meta: { name: "vue-processor", version: "1.0.0" },
-    };
-
-    const { composeProcessor } = await importProcessors();
-    const composed = composeProcessor(baseProcessor, "diff");
-
-    expect(composed.meta).toEqual(baseProcessor.meta);
-  });
-});
-
-describe("configs", () => {
-  it("diff", async () => {
-    const { diffConfig } = await importProcessors();
-    expect(diffConfig).toMatchSnapshot();
-  });
-
-  it("staged", async () => {
-    const { stagedConfig } = await importProcessors();
-    expect(stagedConfig).toMatchSnapshot();
-  });
-});
-
-describe("fatal error-message", () => {
-  it("getUnstagedChangesError", async () => {
-    const { getUnstagedChangesError } = await importProcessors();
-
-    const [result] = getUnstagedChangesError("mock filename.ts");
-    expect(result.fatal).toBe(true);
-    expect(result.message).toMatchInlineSnapshot(
-      '"mock filename.ts has unstaged changes. Please stage or remove the changes."',
+  it("does not call base postprocess when diff preprocess skipped the file", () => {
+    const basePostprocess = jest.fn(() => [message()]);
+    const composed = composeProcessor(
+      { postprocess: basePostprocess },
+      { mode: "diff" },
     );
+    expect(composed.preprocess("text", "/repo/unchanged.ts")).toEqual([]);
+    expect(composed.postprocess([], "/repo/unchanged.ts")).toEqual([]);
+    expect(basePostprocess).not.toHaveBeenCalled();
   });
 });

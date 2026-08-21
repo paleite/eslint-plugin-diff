@@ -56,6 +56,7 @@ const eslintConfig = defineConfig([
           missingExports: false,
           unusedExports: true,
           ignoreExports: ["src/index.ts", "eslint.config.mjs"],
+          suppressMissingFileEnumeratorAPIWarning: true,
         },
       ],
       "import-x/no-named-as-default-member": "off",

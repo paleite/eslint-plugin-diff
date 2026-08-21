@@ -1,36 +1,22 @@
-const OLD_ENV = process.env;
+import type * as GitModule from "./git.js";
+
+jest.mock("./git", () => {
+  const actualGit = jest.requireActual("./git") as unknown as typeof GitModule;
+  return {
+    ...actualGit,
+    getDiffSnapshot: jest.fn(),
+    resolveExactBase: jest.fn(),
+  };
+});
+
+import * as git from "./git";
+
 const importIndex = async () => import("./index.js");
 
-beforeEach(() => {
-  jest.resetModules();
-  process.env = { ...OLD_ENV };
-  delete process.env["CI"];
-});
-
-afterAll(() => {
-  process.env = OLD_ENV;
-});
-
-describe("plugin without CI", () => {
-  it("exposes a flat/ci config", async () => {
-    jest.doMock("./processors", () => ({
-      ci: {},
-      ciConfig: {},
-      composeProcessor: jest.fn(),
-      diff: {},
-      diffConfig: {},
-      staged: {},
-      stagedConfig: {},
-    }));
-
-    let importedIndexModule!: Awaited<ReturnType<typeof importIndex>>;
-    await jest.isolateModulesAsync(async () => {
-      importedIndexModule = await importIndex();
-    });
-
-    const { configs } = importedIndexModule;
-    const [flatCiConfig] = configs["flat/ci"];
-    expect(flatCiConfig?.processor).toBe("diff/ci");
-    expect(flatCiConfig?.plugins.diff).toBeDefined();
+describe("inert import", () => {
+  it("does not execute Git while importing the package", async () => {
+    await importIndex();
+    expect(jest.mocked(git.getDiffSnapshot)).not.toHaveBeenCalled();
+    expect(jest.mocked(git.resolveExactBase)).not.toHaveBeenCalled();
   });
 });

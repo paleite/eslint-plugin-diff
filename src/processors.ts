@@ -1,245 +1,312 @@
 import type { Linter } from "eslint";
 
-import { guessBranch } from "./ci";
+import { resolveCiContext } from "./ci";
+import type { ChangedFile, DiffSnapshot, GitComparison } from "./git";
 import {
-  fetchFromOrigin,
-  getDiffFileList,
-  getDiffForFile,
-  getRangesForDiff,
-  getTrackedFileList,
-  hasCleanIndex,
+  canonicalizeFilename,
+  getChangedLineRanges,
+  getDiffSnapshot,
+  getUnstagedState,
+  resolveCiBase,
+  resolveExactBase,
 } from "./git";
 import type { Range } from "./Range";
+import type { DiffProcessor, ProcessorMode, ProcessorOptions } from "./types";
 
-const getOriginTrackingRefForGuessedBranch = (
-  guessedBranch: string,
-): string => {
-  const branchWithoutRemote = guessedBranch
-    .replace(/^refs\/heads\//, "")
-    .replace(/^refs\/remotes\/origin\//, "")
-    .replace(/^origin\//, "");
+const VALID_MODES = new Set<ProcessorMode>(["diff", "ci", "staged"]);
 
-  return `origin/${branchWithoutRemote}`;
+type NormalizedProcessorOptions = {
+  mode: ProcessorMode;
+  rulesReportedOutsideChangedLines: ReadonlySet<string>;
 };
 
-const createCiInitializer = (): (() => void) => {
-  let initialized = false;
+type ResolvedMode =
+  | { kind: "noop" }
+  | {
+      kind: "active";
+      comparison: GitComparison;
+      includeUntracked: boolean;
+    };
 
-  return () => {
-    if (initialized || process.env["CI"] === undefined) {
-      return;
+const normalizeProcessorOptions = (
+  options: ProcessorOptions,
+): NormalizedProcessorOptions => {
+  if (typeof options !== "object" || options === null) {
+    throw new TypeError(
+      "eslint-plugin-diff processor options must be an object.",
+    );
+  }
+  if (!VALID_MODES.has(options.mode)) {
+    throw new TypeError(
+      `eslint-plugin-diff processor mode must be one of: diff, ci, staged. Received '${String(options.mode)}'.`,
+    );
+  }
+
+  const rules = options.rulesReportedOutsideChangedLines ?? [];
+  if (!Array.isArray(rules)) {
+    throw new TypeError(
+      "rulesReportedOutsideChangedLines must be an array of non-empty rule IDs.",
+    );
+  }
+  for (const ruleId of rules) {
+    if (typeof ruleId !== "string" || ruleId.length === 0) {
+      throw new TypeError(
+        "rulesReportedOutsideChangedLines must contain only non-empty strings.",
+      );
     }
+  }
 
-    initialized = true;
-
-    const providedCommit = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
-    const guessedBranch =
-      providedCommit === undefined ? guessBranch() : undefined;
-
-    if (guessedBranch !== undefined) {
-      const branchForDiff = getOriginTrackingRefForGuessedBranch(guessedBranch);
-      const branchWithoutOrigin = branchForDiff.replace(/^origin\//, "");
-      fetchFromOrigin(branchWithoutOrigin);
-
-      // Make the guessed branch available to git diff calls without
-      // changing explicitly provided values.
-      process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = branchForDiff;
-    }
-  };
-};
-
-/**
- * Exclude unchanged files from being processed
- *
- * Since we're excluding unchanged files in the post-processor, we can exclude
- * them from being processed in the first place, as a performance optimization.
- * This is increasingly useful the more files there are in the repository.
- */
-const getPreProcessor = (
-  trackedFileSet: Set<string>,
-  staged: boolean,
-  initialize?: () => void,
-): DiffProcessor["preprocess"] => {
-  let diffFileListCache: string[] = [];
-  let diffFileSetCache = new Set<string>();
-  let hasInitializedDiffFileList = false;
-
-  const refreshDiffFileList = () => {
-    initialize?.();
-    diffFileListCache = getDiffFileList(staged);
-    diffFileSetCache = new Set(diffFileListCache);
-    hasInitializedDiffFileList = true;
-  };
-
-  const ensureInitializedDiffFileList = () => {
-    if (!hasInitializedDiffFileList) {
-      refreshDiffFileList();
-    }
-  };
-
-  return (text: string, filename: string) => {
-    ensureInitializedDiffFileList();
-
-    const isInDiffFileList = diffFileSetCache.has(filename);
-
-    if (process.env["VSCODE_PID"] !== undefined && !isInDiffFileList) {
-      // Editors can invoke ESLint before our initial diff snapshot includes the
-      // latest edit. Refresh once to avoid "second edit" diagnostics.
-      // TODO: This can refresh repeatedly for files still outside the diff set.
-      // Either enforce a one-time refresh or update the comment/docs.
-      refreshDiffFileList();
-    }
-
-    const shouldBeProcessed =
-      process.env["VSCODE_PID"] !== undefined ||
-      diffFileSetCache.has(filename) ||
-      !trackedFileSet.has(filename);
-
-    return shouldBeProcessed ? [text] : [];
+  return {
+    mode: options.mode,
+    rulesReportedOutsideChangedLines: new Set(rules),
   };
 };
 
-const isLineWithinRange = (line: number) => (range: Range) =>
-  range.isWithinRange(line);
+const resolveMode = (mode: ProcessorMode): ResolvedMode => {
+  if (mode === "ci" && process.env["CI"] === undefined) {
+    return { kind: "noop" };
+  }
 
-const getUnstagedChangesError = (filename: string): [Linter.LintMessage] => {
-  // When we only want to diff staged files, but the file is partially
-  // staged, the ranges of the staged diff might not match the ranges of the
-  // unstaged diff and could cause a conflict, so we return a fatal
-  // error-message instead.
+  const explicitBase = process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
 
-  const fatal = true;
-  const message = `${filename} has unstaged changes. Please stage or remove the changes.`;
-  const severity: Linter.Severity = 2;
-  const fatalError: Linter.LintMessage = {
-    fatal,
-    message,
-    severity,
-    column: 0,
-    line: 0,
-    ruleId: null,
+  if (mode === "diff") {
+    return {
+      kind: "active",
+      comparison: {
+        kind: "working-tree",
+        baseCommit: resolveExactBase(explicitBase ?? "HEAD", false),
+      },
+      includeUntracked: true,
+    };
+  }
+
+  if (mode === "staged") {
+    return {
+      kind: "active",
+      comparison: {
+        kind: "index",
+        baseCommit: resolveExactBase(explicitBase ?? "HEAD", false),
+      },
+      includeUntracked: false,
+    };
+  }
+
+  if (explicitBase !== undefined && explicitBase.length > 0) {
+    return {
+      kind: "active",
+      comparison: {
+        kind: "commit",
+        baseCommit: resolveExactBase(explicitBase, true),
+        headCommit: "HEAD",
+      },
+      includeUntracked: true,
+    };
+  }
+
+  const context = resolveCiContext();
+  if (context === undefined) {
+    return { kind: "noop" };
+  }
+
+  return {
+    kind: "active",
+    comparison: {
+      kind: "commit",
+      baseCommit: resolveCiBase(context),
+      headCommit: "HEAD",
+    },
+    includeUntracked: true,
   };
-
-  return [fatalError];
 };
 
-const getPostProcessor =
-  (
-    trackedFileSet: Set<string>,
-    staged: boolean,
-    includeFixes: boolean,
-    initialize?: () => void,
-  ) =>
-  (
+const getUnstagedChangesError = (filename: string): Linter.LintMessage => ({
+  fatal: true,
+  message: `${filename} has unstaged changes. Please stage or remove the changes.`,
+  severity: 2,
+  column: 0,
+  line: 0,
+  ruleId: null,
+});
+
+const shouldKeepMessage = (
+  message: Linter.LintMessage,
+  changedFile: ChangedFile,
+  changedRanges: readonly Range[],
+  rulesReportedOutsideChangedLines: ReadonlySet<string>,
+  includeFixes: boolean,
+): boolean => {
+  if (message.fatal === true) {
+    return true;
+  }
+  if (includeFixes && message.fix !== undefined) {
+    return true;
+  }
+  if (
+    message.ruleId !== null &&
+    rulesReportedOutsideChangedLines.has(message.ruleId)
+  ) {
+    return true;
+  }
+  if (changedFile.allLinesChanged) {
+    return true;
+  }
+
+  const endLineExclusive = (message.endLine ?? message.line) + 1;
+  return changedRanges.some((range) =>
+    range.intersects(message.line, endLineExclusive),
+  );
+};
+
+const createDiffProcessor = (
+  options: NormalizedProcessorOptions,
+): DiffProcessor => {
+  const includeFixes =
+    process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
+
+  let resolvedMode: ResolvedMode | null = null;
+  let snapshot: DiffSnapshot | null = null;
+
+  const getResolvedMode = (): ResolvedMode => {
+    resolvedMode ??= resolveMode(options.mode);
+    return resolvedMode;
+  };
+
+  const createSnapshot = (
+    resolved: Extract<ResolvedMode, { kind: "active" }>,
+  ): DiffSnapshot =>
+    getDiffSnapshot(resolved.comparison, {
+      includeUntracked: resolved.includeUntracked,
+    });
+
+  const getSnapshot = (
+    resolved: Extract<ResolvedMode, { kind: "active" }>,
+    refresh: boolean,
+  ): DiffSnapshot => {
+    if (refresh || snapshot === null) {
+      snapshot = createSnapshot(resolved);
+    }
+    return snapshot;
+  };
+
+  const preprocess: DiffProcessor["preprocess"] = (
+    text: string,
+    filename: string,
+  ) => {
+    const resolved = getResolvedMode();
+    if (resolved.kind === "noop") {
+      return [text];
+    }
+
+    const currentSnapshot = getSnapshot(
+      resolved,
+      process.env["VSCODE_PID"] !== undefined,
+    );
+    const canonicalFilename = canonicalizeFilename(filename);
+    return currentSnapshot.files.has(canonicalFilename) ? [text] : [];
+  };
+
+  const postprocess: DiffProcessor["postprocess"] = (
     messages: Linter.LintMessage[][],
     filename: string,
-  ): Linter.LintMessage[] => {
-    initialize?.();
-
-    if (messages.length === 0) {
-      // No need to filter, just return
-      return [];
-    }
-    if (!trackedFileSet.has(filename)) {
-      // We don't need to filter the messages of untracked files because they
-      // would all be kept anyway, so we return them as-is.
+  ) => {
+    const resolved = getResolvedMode();
+    if (resolved.kind === "noop") {
       return messages.flat();
     }
 
-    if (staged && !hasCleanIndex(filename)) {
-      return getUnstagedChangesError(filename);
+    const currentSnapshot = getSnapshot(resolved, false);
+
+    const canonicalFilename = canonicalizeFilename(filename);
+    const changedFile = currentSnapshot.files.get(canonicalFilename);
+    if (changedFile === undefined) {
+      return [];
     }
 
-    const rangesForDiff = getRangesForDiff(getDiffForFile(filename, staged));
+    if (
+      options.mode === "staged" &&
+      getUnstagedState(
+        currentSnapshot.repositoryRoot,
+        changedFile.relativePath,
+      ) === "dirty"
+    ) {
+      return [getUnstagedChangesError(filename)];
+    }
 
-    return messages.flatMap((message) => {
-      const filteredMessage = message.filter(({ fatal, line, fix }) => {
-        if (fatal === true) {
-          return true;
-        }
+    const flatMessages = messages.flat();
+    let changedRanges: readonly Range[] | null = null;
 
-        if (includeFixes && fix !== undefined) {
-          return true;
-        }
+    return flatMessages.filter((message) => {
+      const needsRanges =
+        message.fatal !== true &&
+        !(includeFixes && message.fix !== undefined) &&
+        !(
+          message.ruleId !== null &&
+          options.rulesReportedOutsideChangedLines.has(message.ruleId)
+        ) &&
+        !changedFile.allLinesChanged;
 
-        const isLineWithinSomeRange = rangesForDiff.some(
-          isLineWithinRange(line),
-        );
+      if (needsRanges && changedRanges === null) {
+        changedRanges = getChangedLineRanges(currentSnapshot, changedFile);
+      }
 
-        return isLineWithinSomeRange;
-      });
-
-      return filteredMessage;
+      return shouldKeepMessage(
+        message,
+        changedFile,
+        changedRanges ?? [],
+        options.rulesReportedOutsideChangedLines,
+        includeFixes,
+      );
     });
   };
 
-type ProcessorType = "diff" | "staged" | "ci";
-type DiffProcessor = Linter.Processor &
-  Required<
-    Pick<Linter.Processor, "preprocess" | "postprocess" | "supportsAutofix">
-  >;
-
-const getProcessors = (processorType: ProcessorType): DiffProcessor => {
-  const staged = processorType === "staged";
-  const includeFixes =
-    process.env["ESLINT_PLUGIN_DIFF_INCLUDE_FIXES"] === "true";
-  const initialize = processorType === "ci" ? createCiInitializer() : undefined;
-  const trackedFileSet = new Set(getTrackedFileList());
-
   return {
-    preprocess: getPreProcessor(trackedFileSet, staged, initialize),
-    postprocess: getPostProcessor(
-      trackedFileSet,
-      staged,
-      includeFixes,
-      initialize,
-    ),
+    preprocess,
+    postprocess,
     supportsAutofix: true,
   };
 };
 
-const getNoOpProcessor = (): DiffProcessor => ({
-  preprocess: (text: string) => [text],
-  postprocess: (messages: Linter.LintMessage[][]) => messages.flat(),
-  supportsAutofix: true,
-});
+const createProcessor = (options: ProcessorOptions): DiffProcessor =>
+  createDiffProcessor(normalizeProcessorOptions(options));
 
-const getProcessorCallbacks = (
-  processor: Linter.Processor,
-): Pick<DiffProcessor, "preprocess" | "postprocess" | "supportsAutofix"> => {
-  return {
-    preprocess: (text: string, filename: string) =>
-      processor.preprocess?.(text, filename) ?? [text],
-    postprocess: (messages: Linter.LintMessage[][], filename: string) =>
-      processor.postprocess?.(messages, filename) ?? messages.flat(),
-    supportsAutofix: processor.supportsAutofix ?? true,
-  };
-};
+const getProcessorCallbacks = (processor: Linter.Processor) => ({
+  preprocess: (text: string, filename: string) =>
+    processor.preprocess?.(text, filename) ?? [text],
+  postprocess: (
+    messages: Linter.LintMessage[][],
+    filename: string,
+  ): Linter.LintMessage[] =>
+    processor.postprocess?.(messages, filename) ?? messages.flat(),
+  supportsAutofix: processor.supportsAutofix === true,
+});
 
 const composeProcessor = (
   processor: Linter.Processor,
-  mode: ProcessorType = "diff",
+  options: ProcessorOptions,
 ): DiffProcessor => {
-  const diffProcessor = getProcessors(mode);
+  const diffProcessor = createProcessor(options);
   const baseProcessor = getProcessorCallbacks(processor);
+  const admittedFiles = new Set<string>();
 
   return {
     ...processor,
     preprocess: (text: string, filename: string) => {
       const diffTexts = diffProcessor.preprocess(text, filename);
+      const canonicalFilename = canonicalizeFilename(filename);
       if (diffTexts.length === 0) {
+        admittedFiles.delete(canonicalFilename);
         return [];
       }
 
+      admittedFiles.add(canonicalFilename);
       const normalizedText = diffTexts[0] as string;
-
       return baseProcessor.preprocess(normalizedText, filename);
     },
     postprocess: (messages: Linter.LintMessage[][], filename: string) => {
-      if (messages.length === 0) {
+      const canonicalFilename = canonicalizeFilename(filename);
+      if (!admittedFiles.delete(canonicalFilename)) {
         return [];
       }
-
       const baseMessages = baseProcessor.postprocess(messages, filename);
       return diffProcessor.postprocess([baseMessages], filename);
     },
@@ -248,48 +315,10 @@ const composeProcessor = (
   };
 };
 
-const ci =
-  process.env["CI"] === undefined ? getNoOpProcessor() : getProcessors("ci");
-const diff = getProcessors("diff");
-const staged = getProcessors("staged");
-
-const diffConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/diff",
-    },
-  ],
-};
-
-const ciConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/ci",
-    },
-  ],
-};
-
-const stagedConfig: Linter.BaseConfig = {
-  plugins: ["diff"],
-  overrides: [
-    {
-      files: ["*"],
-      processor: "diff/staged",
-    },
-  ],
-};
-
 export {
-  ci,
-  ciConfig,
   composeProcessor,
-  diff,
-  diffConfig,
+  createProcessor,
   getUnstagedChangesError,
-  staged,
-  stagedConfig,
+  normalizeProcessorOptions,
+  shouldKeepMessage,
 };

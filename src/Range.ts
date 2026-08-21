@@ -19,6 +19,16 @@ class Range {
   isWithinRange(n: Readonly<number>): boolean {
     return this.inclusiveLowerBound <= n && n < this.exclusiveUpperBound;
   }
+
+  intersects(
+    otherInclusiveLowerBound: Readonly<number>,
+    otherExclusiveUpperBound: Readonly<number>,
+  ): boolean {
+    return (
+      this.inclusiveLowerBound < otherExclusiveUpperBound &&
+      otherInclusiveLowerBound < this.exclusiveUpperBound
+    );
+  }
 }
 
 export { Range };

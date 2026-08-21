@@ -16,6 +16,15 @@ describe("range", () => {
     expect(range.isWithinRange(2)).toBe(false);
   });
 
+  it("should detect interval intersection", () => {
+    const range: Range = new Range(3, 6);
+
+    expect(range.intersects(1, 3)).toBe(false);
+    expect(range.intersects(2, 4)).toBe(true);
+    expect(range.intersects(5, 7)).toBe(true);
+    expect(range.intersects(6, 8)).toBe(false);
+  });
+
   it("should throw TypeError when parameters are flipped", () => {
     expect(() => new Range(1, 0)).toThrowErrorMatchingSnapshot();
   });

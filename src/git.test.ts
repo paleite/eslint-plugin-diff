@@ -1,207 +1,91 @@
-import * as child_process from "node:child_process";
-import path from "node:path";
+import * as path from "node:path";
 
-import {
-  diffFileList,
-  hunks,
-  includingOnlyRemovals,
-} from "./__fixtures__/diff";
-import {
-  fetchFromOrigin,
-  getDiffFileList,
-  getDiffForFile,
-  getRangesForDiff,
-  getTrackedFileList,
-  hasCleanIndex,
-} from "./git";
+import { getRangesForDiff, parseNameStatusZ } from "./git";
 
-jest.mock("child_process");
+const root = path.resolve("/repo");
 
-const mockedChildProcess = jest.mocked(child_process, { shallow: true });
+describe("parseNameStatusZ", () => {
+  it("parses current-side statuses and omits deleted files", () => {
+    const output = [
+      "A",
+      "added.ts",
+      "M",
+      "modified.ts",
+      "T",
+      "typed.ts",
+      "D",
+      "deleted.ts",
+      "R090",
+      "old.ts",
+      "renamed.ts",
+      "C080",
+      "source.ts",
+      "copied.ts",
+      "",
+    ].join("\0");
 
-const OLD_ENV = process.env;
+    const files = parseNameStatusZ(output, root);
+    expect([...files.values()].map(({ status }) => status)).toEqual([
+      "added",
+      "modified",
+      "type-changed",
+      "renamed",
+      "copied",
+    ]);
+    expect(
+      [...files.values()].find(({ status }) => status === "renamed"),
+    ).toMatchObject({
+      previousRelativePath: "old.ts",
+      relativePath: "renamed.ts",
+      similarity: 90,
+      allLinesChanged: false,
+    });
+  });
 
-beforeEach(() => {
-  jest.resetModules(); // Most important - it clears the cache
-  process.env = { ...OLD_ENV }; // Make a copy
-});
+  it("preserves tabs and newlines in NUL-delimited paths", () => {
+    const files = parseNameStatusZ("M\0tab\tand\nnewline.ts\0", root);
+    expect([...files.values()][0]?.relativePath).toBe("tab\tand\nnewline.ts");
+  });
 
-afterAll(() => {
-  process.env = OLD_ENV; // Restore old environment
+  it.each(["U", "X", "B"])("rejects unresolved Git status %s", (status) => {
+    expect(() => parseNameStatusZ(`${status}\0file.ts\0`, root)).toThrow(
+      /cannot determine changed-file scope/u,
+    );
+  });
+
+  it("rejects unknown and malformed status streams", () => {
+    expect(() => parseNameStatusZ("Q\0file.ts\0", root)).toThrow(
+      /Unsupported/u,
+    );
+    expect(() => parseNameStatusZ("Rbad\0old.ts\0new.ts\0", root)).toThrow(
+      /similarity/u,
+    );
+    expect(() => parseNameStatusZ("M\0", root)).toThrow(/Incomplete/u);
+  });
 });
 
 describe("getRangesForDiff", () => {
-  it("should find the ranges of each staged file", () => {
-    expect(getRangesForDiff(hunks)).toMatchSnapshot();
+  it("uses current-side added line ranges and ignores deletion-only hunks", () => {
+    const diff = `@@ -1,0 +2,2 @@
++a
++b
+@@ -10,2 +11,0 @@
+-a
+-b`;
+    const ranges = getRangesForDiff(diff);
+    expect(ranges).toHaveLength(1);
+    expect(ranges[0]?.isWithinRange(2)).toBe(true);
+    expect(ranges[0]?.isWithinRange(3)).toBe(true);
+    expect(ranges[0]?.isWithinRange(4)).toBe(false);
   });
 
-  it("should work for hunks which include only-removal-ranges", () => {
-    expect(getRangesForDiff(includingOnlyRemovals)).toMatchSnapshot();
+  it("uses an implicit hunk count of one", () => {
+    const [range] = getRangesForDiff("@@ -1 +5 @@");
+    expect(range?.isWithinRange(5)).toBe(true);
+    expect(range?.isWithinRange(6)).toBe(false);
   });
 
-  it("should work for hunks which include only-removal-ranges", () => {
-    expect(() =>
-      getRangesForDiff("@@ invalid hunk header @@"),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Couldn't match regex with line '@@ invalid hunk header @@'"`,
-    );
-  });
-});
-
-describe("getDiffForFile", () => {
-  it("should get the staged diff of a file", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
-
-    const diffFromFile = getDiffForFile("./mockfile.js", true);
-
-    const expectedCommand = "git";
-    const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --staged --unified=0 1234567";
-
-    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
-    const [command, argsIncludingFile = []] = lastCall ?? [""];
-    const args = argsIncludingFile.slice(0, -2);
-
-    expect(command).toBe(expectedCommand);
-    expect(args.join(" ")).toEqual(expectedArgs);
-    expect(diffFromFile).toContain("diff --git");
-    expect(diffFromFile).toContain("@@");
-  });
-
-  it("should work when using staged = false", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
-
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
-
-    const expectedCommand = "git";
-    const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 1234567";
-
-    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
-    const [command, argsIncludingFile = []] = lastCall ?? [""];
-    const args = argsIncludingFile.slice(0, -2);
-
-    expect(command).toBe(expectedCommand);
-    expect(args.join(" ")).toEqual(expectedArgs);
-    expect(diffFromFile).toContain("diff --git");
-    expect(diffFromFile).toContain("@@");
-  });
-
-  it("should use HEAD when no commit was defined", () => {
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(hunks));
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = undefined;
-
-    const diffFromFile = getDiffForFile("./mockfile.js", false);
-
-    const expectedCommand = "git";
-    const expectedArgs =
-      "diff --diff-algorithm=histogram --diff-filter=ACM --find-renames=100% --no-ext-diff --relative --unified=0 HEAD";
-
-    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
-    const [command, argsIncludingFile = []] = lastCall ?? [""];
-    const args = argsIncludingFile.slice(0, -2);
-
-    expect(command).toBe(expectedCommand);
-    expect(args.join(" ")).toEqual(expectedArgs);
-    expect(diffFromFile).toContain("diff --git");
-    expect(diffFromFile).toContain("@@");
-  });
-});
-
-describe("hasCleanIndex", () => {
-  it("returns false instead of throwing", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockImplementationOnce(() => {
-      throw new Error("mocked error");
-    });
-    expect(hasCleanIndex("")).toEqual(false);
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
-  });
-
-  it("returns true otherwise", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
-    expect(hasCleanIndex("")).toEqual(true);
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalled();
-  });
-});
-
-describe("fetchFromOrigin", () => {
-  it("fetches from origin for the provided branch", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValue(Buffer.from(""));
-
-    fetchFromOrigin("main");
-
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledWith(
-      "git",
-      ["fetch", "--quiet", "origin", "main"],
-      expect.anything(),
-    );
-  });
-});
-
-describe("getDiffFileList", () => {
-  it("should get the list of staged files", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList),
-    );
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getDiffFileList(false);
-
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
-    expect(fileListA).toEqual(
-      ["file1", "file2", "file3"].map((p) => path.resolve(p)),
-    );
-  });
-
-  it("includes --staged when staged is true", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList),
-    );
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "1234567";
-
-    getDiffFileList(true);
-
-    const lastCall = mockedChildProcess.execFileSync.mock.calls.at(-1);
-    const [command, args = []] = lastCall ?? [""];
-
-    expect(command).toBe("git");
-    expect(args).toContain("--staged");
-    expect(args).toContain("1234567");
-  });
-
-  it("returns an empty list when git diff has no output", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(""));
-
-    expect(getDiffFileList(false)).toEqual([]);
-  });
-});
-
-describe("getTrackedFileList", () => {
-  it("should get the list of untracked files", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(
-      Buffer.from(diffFileList),
-    );
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(0);
-    const fileListA = getTrackedFileList();
-    expect(mockedChildProcess.execFileSync).toHaveBeenCalledTimes(1);
-
-    expect(fileListA).toEqual(
-      ["file1", "file2", "file3"].map((p) => path.resolve(p)),
-    );
-  });
-
-  it("returns an empty list when git ls-files has no output", () => {
-    jest.mock("child_process").resetAllMocks();
-    mockedChildProcess.execFileSync.mockReturnValueOnce(Buffer.from(""));
-
-    expect(getTrackedFileList()).toEqual([]);
+  it("throws for malformed hunk headers", () => {
+    expect(() => getRangesForDiff("@@ invalid @@")).toThrow(/Couldn't match/u);
   });
 });

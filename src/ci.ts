@@ -1,114 +1,145 @@
-type CiProviderCommon<T extends CiProviderName> = { name: T };
+type OfficialProvider = "github" | "gitlab" | "azure" | "bitbucket";
+type LegacyProvider = "appveyor" | "bamboo" | "buddy" | "drone" | "travis";
 
-type CiProvider<T extends CiProviderName = CiProviderName> =
-  CiProviderCommon<T> &
-    (
-      | { isSupported: false }
-      | { isSupported: true; diffBranch: string | undefined }
-    );
-
-const PROVIDERS = {
-  AppVeyor: {
-    name: "AppVeyor",
-    isSupported: true,
-    diffBranch:
-      (process.env["APPVEYOR_PULL_REQUEST_NUMBER"] ?? "") === ""
-        ? undefined
-        : "APPVEYOR_REPO_BRANCH",
-  },
-  AzurePipelines: {
-    name: "AzurePipelines",
-    isSupported: true,
-    diffBranch: "SYSTEM_PULLREQUEST_TARGETBRANCH",
-  },
-  Bamboo: {
-    name: "Bamboo",
-    isSupported: true,
-    diffBranch: "bamboo_repository_pr_targetBranch",
-  },
-  BitbucketPipelines: {
-    name: "BitbucketPipelines",
-    isSupported: true,
-    diffBranch: "BITBUCKET_PR_DESTINATION_BRANCH",
-  },
-  Buddy: {
-    name: "Buddy",
-    isSupported: true,
-    diffBranch: "BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH",
-  },
-  Drone: {
-    name: "Drone",
-    isSupported: true,
-    diffBranch: "DRONE_TARGET_BRANCH",
-  },
-  GitHubActions: {
-    name: "GitHubActions",
-    isSupported: true,
-    diffBranch: "GITHUB_BASE_REF",
-  },
-  GitLab: {
-    name: "GitLab",
-    isSupported: true,
-    diffBranch:
-      (process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] ?? "") === ""
-        ? "CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
-        : "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME",
-  },
-  Travis: {
-    name: "Travis",
-    isSupported: true,
-    diffBranch:
-      (process.env["TRAVIS_PULL_REQUEST"] ?? "") === "false"
-        ? undefined
-        : "TRAVIS_BRANCH",
-  },
-  AwsCodeBuild: { name: "AwsCodeBuild", isSupported: false },
-  Circle: { name: "Circle", isSupported: false },
-  Codeship: { name: "Codeship", isSupported: false },
-  Continuousphp: { name: "Continuousphp", isSupported: false },
-  Jenkins: { name: "Jenkins", isSupported: false },
-  SourceHut: { name: "SourceHut", isSupported: false },
-  TeamCity: { name: "TeamCity", isSupported: false },
-  Wercker: { name: "Wercker", isSupported: false },
-} as const;
-
-type CiProviderName = keyof typeof PROVIDERS;
-
-const guessProviders = () =>
-  Object.values(PROVIDERS).reduce<{ name: CiProviderName; branch: string }[]>(
-    (acc, { name, ...cur }) => {
-      if (!cur.isSupported || cur.diffBranch === undefined) {
-        return acc;
-      }
-
-      const branch = process.env[cur.diffBranch] ?? "";
-      if (branch === "") {
-        return acc;
-      }
-
-      return [...acc, { name, branch }];
-    },
-    [],
-  );
-
-const guessBranch = (): string | undefined => {
-  if ((process.env["ESLINT_PLUGIN_DIFF_COMMIT"] ?? "").length > 0) {
-    throw new Error("ESLINT_PLUGIN_DIFF_COMMIT already set");
-  }
-
-  const guessedProviders = guessProviders();
-  if (guessedProviders.length > 1) {
-    throw new Error(
-      `Too many CI providers found (${guessedProviders
-        .map(({ name }) => name)
-        .join(
-          ", ",
-        )}). Please specify your target branch explicitly instead, e.g. ESLINT_PLUGIN_DIFF_COMMIT="main"`,
-    );
-  }
-
-  return guessedProviders[0]?.branch;
+type PullRequestContext = {
+  provider: OfficialProvider | LegacyProvider;
+  baseRef?: string | undefined;
+  baseSha?: string | undefined;
+  diffBaseSha?: string | undefined;
+  headRef?: string | undefined;
+  headSha?: string | undefined;
 };
 
-export type { CiProvider, CiProviderName };
-export { guessBranch, PROVIDERS };
+type Environment = NodeJS.ProcessEnv;
+
+type Candidate = PullRequestContext & { signal: string };
+
+const nonEmpty = (value: string | undefined): string | undefined =>
+  value === undefined || value.length === 0 ? undefined : value;
+
+const getOfficialCandidates = (env: Environment): Candidate[] => {
+  const candidates: Candidate[] = [];
+
+  const githubBase = nonEmpty(env["GITHUB_BASE_REF"]);
+  if (githubBase !== undefined) {
+    candidates.push({
+      provider: "github",
+      signal: "GITHUB_BASE_REF",
+      baseRef: githubBase,
+      headRef: nonEmpty(env["GITHUB_REF"]) ?? nonEmpty(env["GITHUB_HEAD_REF"]),
+      headSha: nonEmpty(env["GITHUB_SHA"]),
+    });
+  }
+
+  const gitlabBase =
+    nonEmpty(env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"]) ??
+    nonEmpty(env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"]);
+  const gitlabDiffBase = nonEmpty(env["CI_MERGE_REQUEST_DIFF_BASE_SHA"]);
+  if (gitlabBase !== undefined || gitlabDiffBase !== undefined) {
+    candidates.push({
+      provider: "gitlab",
+      signal:
+        gitlabDiffBase !== undefined
+          ? "CI_MERGE_REQUEST_DIFF_BASE_SHA"
+          : "CI_MERGE_REQUEST_TARGET_BRANCH_NAME",
+      baseRef: gitlabBase,
+      diffBaseSha: gitlabDiffBase,
+      headRef: nonEmpty(env["CI_COMMIT_REF_NAME"]),
+      headSha: nonEmpty(env["CI_COMMIT_SHA"]),
+    });
+  }
+
+  const azureBase = nonEmpty(env["SYSTEM_PULLREQUEST_TARGETBRANCH"]);
+  if (azureBase !== undefined) {
+    candidates.push({
+      provider: "azure",
+      signal: "SYSTEM_PULLREQUEST_TARGETBRANCH",
+      baseRef: azureBase,
+      headRef: nonEmpty(env["SYSTEM_PULLREQUEST_SOURCEBRANCH"]),
+      headSha:
+        nonEmpty(env["SYSTEM_PULLREQUEST_SOURCECOMMITID"]) ??
+        nonEmpty(env["BUILD_SOURCEVERSION"]),
+    });
+  }
+
+  const bitbucketBase = nonEmpty(env["BITBUCKET_PR_DESTINATION_BRANCH"]);
+  if (bitbucketBase !== undefined) {
+    candidates.push({
+      provider: "bitbucket",
+      signal: "BITBUCKET_PR_DESTINATION_BRANCH",
+      baseRef: bitbucketBase,
+      baseSha: nonEmpty(env["BITBUCKET_PR_DESTINATION_COMMIT"]),
+      headRef: nonEmpty(env["BITBUCKET_BRANCH"]),
+      headSha: nonEmpty(env["BITBUCKET_COMMIT"]),
+    });
+  }
+
+  return candidates;
+};
+
+const getLegacyCandidates = (env: Environment): Candidate[] => {
+  const candidates: Candidate[] = [];
+  const add = (
+    provider: LegacyProvider,
+    signal: string,
+    baseRef: string | undefined,
+  ) => {
+    if (baseRef !== undefined) {
+      candidates.push({ provider, signal, baseRef });
+    }
+  };
+
+  if (nonEmpty(env["APPVEYOR_PULL_REQUEST_NUMBER"]) !== undefined) {
+    add(
+      "appveyor",
+      "APPVEYOR_REPO_BRANCH",
+      nonEmpty(env["APPVEYOR_REPO_BRANCH"]),
+    );
+  }
+  add(
+    "bamboo",
+    "bamboo_repository_pr_targetBranch",
+    nonEmpty(env["bamboo_repository_pr_targetBranch"]),
+  );
+  add(
+    "buddy",
+    "BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH",
+    nonEmpty(env["BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"]),
+  );
+  add("drone", "DRONE_TARGET_BRANCH", nonEmpty(env["DRONE_TARGET_BRANCH"]));
+  if (env["TRAVIS_PULL_REQUEST"] !== "false") {
+    add("travis", "TRAVIS_BRANCH", nonEmpty(env["TRAVIS_BRANCH"]));
+  }
+
+  return candidates;
+};
+
+const resolveCiContext = (
+  env: Environment = process.env,
+): PullRequestContext | undefined => {
+  const candidates = [
+    ...getOfficialCandidates(env),
+    ...getLegacyCandidates(env),
+  ];
+
+  if (candidates.length > 1) {
+    throw new Error(
+      `Too many CI providers found (${candidates
+        .map(({ provider, signal }) => `${provider}:${signal}`)
+        .join(
+          ", ",
+        )}). Set ESLINT_PLUGIN_DIFF_COMMIT to an exact comparison point.`,
+    );
+  }
+
+  const candidate = candidates[0];
+  if (candidate === undefined) {
+    return undefined;
+  }
+
+  const { signal: _signal, ...context } = candidate;
+  return context;
+};
+
+export type { PullRequestContext };
+export { resolveCiContext };

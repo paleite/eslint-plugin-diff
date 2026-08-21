@@ -1,17 +1,29 @@
-import { expectType } from "tsd";
 import type { Linter } from "eslint";
+import { expectType } from "tsd";
 
-import type { PluginConfigs, processors } from "..";
-import plugin, { configs } from "..";
+import plugin, {
+  composeProcessor,
+  createProcessor,
+  type DiffProcessor,
+  type ProcessorOptions,
+} from "..";
 
-expectType<PluginConfigs>(configs);
-expectType<PluginConfigs>(plugin.configs);
-expectType<typeof processors>(plugin.processors);
+const options: ProcessorOptions = {
+  mode: "ci",
+  rulesReportedOutsideChangedLines: ["example/rule"],
+};
 
-const flatDiffConfigEntries: Linter.Config[] = configs["flat/diff"];
-const flatStagedConfigEntries: Linter.Config[] = configs["flat/staged"];
-const flatCiConfigEntries: Linter.Config[] = configs["flat/ci"];
+expectType<DiffProcessor>(createProcessor(options));
+expectType<DiffProcessor>(plugin.createProcessor({ mode: "diff" }));
+expectType<DiffProcessor>(composeProcessor({}, { mode: "staged" }));
+expectType<DiffProcessor>(plugin.composeProcessor({}, options));
+expectType<Linter.Processor>(plugin.createProcessor({ mode: "diff" }));
 
-expectType<Linter.Config[]>(flatDiffConfigEntries);
-expectType<Linter.Config[]>(flatStagedConfigEntries);
-expectType<Linter.Config[]>(flatCiConfigEntries);
+// @ts-expect-error mode is required
+createProcessor({});
+// @ts-expect-error legacy string compose mode is removed
+composeProcessor({}, "diff");
+// @ts-expect-error legacy configs are removed
+plugin.configs;
+// @ts-expect-error static processors are removed
+plugin.processors;

@@ -1,138 +1,169 @@
-const OLD_ENV = process.env;
-const importCi = async (): Promise<typeof import("./ci.js")> =>
-  import("./ci.js");
+import { resolveCiContext } from "./ci";
 
-beforeEach(() => {
-  jest.resetModules(); // Most important - it clears the cache
-  process.env = { ...OLD_ENV }; // Make a copy
+const cleanEnv = (): NodeJS.ProcessEnv => ({});
 
-  // When running in CI, we want to avoid triggering the "Too many CI providers
-  // found"-error, so we delete all known `diffBranch`-occurrences here.
-  delete process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"];
-  delete process.env["bamboo_repository_pr_targetBranch"];
-  delete process.env["BITBUCKET_PR_DESTINATION_BRANCH"];
-  delete process.env["BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"];
-  delete process.env["DRONE_TARGET_BRANCH"];
-  delete process.env["GITHUB_BASE_REF"];
-  delete process.env["APPVEYOR_PULL_REQUEST_NUMBER"];
-  delete process.env["APPVEYOR_REPO_BRANCH"];
-  delete process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"];
-  delete process.env["TRAVIS_BRANCH"];
-});
-
-describe("guessBranch", () => {
-  it("ensure the branch is guessed if ESLINT_PLUGIN_DIFF_COMMIT is not already set", async () => {
-    delete process.env["ESLINT_PLUGIN_DIFF_COMMIT"];
-    const { guessBranch } = await importCi();
-    expect(() => guessBranch()).not.toThrow(/ESLINT_PLUGIN_DIFF_COMMIT/u);
+describe("resolveCiContext", () => {
+  it("uses process.env when no environment object is provided", () => {
+    const previous = process.env;
+    process.env = { GITHUB_BASE_REF: "main" };
+    try {
+      expect(resolveCiContext()).toEqual({
+        provider: "github",
+        baseRef: "main",
+      });
+    } finally {
+      process.env = previous;
+    }
   });
 
-  it("ensure the branch is not guessed if ESLINT_PLUGIN_DIFF_COMMIT is already set", async () => {
-    process.env["ESLINT_PLUGIN_DIFF_COMMIT"] = "origin/main";
-    const { guessBranch } = await importCi();
-    expect(() => guessBranch()).toThrow(/ESLINT_PLUGIN_DIFF_COMMIT/u);
+  it("returns undefined outside pull-request context", () => {
+    expect(resolveCiContext(cleanEnv())).toBeUndefined();
   });
 
-  it("fails when too many providers were found as candidates", async () => {
-    process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"] = "CORRECT";
-    process.env["bamboo_repository_pr_targetBranch"] = "CORRECT";
-    process.env["BITBUCKET_PR_DESTINATION_BRANCH"] = "CORRECT";
-    process.env["BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"] = "CORRECT";
-    process.env["DRONE_TARGET_BRANCH"] = "CORRECT";
-    process.env["GITHUB_BASE_REF"] = "CORRECT";
-    process.env["APPVEYOR_PULL_REQUEST_NUMBER"] = "0";
-    process.env["APPVEYOR_REPO_BRANCH"] = "CORRECT";
-    process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] = "CORRECT";
-    process.env["TRAVIS_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(() => guessBranch()).toThrow(/Too many CI providers found/u);
-  });
-});
-
-describe("simple supported providers", () => {
-  it("AzurePipelines", async () => {
-    process.env["SYSTEM_PULLREQUEST_TARGETBRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("resolves GitHub Actions", () => {
+    expect(
+      resolveCiContext({
+        GITHUB_BASE_REF: "main",
+        GITHUB_HEAD_REF: "feature",
+        GITHUB_REF: "refs/pull/12/merge",
+        GITHUB_SHA: "abc123",
+      }),
+    ).toEqual({
+      provider: "github",
+      baseRef: "main",
+      headRef: "refs/pull/12/merge",
+      headSha: "abc123",
+    });
   });
 
-  it("Bamboo", async () => {
-    process.env["bamboo_repository_pr_targetBranch"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("falls back to GITHUB_HEAD_REF when GITHUB_REF is unavailable", () => {
+    expect(
+      resolveCiContext({
+        GITHUB_BASE_REF: "main",
+        GITHUB_HEAD_REF: "feature",
+      }),
+    ).toEqual({
+      provider: "github",
+      baseRef: "main",
+      headRef: "feature",
+    });
   });
 
-  it("BitbucketPipelines", async () => {
-    process.env["BITBUCKET_PR_DESTINATION_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("resolves GitLab and keeps exact diff base", () => {
+    expect(
+      resolveCiContext({
+        CI_MERGE_REQUEST_TARGET_BRANCH_NAME: "main",
+        CI_MERGE_REQUEST_DIFF_BASE_SHA: "abc123",
+        CI_COMMIT_REF_NAME: "feature",
+        CI_COMMIT_SHA: "def456",
+      }),
+    ).toEqual({
+      provider: "gitlab",
+      baseRef: "main",
+      diffBaseSha: "abc123",
+      headRef: "feature",
+      headSha: "def456",
+    });
   });
 
-  it("Buddy", async () => {
-    process.env["BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("resolves external GitLab pull requests", () => {
+    expect(
+      resolveCiContext({
+        CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME: "main",
+      }),
+    ).toEqual({ provider: "gitlab", baseRef: "main" });
   });
 
-  it("Drone", async () => {
-    process.env["DRONE_TARGET_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("resolves Azure Pipelines", () => {
+    expect(
+      resolveCiContext({
+        SYSTEM_PULLREQUEST_TARGETBRANCH: "refs/heads/main",
+        SYSTEM_PULLREQUEST_SOURCEBRANCH: "refs/heads/feature",
+        SYSTEM_PULLREQUEST_SOURCECOMMITID: "abc123",
+      }),
+    ).toEqual({
+      provider: "azure",
+      baseRef: "refs/heads/main",
+      headRef: "refs/heads/feature",
+      headSha: "abc123",
+    });
   });
 
-  it("GitHubActions", async () => {
-    process.env["GITHUB_BASE_REF"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
-  });
-});
-
-describe("complex supported providers", () => {
-  it("AppVeyor", async () => {
-    // APPVEYOR_PULL_REQUEST_NUMBER is non-empty, so we can find the repo in
-    // APPVEYOR_REPO_BRANCH
-    process.env["APPVEYOR_PULL_REQUEST_NUMBER"] = "0";
-    process.env["APPVEYOR_REPO_BRANCH"] = "CORRECT";
-
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
-  });
-
-  it("doesn't return the guessed branch when APPVEYOR_PULL_REQUEST_NUMBER is empty", async () => {
-    // APPVEYOR_PULL_REQUEST_NUMBER is non-empty iff we're in a pull-request.
-    delete process.env["APPVEYOR_PULL_REQUEST_NUMBER"];
-    // Scenario: A regular commit to main, not a pull-request.
-    process.env["APPVEYOR_REPO_BRANCH"] = "main";
-
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe(undefined);
+  it("resolves Bitbucket Pipelines without treating destination commit as diff base", () => {
+    expect(
+      resolveCiContext({
+        BITBUCKET_PR_DESTINATION_BRANCH: "main",
+        BITBUCKET_PR_DESTINATION_COMMIT: "base-tip",
+        BITBUCKET_BRANCH: "feature",
+        BITBUCKET_COMMIT: "head",
+      }),
+    ).toEqual({
+      provider: "bitbucket",
+      baseRef: "main",
+      baseSha: "base-tip",
+      headRef: "feature",
+      headSha: "head",
+    });
   });
 
-  it("GitLab with CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME", async () => {
-    delete process.env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"];
-    process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("preserves supported legacy provider detection", () => {
+    expect(
+      resolveCiContext({ bamboo_repository_pr_targetBranch: "main" }),
+    ).toEqual({ provider: "bamboo", baseRef: "main" });
   });
 
-  it("GitLab with CI_MERGE_REQUEST_TARGET_BRANCH_NAME", async () => {
-    delete process.env["CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"];
-    process.env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("throws when multiple provider families are detected", () => {
+    expect(() =>
+      resolveCiContext({
+        GITHUB_BASE_REF: "main",
+        BITBUCKET_PR_DESTINATION_BRANCH: "main",
+      }),
+    ).toThrow(/Too many CI providers/u);
+  });
+  it.each([
+    [
+      "appveyor",
+      { APPVEYOR_PULL_REQUEST_NUMBER: "1", APPVEYOR_REPO_BRANCH: "main" },
+    ],
+    ["bamboo", { bamboo_repository_pr_targetBranch: "main" }],
+    ["buddy", { BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH: "main" }],
+    ["drone", { DRONE_TARGET_BRANCH: "main" }],
+    ["travis", { TRAVIS_PULL_REQUEST: "123", TRAVIS_BRANCH: "main" }],
+  ] as const)("resolves legacy %s context", (provider, env) => {
+    expect(resolveCiContext(env)).toEqual({ provider, baseRef: "main" });
   });
 
-  it("Travis", async () => {
-    delete process.env["TRAVIS_PULL_REQUEST"];
-    process.env["TRAVIS_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe("CORRECT");
+  it("ignores AppVeyor branch outside a pull request", () => {
+    expect(
+      resolveCiContext({
+        APPVEYOR_PULL_REQUEST_NUMBER: "",
+        APPVEYOR_REPO_BRANCH: "main",
+      }),
+    ).toBeUndefined();
   });
 
-  it("doesn't return the guessed branch when TRAVIS_PULL_REQUEST is explicitly 'false'", async () => {
-    process.env["TRAVIS_PULL_REQUEST"] = "false";
-    process.env["TRAVIS_BRANCH"] = "CORRECT";
-    const { guessBranch } = await importCi();
-    expect(guessBranch()).toBe(undefined);
+  it("ignores Travis branch when the pull-request flag is false", () => {
+    expect(
+      resolveCiContext({ TRAVIS_PULL_REQUEST: "false", TRAVIS_BRANCH: "main" }),
+    ).toBeUndefined();
+  });
+
+  it("uses Azure build source version when the PR source commit is unavailable", () => {
+    expect(
+      resolveCiContext({
+        SYSTEM_PULLREQUEST_TARGETBRANCH: "refs/heads/main",
+        BUILD_SOURCEVERSION: "fallback-head",
+      }),
+    ).toEqual({
+      provider: "azure",
+      baseRef: "refs/heads/main",
+      headSha: "fallback-head",
+    });
+  });
+
+  it("accepts GitLab exact diff base without a target branch", () => {
+    expect(
+      resolveCiContext({ CI_MERGE_REQUEST_DIFF_BASE_SHA: "exact-base" }),
+    ).toEqual({ provider: "gitlab", diffBaseSha: "exact-base" });
   });
 });
