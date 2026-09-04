@@ -24,8 +24,11 @@ const lintFile = async (
   filename: string,
   processor: ReturnType<typeof createProcessor>,
   rules: Linter.RulesRecord,
+  cache = false,
 ) => {
   const eslint = new ESLint({
+    cache,
+    cacheLocation: path.join(directory, ".eslintcache"),
     cwd: directory,
     overrideConfigFile: true,
     overrideConfig: [
@@ -42,6 +45,29 @@ const lintFile = async (
 };
 
 describe("ESLint 10 processor integration", () => {
+  it("serializes direct processor objects for the cache", async () => {
+    const repo = createTestRepository();
+    try {
+      repo.write("fixture.js", "const value = 1;\n");
+      repo.commit("base");
+      repo.write("fixture.js", "const value = 2;\n");
+
+      await expect(
+        withCwd(repo.directory, () =>
+          lintFile(
+            repo.directory,
+            path.join(repo.directory, "fixture.js"),
+            createProcessor({ mode: "diff" }),
+            {},
+            true,
+          ),
+        ),
+      ).resolves.toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
   it("reports a multiline diagnostic when an interior changed line intersects its span", async () => {
     const repo = createTestRepository();
     try {

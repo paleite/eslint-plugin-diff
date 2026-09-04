@@ -19,6 +19,7 @@ jest.mock("./ci", () => ({
 
 import type { Linter } from "eslint";
 
+import packageJson from "../package.json";
 import * as ci from "./ci";
 import * as git from "./git";
 import {
@@ -127,6 +128,13 @@ describe("processor options", () => {
 });
 
 describe("createProcessor", () => {
+  it("exposes serializable processor metadata", () => {
+    expect(createProcessor({ mode: "diff" }).meta).toEqual({
+      name: packageJson.name,
+      version: packageJson.version,
+    });
+  });
+
   it("does no Git work during construction", () => {
     createProcessor({ mode: "diff" });
     expect(mockedGit.resolveExactBase).not.toHaveBeenCalled();

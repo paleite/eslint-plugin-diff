@@ -1,5 +1,6 @@
 import type { Linter } from "eslint";
 
+import packageJson from "../package.json";
 import { resolveCiContext } from "./ci";
 import type { ChangedFile, DiffSnapshot, GitComparison } from "./git";
 import {
@@ -14,6 +15,10 @@ import type { Range } from "./Range";
 import type { DiffProcessor, ProcessorMode, ProcessorOptions } from "./types";
 
 const VALID_MODES = new Set<ProcessorMode>(["diff", "ci", "staged"]);
+const PROCESSOR_META = {
+  name: packageJson.name,
+  version: packageJson.version,
+};
 
 type NormalizedProcessorOptions = {
   mode: ProcessorMode;
@@ -260,6 +265,7 @@ const createDiffProcessor = (
   };
 
   return {
+    meta: PROCESSOR_META,
     preprocess,
     postprocess,
     supportsAutofix: true,
